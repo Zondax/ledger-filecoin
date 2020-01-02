@@ -42,7 +42,6 @@ cmake-build-fuzz/
 src/ledger/bin/
 src/ledger/debug/
 src/ledger/obj/
-pkg/
 
 \deps/*
 !\deps/nanos-secure-sdk

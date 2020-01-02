@@ -57,6 +57,9 @@ clean:
 shell:
 	$(call run_docker_privileged,$(DOCKER_BOLOS_SDK) -t,bash)
 
+package: build
+	$(call run_docker_privileged,$(DOCKER_BOLOS_SDK),make -C /project/src/ledger package)
+
 load: build
 	$(call run_docker_privileged,$(DOCKER_BOLOS_SDK),make -C /project/src/ledger load)
 
