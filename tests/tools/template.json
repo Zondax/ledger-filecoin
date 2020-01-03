@@ -1,0 +1,27 @@
+[
+  {
+    "description": "TODO invalid test case ",
+    "to": "",
+    "from": "",
+    "nonce": 0,
+    "value" : "0",
+    "gasprice" : "0",
+    "gaslimit" : "0",
+    "method" : 0,
+    "encoded_tx": "",
+    "valid": false
+  },
+  {
+    "description": "Basic test case",
+    "to": "f17uoq6tp427uzv7fztkbsnn64iwotfrristwpryy",
+    "from": "f1xcbgdhkgkwht3hrrnui3jdopeejsoatkzmoltqy",
+    "nonce": 1,
+    "value" : "100000",
+    "gasprice" : "2500",
+    "gaslimit" : "25000",
+    "method" : 0,
+    "params": "",
+    "encoded_tx": "",
+    "valid": true
+  }
+]

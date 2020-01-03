@@ -4,11 +4,26 @@
         "to": "",
         "from": "",
         "nonce": 0,
-        "value" : "0",
-        "gasprice" : "0",
-        "gaslimit" : "0",
-        "method" : 0,
-        "encoded_tx": "o2Vub25jZQBmbWV0aG9kbHN0YWtpbmcuQnVybmRib2R5oWtidXJuX3Rva2Vuc0EA",
-        "valid": true
+        "value": "0",
+        "gasprice": "0",
+        "gaslimit": "0",
+        "method": 0,
+        "encoded_tx": "iEBAAEEAQQBBAAD3",
+        "valid": false,
+        "encoded_tx_hex": "8840400041004100410000f7"
+    },
+    {
+        "description": "Basic test case",
+        "to": "f17uoq6tp427uzv7fztkbsnn64iwotfrristwpryy",
+        "from": "f1xcbgdhkgkwht3hrrnui3jdopeejsoatkzmoltqy",
+        "nonce": 1,
+        "value": "100000",
+        "gasprice": "2500",
+        "gaslimit": "25000",
+        "method": 0,
+        "params": "",
+        "encoded_tx": "iFgpZjE3dW9xNnRwNDI3dXp2N2Z6dGtic25uNjRpd290ZnJyaXN0d3ByeXlYKWYxeGNiZ2Roa2drd2h0M2hycm51aTNqZG9wZWVqc29hdGt6bW9sdHF5AUMBhqBCCcRCYagAYA==",
+        "valid": true,
+        "encoded_tx_hex": "885829663137756f71367470343237757a7637667a746b62736e6e363469776f746672726973747770727979582966317863626764686b676b776874336872726e7569336a646f7065656a736f61746b7a6d6f6c74717901430186a04209c44261a80060"
     }
 ]
