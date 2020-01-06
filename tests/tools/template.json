@@ -9,7 +9,7 @@
     "gaslimit" : "0",
     "method" : 0,
     "encoded_tx": "",
-    "valid": true
+    "valid": false
   },
   {
     "description": "Basic test case",
@@ -20,7 +20,6 @@
     "gasprice" : "2500",
     "gaslimit" : "25000",
     "method" : 0,
-    "params": "",
     "encoded_tx": "",
     "valid": true
   }

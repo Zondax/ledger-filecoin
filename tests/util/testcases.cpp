@@ -20,6 +20,7 @@
 #include <fmt/core.h>
 #include <gtest/gtest.h>
 #include <algorithm>
+#include <parser_txdef.h>
 
 bool TestcaseIsValid(const Json::Value &tc) {
     return true;
@@ -81,9 +82,14 @@ std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &j) {
 
     addTo(answer, "5 | Gas Limit : {}", FormatAmount(j["gaslimit"].asString()));
 
-    addTo(answer, "6 | Method : {}", j["method"].asUInt64());
+    if (j["method"] == 0) {
+        addTo(answer, "6 | Method : No Method");
+    }
 
-    addTo(answer, "7 | Params :  ");
+    // If 0 we have a no parameters
+    if (j["method"] != 0) {
+        addTo(answer, "7 | Params :  ");
+    }
 
     return answer;
 }

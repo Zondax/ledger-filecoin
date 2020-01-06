@@ -8,9 +8,9 @@
         "gasprice": "0",
         "gaslimit": "0",
         "method": 0,
-        "encoded_tx": "iEBAAEEAQQBBAAD3",
-        "valid": true,
-        "encoded_tx_hex": "8840400041004100410000f7"
+        "encoded_tx": "h0BAAEEAQQBBAAA=",
+        "valid": false,
+        "encoded_tx_hex": "8740400041004100410000"
     },
     {
         "description": "Basic test case",
@@ -21,9 +21,8 @@
         "gasprice": "2500",
         "gaslimit": "25000",
         "method": 0,
-        "params": "",
-        "encoded_tx": "iFgpZjE3dW9xNnRwNDI3dXp2N2Z6dGtic25uNjRpd290ZnJyaXN0d3ByeXlYKWYxeGNiZ2Roa2drd2h0M2hycm51aTNqZG9wZWVqc29hdGt6bW9sdHF5AUMBhqBCCcRCYagAYA==",
+        "encoded_tx": "h1gpZjE3dW9xNnRwNDI3dXp2N2Z6dGtic25uNjRpd290ZnJyaXN0d3ByeXlYKWYxeGNiZ2Roa2drd2h0M2hycm51aTNqZG9wZWVqc29hdGt6bW9sdHF5AUMBhqBCCcRCYagA",
         "valid": true,
-        "encoded_tx_hex": "885829663137756f71367470343237757a7637667a746b62736e6e363469776f746672726973747770727979582966317863626764686b676b776874336872726e7569336a646f7065656a736f61746b7a6d6f6c74717901430186a04209c44261a80060"
+        "encoded_tx_hex": "875829663137756f71367470343237757a7637667a746b62736e6e363469776f746672726973747770727979582966317863626764686b676b776874336872726e7569336a646f7065656a736f61746b7a6d6f6c74717901430186a04209c44261a800"
     }
 ]

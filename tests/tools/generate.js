@@ -36,8 +36,11 @@ function toCBOR(message) {
     // "method"
     answer.push(message.method);
 
-    // "params"
-    answer.push(message.params);
+    if (message.params) {
+        // "params"
+        answer.push(message.params);
+    }
+
 
     return cbor.encode(answer);
 }
