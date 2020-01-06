@@ -9,7 +9,7 @@
         "gaslimit": "0",
         "method": 0,
         "encoded_tx": "iEBAAEEAQQBBAAD3",
-        "valid": false,
+        "valid": true,
         "encoded_tx_hex": "8840400041004100410000f7"
     },
     {

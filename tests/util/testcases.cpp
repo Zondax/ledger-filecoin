@@ -15,6 +15,7 @@
 ********************************************************************************/
 #include "testcases.h"
 #include "base64.h"
+#include <lib/crypto.h>
 #include <zxmacros.h>
 #include <fmt/core.h>
 #include <gtest/gtest.h>
@@ -27,6 +28,20 @@ bool TestcaseIsValid(const Json::Value &tc) {
 template<typename S, typename... Args>
 void addTo(std::vector<std::string> &answer, const S &format_str, Args &&... args) {
     answer.push_back(fmt::format(format_str, args...));
+}
+
+std::string FormatAddress(const std::string &address, uint8_t idx, uint8_t *pageCount) {
+    char outBuffer[40];
+    pageString(outBuffer, sizeof(outBuffer), address.c_str(), idx, pageCount);
+
+    return std::string(outBuffer);
+}
+
+std::string FormatAmount(const std::string &amount) {
+    char buffer[500];
+    MEMZERO(buffer, sizeof(buffer));
+    fpstr_to_str(buffer, amount.c_str(), COIN_AMOUNT_DECIMAL_PLACES);
+    return std::string(buffer);
 }
 
 std::vector<uint8_t> prepareBlob(const std::string &base64Cbor) {
@@ -49,6 +64,24 @@ std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &j) {
         answer.emplace_back("Test case is not valid!");
         return answer;
     }
+
+    uint8_t dummy;
+
+    addTo(answer, "0 | To : {}", FormatAddress(j["to"].asString(), 0, &dummy));
+    addTo(answer, "0 | To : {}", FormatAddress(j["to"].asString(), 1, &dummy));
+
+    addTo(answer, "1 | From : {}", FormatAddress(j["from"].asString(), 0, &dummy));
+    addTo(answer, "1 | From : {}", FormatAddress(j["from"].asString(), 1, &dummy));
+
+    addTo(answer, "2 | Nonce : {}", j["nonce"].asUInt64());
+
+    addTo(answer, "3 | Gas Price : {}", FormatAmount(j["gasprice"].asString()));
+
+    addTo(answer, "4 | Gas Limit : {}", FormatAmount(j["gaslimit"].asString()));
+
+    addTo(answer, "5 | Method : {}", j["method"].asUInt64());
+
+    addTo(answer, "6 | Params :  ");
 
     return answer;
 }

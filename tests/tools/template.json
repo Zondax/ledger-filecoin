@@ -9,7 +9,7 @@
     "gaslimit" : "0",
     "method" : 0,
     "encoded_tx": "",
-    "valid": false
+    "valid": true
   },
   {
     "description": "Basic test case",
