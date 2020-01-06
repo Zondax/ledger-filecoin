@@ -75,13 +75,15 @@ std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &j) {
 
     addTo(answer, "2 | Nonce : {}", j["nonce"].asUInt64());
 
-    addTo(answer, "3 | Gas Price : {}", FormatAmount(j["gasprice"].asString()));
+    addTo(answer, "3 | Value : {}", FormatAmount(j["value"].asString()));
 
-    addTo(answer, "4 | Gas Limit : {}", FormatAmount(j["gaslimit"].asString()));
+    addTo(answer, "4 | Gas Price : {}", FormatAmount(j["gasprice"].asString()));
 
-    addTo(answer, "5 | Method : {}", j["method"].asUInt64());
+    addTo(answer, "5 | Gas Limit : {}", FormatAmount(j["gaslimit"].asString()));
 
-    addTo(answer, "6 | Params :  ");
+    addTo(answer, "6 | Method : {}", j["method"].asUInt64());
+
+    addTo(answer, "7 | Params :  ");
 
     return answer;
 }
