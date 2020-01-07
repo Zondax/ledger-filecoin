@@ -13,10 +13,10 @@ function toCBOR(message) {
 
 
     // "to" field
-    answer.push(Buffer.from(message.to));
+    answer.push(Buffer.from(message.to, 'hex'));
 
     // "from" field
-    answer.push(Buffer.from(message.from));
+    answer.push(Buffer.from(message.from, 'hex'));
 
     // "nonce" field
     answer.push(message.nonce);

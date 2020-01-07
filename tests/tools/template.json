@@ -13,8 +13,8 @@
   },
   {
     "description": "Basic test case",
-    "to": "f17uoq6tp427uzv7fztkbsnn64iwotfrristwpryy",
-    "from": "f1xcbgdhkgkwht3hrrnui3jdopeejsoatkzmoltqy",
+    "to": "01FD1D0F4DFCD7E99AFCB99A8326B7DC459D32C628",
+    "from": "01B882619D46558F3D9E316D11B48DCF211327025A",
     "nonce": 1,
     "value" : "100000",
     "gasprice" : "2500",
