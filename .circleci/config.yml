@@ -34,7 +34,7 @@ jobs:
       - run: cd /home/test/project/src/ledger && make package
       - store_artifacts:
           path: /home/test/project/src/ledger/pkg/
-#      - run: /home/test/go/bin/ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete $(/home/test/project/src/ledger/pkg/zxtool.sh version) /home/test/project/src/ledger/pkg/
+      - run: /home/test/go/bin/ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete $(/home/test/project/src/ledger/pkg/zxtool.sh version) /home/test/project/src/ledger/pkg/demo.zip
 
 workflows:
   version: 2
