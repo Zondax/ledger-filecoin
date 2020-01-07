@@ -4,11 +4,25 @@
         "to": "",
         "from": "",
         "nonce": 0,
-        "value" : "0",
-        "gasprice" : "0",
-        "gaslimit" : "0",
-        "method" : 0,
-        "encoded_tx": "o2Vub25jZQBmbWV0aG9kbHN0YWtpbmcuQnVybmRib2R5oWtidXJuX3Rva2Vuc0EA",
-        "valid": true
+        "value": "0",
+        "gasprice": "0",
+        "gaslimit": "0",
+        "method": 0,
+        "encoded_tx": "h0BAAEEAQQBBAAA=",
+        "valid": false,
+        "encoded_tx_hex": "8740400041004100410000"
+    },
+    {
+        "description": "Basic test case",
+        "to": "01FD1D0F4DFCD7E99AFCB99A8326B7DC459D32C628",
+        "from": "01B882619D46558F3D9E316D11B48DCF211327025A",
+        "nonce": 1,
+        "value": "100000",
+        "gasprice": "2500",
+        "gaslimit": "25000",
+        "method": 0,
+        "encoded_tx": "h1UB/R0PTfzX6Zr8uZqDJrfcRZ0yxihVAbiCYZ1GVY89njFtEbSNzyETJwJaAUMBhqBCCcRCYagA",
+        "valid": true,
+        "encoded_tx_hex": "875501fd1d0f4dfcd7e99afcb99a8326b7dc459d32c6285501b882619d46558f3d9e316d11b48dcf211327025a01430186a04209c44261a800"
     }
 ]
