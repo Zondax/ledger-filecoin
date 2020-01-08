@@ -51,7 +51,7 @@ TEST(CRYPTO, fillAddress) {
         ::testing::Eq("03CD4569C4FE16556D74DFD1372A2F3AE7B6C43121C7C2902F9AE935B80A7C254B"));
 
     EXPECT_THAT(std::string(addr),
-                ::testing::Eq("f1Z2UF3VZDJGPOZBG3IHFNWKHX3DMM6MOPKFHQOYY"));
+                ::testing::Eq("f1z2uf3vzdjgpozbg3ihfnwkhx3dmm6mopkfhqoyy"));
 
     std::cout << pk << std::endl;
     std::cout << addr << std::endl;
@@ -77,7 +77,7 @@ TEST(CRYPTO, fillAddressTestMnemonic) {
                 ::testing::Eq("8D16D62802CA55326EC52BF76A8543B90E2ABA5BCF6CD195C0D6FC1EF38FA1B300"));
 
     EXPECT_THAT(std::string(addr),
-                ::testing::Eq("f1F5QRFE6FZJSTZ52LJD47GER4BESC7J2G5HFV4LQ"));
+                ::testing::Eq("f1f5qrfe6fzjstz52ljd47ger4besc7j2g5hfv4lq"));
 
     std::cout << pk << std::endl;
     std::cout << addr << std::endl;
