@@ -14,8 +14,8 @@
     },
     {
         "description": "Basic test case",
-        "to": "01FD1D0F4DFCD7E99AFCB99A8326B7DC459D32C628",
-        "from": "01B882619D46558F3D9E316D11B48DCF211327025A",
+        "to": "f17uoq6tp427uzv7fztkbsnn64iwotfrristwpryy",
+        "from": "f1xcbgdhkgkwht3hrrnui3jdopeejsoas2rujnkdi",
         "nonce": 1,
         "value": "100000",
         "gasprice": "2500",
@@ -24,5 +24,31 @@
         "encoded_tx": "h1UB/R0PTfzX6Zr8uZqDJrfcRZ0yxihVAbiCYZ1GVY89njFtEbSNzyETJwJaAUMBhqBCCcRCYagA",
         "valid": true,
         "encoded_tx_hex": "875501fd1d0f4dfcd7e99afcb99a8326b7dc459d32c6285501b882619d46558f3d9e316d11b48dcf211327025a01430186a04209c44261a800"
+    },
+    {
+        "description": "Using Protocol 0 addressess",
+        "to": "f00",
+        "from": "f0150",
+        "nonce": 1,
+        "value": "100000",
+        "gasprice": "2500",
+        "gaslimit": "25000",
+        "method": 0,
+        "encoded_tx": "h0IAAEMAlgEBQwGGoEIJxEJhqAA=",
+        "valid": true,
+        "encoded_tx_hex": "874200004300960101430186a04209c44261a800"
+    },
+    {
+        "description": "Using Protocol 1 addressess",
+        "to": "f17uoq6tp427uzv7fztkbsnn64iwotfrristwpryy",
+        "from": "f1xcbgdhkgkwht3hrrnui3jdopeejsoatkzmoltqy",
+        "nonce": 1,
+        "value": "100000",
+        "gasprice": "2500",
+        "gaslimit": "25000",
+        "method": 0,
+        "encoded_tx": "h1UB/R0PTfzX6Zr8uZqDJrfcRZ0yxihVAbiCYZ1GVY89njFtEbSNzyETJwJqAUMBhqBCCcRCYagA",
+        "valid": true,
+        "encoded_tx_hex": "875501fd1d0f4dfcd7e99afcb99a8326b7dc459d32c6285501b882619d46558f3d9e316d11b48dcf211327026a01430186a04209c44261a800"
     }
 ]

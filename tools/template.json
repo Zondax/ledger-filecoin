@@ -1,0 +1,50 @@
+[
+  {
+    "description": "TODO invalid test case ",
+    "to": "",
+    "from": "",
+    "nonce": 0,
+    "value" : "0",
+    "gasprice" : "0",
+    "gaslimit" : "0",
+    "method" : 0,
+    "encoded_tx": "",
+    "valid": false
+  },
+  {
+    "description": "Basic test case",
+    "to": "01FD1D0F4DFCD7E99AFCB99A8326B7DC459D32C628",
+    "from": "01B882619D46558F3D9E316D11B48DCF211327025A",
+    "nonce": 1,
+    "value": "100000",
+    "gasprice": "2500",
+    "gaslimit": "25000",
+    "method": 0,
+    "encoded_tx": "",
+    "valid": true
+  },
+  {
+    "description": "Using Protocol 0 addressess",
+    "to": "0000",
+    "from": "009601",
+    "nonce": 1,
+    "value" : "100000",
+    "gasprice" : "2500",
+    "gaslimit" : "25000",
+    "method" : 0,
+    "encoded_tx": "",
+    "valid": true
+  },
+  {
+  "description": "Using Protocol 1 addressess",
+  "to": "01fd1d0f4dfcd7e99afcb99a8326b7dc459d32c628",
+  "from": "01b882619d46558f3d9e316d11b48dcf211327026a",
+  "nonce": 1,
+  "value" : "100000",
+  "gasprice" : "2500",
+  "gaslimit" : "25000",
+  "method" : 0,
+  "encoded_tx": "",
+  "valid": true
+}
+]

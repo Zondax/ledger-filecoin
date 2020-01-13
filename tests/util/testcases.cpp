@@ -68,11 +68,21 @@ std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &j) {
 
     uint8_t dummy;
 
-    addTo(answer, "0 | To : {}", FormatAddress(j["to"].asString(), 0, &dummy));
-    addTo(answer, "0 | To : {}", FormatAddress(j["to"].asString(), 1, &dummy));
+    if (j["to"].asString().length() > 40) {
+        addTo(answer, "0 | To : {}", FormatAddress(j["to"].asString(), 0, &dummy));
+        addTo(answer, "0 | To : {}", FormatAddress(j["to"].asString(), 1, &dummy));
+    } else {
+        // To print protocol 0 addresses which seems to be always less than 20char
+        addTo(answer, "0 | To : {}", FormatAddress(j["to"].asString(), 0, &dummy));
+    }
 
-    addTo(answer, "1 | From : {}", FormatAddress(j["from"].asString(), 0, &dummy));
-    addTo(answer, "1 | From : {}", FormatAddress(j["from"].asString(), 1, &dummy));
+    if (j["from"].asString().length() > 40) {
+        addTo(answer, "1 | From : {}", FormatAddress(j["from"].asString(), 0, &dummy));
+        addTo(answer, "1 | From : {}", FormatAddress(j["from"].asString(), 1, &dummy));
+    } else {
+        // To print protocol 0 addresses which seems to be always less than 20char
+        addTo(answer, "1 | From : {}", FormatAddress(j["from"].asString(), 0, &dummy));
+    }
 
     addTo(answer, "2 | Nonce : {}", j["nonce"].asUInt64());
 
