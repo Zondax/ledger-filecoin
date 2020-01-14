@@ -24,9 +24,33 @@
     "valid": true
   },
   {
-    "description": "Using Protocol 0 addressess",
+    "description": "Using Protocol 0 addresses",
     "to": "0000",
     "from": "009601",
+    "nonce": 1,
+    "value" : "100000",
+    "gasprice" : "2500",
+    "gaslimit" : "25000",
+    "method" : 0,
+    "encoded_tx": "",
+    "valid": true
+  },
+  {
+    "description": "Using Protocol 0 addresses 2",
+    "to": "008008",
+    "from": "00c10d",
+    "nonce": 1,
+    "value" : "100000",
+    "gasprice" : "2500",
+    "gaslimit" : "25000",
+    "method" : 0,
+    "encoded_tx": "",
+    "valid": true
+  },
+  {
+    "description": "Using Protocol 0 addresses 3",
+    "to": "00ffffffffffffffffff01",
+    "from": "0000",
     "nonce": 1,
     "value" : "100000",
     "gasprice" : "2500",

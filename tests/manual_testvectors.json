@@ -26,7 +26,7 @@
         "encoded_tx_hex": "875501fd1d0f4dfcd7e99afcb99a8326b7dc459d32c6285501b882619d46558f3d9e316d11b48dcf211327025a01430186a04209c44261a800"
     },
     {
-        "description": "Using Protocol 0 addressess",
+        "description": "Using Protocol 0 addresses",
         "to": "f00",
         "from": "f0150",
         "nonce": 1,
@@ -37,6 +37,32 @@
         "encoded_tx": "h0IAAEMAlgEBQwGGoEIJxEJhqAA=",
         "valid": true,
         "encoded_tx_hex": "874200004300960101430186a04209c44261a800"
+    },
+    {
+        "description": "Using Protocol 0 addresses 2",
+        "to": "f01024",
+        "from": "f01729",
+        "nonce": 1,
+        "value": "100000",
+        "gasprice": "2500",
+        "gaslimit": "25000",
+        "method": 0,
+        "encoded_tx": "h0MAgAhDAMENAUMBhqBCCcRCYagA",
+        "valid": true,
+        "encoded_tx_hex": "87430080084300c10d01430186a04209c44261a800"
+    },
+    {
+        "description": "Using Protocol 0 addresses 3",
+        "to": "f018446744073709552000",
+        "from": "f00",
+        "nonce": 1,
+        "value": "100000",
+        "gasprice": "2500",
+        "gaslimit": "25000",
+        "method": 0,
+        "encoded_tx": "h0sA////////////AUIAAAFDAYagQgnEQmGoAA==",
+        "valid": true,
+        "encoded_tx_hex": "874b00ffffffffffffffffff0142000001430186a04209c44261a800"
     },
     {
         "description": "Using Protocol 1 addresses",
