@@ -180,5 +180,44 @@
         "encoded_tx": "h1gxA6dyawOAIvdaOEYXWFNgzuYpBwotnShxKWXl8m7MQIWDgoA3JO008nIDNvCdtjHwdFgxA61Y32luLU6R6obIgek4uk6oGzleEnl7hLnPMUuVRnBeg5x6mdYGskfdtPmsejQU3QFDAYagQgnEQmGoAA==",
         "valid": true,
         "encoded_tx_hex": "87583103a7726b038022f75a384617585360cee629070a2d9d28712965e5f26ecc40858382803724ed34f2720336f09db631f074583103ad58df696e2d4e91ea86c881e938ba4ea81b395e12797b84b9cf314b9546705e839c7a99d606b247ddb4f9ac7a3414dd01430186a04209c44261a800"
+    },
+    {
+        "description": "Using Protocol 3 addresses 3",
+        "to": "f3u5zgwa4ael3vuocgc5mfgygo4yuqocrntuuhcklf4xzg5tcaqwbyfabxetwtj4tsam3pbhnwghyhijr5mixa",
+        "from": "f3vvmn62lofvhjd2ugzca6sof2j2ubwok6cj4xxbfzz4yuxfkgobpihhd2thlanmsh3w2ptld2gqkn2jvlss4a",
+        "nonce": 1,
+        "value": "100000",
+        "gasprice": "2500",
+        "gaslimit": "25000",
+        "method": 0,
+        "encoded_tx": "h1gxA6dyawOAIvdaOEYXWFNgzuYpBwotnShxKWXl8m7MQIWDgoA3JO008nIDNvCdtjHwdFgxA61Y32luLU6R6obIgek4uk6oGzleEnl7hLnPMUuVRnBeg5x6mdYGskfdtPmsejQU3QFDAYagQgnEQmGoAA==",
+        "valid": true,
+        "encoded_tx_hex": "87583103a7726b038022f75a384617585360cee629070a2d9d28712965e5f26ecc40858382803724ed34f2720336f09db631f074583103ad58df696e2d4e91ea86c881e938ba4ea81b395e12797b84b9cf314b9546705e839c7a99d606b247ddb4f9ac7a3414dd01430186a04209c44261a800"
+    },
+    {
+        "description": "Address protocol 1 Invalid payload length of 21 bytes",
+        "to": "f1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaae6zk5dy",
+        "from": "f1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaae6zk5dy",
+        "nonce": 1,
+        "value": "100000",
+        "gasprice": "2500",
+        "gaslimit": "25000",
+        "method": 0,
+        "encoded_tx": "h1YBAAAAAAAAAAAAAAAAAAAAAAAAAAABVgEAAAAAAAAAAAAAAAAAAAAAAAAAAAEBQwGGoEIJxEJhqAA=",
+        "valid": false,
+        "encoded_tx_hex": "875601000000000000000000000000000000000000000001560100000000000000000000000000000000000000000101430186a04209c44261a800"
+    },
+    {
+        "description": "Address protocol 1 Invalid payload length of 19 bytes",
+        "to": "f1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaabh2wd2q",
+        "from": "f1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaabh2wd2q",
+        "nonce": 1,
+        "value": "100000",
+        "gasprice": "2500",
+        "gaslimit": "25000",
+        "method": 0,
+        "encoded_tx": "h1QBAAAAAAAAAAAAAAAAAAAAAAAAAFQBAAAAAAAAAAAAAAAAAAAAAAAAAAFDAYagQgnEQmGoAA==",
+        "valid": false,
+        "encoded_tx_hex": "8754010000000000000000000000000000000000000054010000000000000000000000000000000000000001430186a04209c44261a800"
     }
 ]

@@ -166,5 +166,42 @@
     "method" : 0,
     "encoded_tx": "",
     "valid": true
+  },
+  {
+    "description": "Using Protocol 3 addresses 3",
+    "to": "03a7726b038022f75a384617585360cee629070a2d9d28712965e5f26ecc40858382803724ed34f2720336f09db631f074",
+    "from": "03ad58df696e2d4e91ea86c881e938ba4ea81b395e12797b84b9cf314b9546705e839c7a99d606b247ddb4f9ac7a3414dd",
+    "nonce": 1,
+    "value" : "100000",
+    "gasprice" : "2500",
+    "gaslimit" : "25000",
+    "method" : 0,
+    "encoded_tx": "",
+    "valid": true
+  },
+  {
+    "description": "Address protocol 1 Invalid payload length of 21 bytes",
+    "to": "01000000000000000000000000000000000000000001",
+    "from": "01000000000000000000000000000000000000000001",
+    "nonce": 1,
+    "value" : "100000",
+    "gasprice" : "2500",
+    "gaslimit" : "25000",
+    "method" : 0,
+    "encoded_tx": "",
+    "valid": false
+  },
+  {
+    "description": "Address protocol 1 Invalid payload length of 19 bytes",
+    "to": "0100000000000000000000000000000000000000",
+    "from": "0100000000000000000000000000000000000000",
+    "nonce": 1,
+    "value" : "100000",
+    "gasprice" : "2500",
+    "gaslimit" : "25000",
+    "method" : 0,
+    "encoded_tx": "",
+    "valid": false
   }
 ]
+
