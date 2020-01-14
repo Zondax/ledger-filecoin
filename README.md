@@ -1,7 +1,7 @@
 # Ledger Filecoin app
 ![stability-wip](https://img.shields.io/badge/stability-work_in_progress-lightgrey.svg)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![CircleCI](https://circleci.com/gh/ZondaX/ledger-filecoin.svg?style=shield&circle-token=4bf765e5c966e96078073eac89a2e98c2f03077f)](https://circleci.com/gh/ZondaX/ledger-filecoin)
+[![CircleCI](https://circleci.com/gh/Zondax/ledger-filecoin.svg?style=shield&circle-token=4bf765e5c966e96078073eac89a2e98c2f03077f)](https://circleci.com/gh/Zondax/ledger-filecoin)
 [![CodeFactor](https://www.codefactor.io/repository/github/zondax/ledger-filecoin/badge)](https://www.codefactor.io/repository/github/zondax/ledger-filecoin)
 
 This repository contains:
