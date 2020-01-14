@@ -2,7 +2,10 @@
   "name": "tools",
   "version": "1.0.0",
   "dependencies": {
-    "cbor": "^5.0.1"
+    "base32-encode": "^1.1.1",
+    "blake2": "^4.0.0",
+    "cbor": "^5.0.1",
+    "@webassemblyjs/leb128": "^1.8.5"
   },
   "scripts": {
     "generate": "node generate.js"
