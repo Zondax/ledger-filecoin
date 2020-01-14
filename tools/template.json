@@ -202,6 +202,78 @@
     "method" : 0,
     "encoded_tx": "",
     "valid": false
+  },
+  {
+    "description": "Address protocol 0 Invalid payload length of 21 bytes",
+    "to": "00000000000000000000000000000000000000000000",
+    "from": "00000000000000000000000000000000000000000000",
+    "nonce": 1,
+    "value" : "100000",
+    "gasprice" : "2500",
+    "gaslimit" : "25000",
+    "method" : 0,
+    "encoded_tx": "",
+    "valid": false
+  },
+  {
+    "description": "Address protocol 2 Invalid payload length of 21 bytes",
+    "to": "02000000000000000000000000000000000000000000",
+    "from": "02000000000000000000000000000000000000000000",
+    "nonce": 1,
+    "value" : "100000",
+    "gasprice" : "2500",
+    "gaslimit" : "25000",
+    "method" : 0,
+    "encoded_tx": "",
+    "valid": false
+  },
+  {
+    "description": "Address protocol 2 Invalid payload length of 19 bytes",
+    "to": "0200000000000000000000000000000000000000",
+    "from": "0200000000000000000000000000000000000000",
+    "nonce": 1,
+    "value" : "100000",
+    "gasprice" : "2500",
+    "gaslimit" : "25000",
+    "method" : 0,
+    "encoded_tx": "",
+    "valid": false
+  },
+  {
+    "description": "Address protocol 3 Invalid payload length of 47 bytes",
+    "to": "030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "from": "030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "nonce": 1,
+    "value" : "100000",
+    "gasprice" : "2500",
+    "gaslimit" : "25000",
+    "method" : 0,
+    "encoded_tx": "",
+    "valid": false
+  },
+  {
+    "description": "Address protocol 3 Invalid payload length of 49 bytes",
+    "to": "0300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "from": "0300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "nonce": 1,
+    "value" : "100000",
+    "gasprice" : "2500",
+    "gaslimit" : "25000",
+    "method" : 0,
+    "encoded_tx": "",
+    "valid": false
+  },
+  {
+    "description": "Address with unknown protocol",
+    "to": "040000000000000000000000000000000000000000",
+    "from": "040000000000000000000000000000000000000000",
+    "nonce": 1,
+    "value" : "100000",
+    "gasprice" : "2500",
+    "gaslimit" : "25000",
+    "method" : 0,
+    "encoded_tx": "",
+    "valid": false
   }
 ]
 

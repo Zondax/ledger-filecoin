@@ -219,5 +219,70 @@
         "encoded_tx": "h1QBAAAAAAAAAAAAAAAAAAAAAAAAAFQBAAAAAAAAAAAAAAAAAAAAAAAAAAFDAYagQgnEQmGoAA==",
         "valid": false,
         "encoded_tx_hex": "8754010000000000000000000000000000000000000054010000000000000000000000000000000000000001430186a04209c44261a800"
+    },
+    {
+        "description": "Address protocol 0 Invalid payload length of 21 bytes",
+        "to": "f00",
+        "from": "f00",
+        "nonce": 1,
+        "value": "100000",
+        "gasprice": "2500",
+        "gaslimit": "25000",
+        "method": 0,
+        "encoded_tx": "h1YAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVgAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQwGGoEIJxEJhqAA=",
+        "valid": false,
+        "encoded_tx_hex": "875600000000000000000000000000000000000000000000560000000000000000000000000000000000000000000001430186a04209c44261a800"
+    },
+    {
+        "description": "Address protocol 2 Invalid payload length of 21 bytes",
+        "to": "f2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa3sien4",
+        "from": "f2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa3sien4",
+        "nonce": 1,
+        "value": "100000",
+        "gasprice": "2500",
+        "gaslimit": "25000",
+        "method": 0,
+        "encoded_tx": "h1YCAAAAAAAAAAAAAAAAAAAAAAAAAAAAVgIAAAAAAAAAAAAAAAAAAAAAAAAAAAABQwGGoEIJxEJhqAA=",
+        "valid": false,
+        "encoded_tx_hex": "875602000000000000000000000000000000000000000000560200000000000000000000000000000000000000000001430186a04209c44261a800"
+    },
+    {
+        "description": "Address protocol 2 Invalid payload length of 19 bytes",
+        "to": "f2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaab5nwlky",
+        "from": "f2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaab5nwlky",
+        "nonce": 1,
+        "value": "100000",
+        "gasprice": "2500",
+        "gaslimit": "25000",
+        "method": 0,
+        "encoded_tx": "h1QCAAAAAAAAAAAAAAAAAAAAAAAAAFQCAAAAAAAAAAAAAAAAAAAAAAAAAAFDAYagQgnEQmGoAA==",
+        "valid": false,
+        "encoded_tx_hex": "8754020000000000000000000000000000000000000054020000000000000000000000000000000000000001430186a04209c44261a800"
+    },
+    {
+        "description": "Address protocol 3 Invalid payload length of 47 bytes",
+        "to": "f3aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaamqs4am4",
+        "from": "f3aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaamqs4am4",
+        "nonce": 1,
+        "value": "100000",
+        "gasprice": "2500",
+        "gaslimit": "25000",
+        "method": 0,
+        "encoded_tx": "h1gwAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWDADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQwGGoEIJxEJhqAA=",
+        "valid": false,
+        "encoded_tx_hex": "875830030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000583003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001430186a04209c44261a800"
+    },
+    {
+        "description": "Address protocol 3 Invalid payload length of 49 bytes",
+        "to": "f3aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaddp6aeu",
+        "from": "f3aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaddp6aeu",
+        "nonce": 1,
+        "value": "100000",
+        "gasprice": "2500",
+        "gaslimit": "25000",
+        "method": 0,
+        "encoded_tx": "h1gyAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABYMgMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUMBhqBCCcRCYagA",
+        "valid": false,
+        "encoded_tx_hex": "87583203000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005832030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001430186a04209c44261a800"
     }
 ]
