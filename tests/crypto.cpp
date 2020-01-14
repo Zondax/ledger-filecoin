@@ -19,6 +19,7 @@
 #include <iostream>
 #include <hexutils.h>
 #include <lib/crypto.h>
+#include <bignum.h>
 
 using ::testing::TestWithParam;
 using ::testing::Values;
@@ -48,10 +49,10 @@ TEST(CRYPTO, fillAddress) {
     char *addr = (char *) (buffer + 33);
 
     EXPECT_THAT(std::string(pk),
-        ::testing::Eq("03CD4569C4FE16556D74DFD1372A2F3AE7B6C43121C7C2902F9AE935B80A7C254B"));
+                ::testing::Eq("03CD4569C4FE16556D74DFD1372A2F3AE7B6C43121C7C2902F9AE935B80A7C254B"));
 
     EXPECT_THAT(std::string(addr),
-                ::testing::Eq("f1z2uf3vzdjgpozbg3ihfnwkhx3dmm6mopkfhqoyy"));
+                ::testing::Eq("f1z2uf3vzdjgpozbg3ihfnwkhx3dmm6mop6d4vlii"));
 
     std::cout << pk << std::endl;
     std::cout << addr << std::endl;
@@ -77,8 +78,72 @@ TEST(CRYPTO, fillAddressTestMnemonic) {
                 ::testing::Eq("8D16D62802CA55326EC52BF76A8543B90E2ABA5BCF6CD195C0D6FC1EF38FA1B300"));
 
     EXPECT_THAT(std::string(addr),
-                ::testing::Eq("f1f5qrfe6fzjstz52ljd47ger4besc7j2g5hfv4lq"));
+                ::testing::Eq("f1f5qrfe6fzjstz52ljd47ger4besc7j2gzz3e4ea"));
 
     std::cout << pk << std::endl;
     std::cout << addr << std::endl;
+}
+
+TEST(CRYPTO, extractBitsFromLEB128_small) {
+    uint8_t input[] = {0x81, 0x01};
+    uint64_t output;
+
+    auto ret = decompressLEB128(input, &output);
+
+    EXPECT_THAT(ret, ::testing::Eq(1));
+    EXPECT_THAT(output, ::testing::Eq(0x81));
+
+    char bufferUI[300];
+    uint64_to_str(bufferUI, sizeof(bufferUI), output);
+
+    auto expected = std::string("129");
+    EXPECT_THAT(std::string(bufferUI), testing::Eq(expected)) << "decimal output not matching";
+}
+
+TEST(CRYPTO, extractBitsFromLEB128_1byte) {
+    uint8_t input[] = {0xc1, 0x0d};
+    uint64_t output;
+
+    auto ret = decompressLEB128(input, &output);
+
+    EXPECT_THAT(ret, ::testing::Eq(1));
+    EXPECT_THAT(output, ::testing::Eq(1729));
+
+    char bufferUI[300];
+    uint64_to_str(bufferUI, sizeof(bufferUI), output);
+
+    auto expected = std::string("1729");
+    EXPECT_THAT(std::string(bufferUI), testing::Eq(expected)) << "decimal output not matching";
+}
+
+TEST(CRYPTO, extractBitsFromLEB128_big) {
+    uint8_t input[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01};
+    uint64_t output;
+
+    auto ret = decompressLEB128(input, &output);
+
+    EXPECT_THAT(ret, ::testing::Eq(1));
+    EXPECT_THAT(output, ::testing::Eq(18446744073709551615u));
+
+    char bufferUI[300];
+    uint64_to_str(bufferUI, sizeof(bufferUI), output);
+
+    auto expected = std::string("18446744073709551615");
+    EXPECT_THAT(std::string(bufferUI), testing::Eq(expected)) << "decimal output not matching";
+}
+
+TEST(CRYPTO, extractBitsFromLEB128_tooBig) {
+    uint8_t input[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x02};
+    uint64_t output;
+
+    auto ret = decompressLEB128(input, &output);
+
+    EXPECT_THAT(ret, ::testing::Eq(0));
+    EXPECT_THAT(output, ::testing::Eq(0));
+
+    char bufferUI[300];
+    uint64_to_str(bufferUI, sizeof(bufferUI), output);
+
+    auto expected = std::string("0");
+    EXPECT_THAT(std::string(bufferUI), testing::Eq(expected)) << "decimal output not matching";
 }
