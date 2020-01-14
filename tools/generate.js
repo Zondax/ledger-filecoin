@@ -1,8 +1,8 @@
 const fs = require('fs');
 const cbor = require('cbor');
-const varint = require('varint');
 const blake2 = require('blake2');
 const base32Encode = require('base32-encode');
+const leb128 = require('@webassemblyjs/leb128');
 
 function bigintToArray(v) {
     tmp = BigInt(v).toString(16);
@@ -12,7 +12,7 @@ function bigintToArray(v) {
 }
 
 function toCBOR(message) {
-    let answer = []
+    let answer = [];
 
 
     // "to" field
@@ -52,18 +52,19 @@ function formatAddress(a) {
     let formattedAddress = "f";
     addressBuffer = Buffer.from(a, 'hex');
 
-    if ( addressBuffer.length < 1) {
+    if (addressBuffer.length < 1) {
         // empty address
         return "";
     }
 
-    if (addressBuffer[0] == 0x00) {
+    if (addressBuffer[0] === 0x00) {
         formattedAddress += "0";
-        let result = varint.decode(addressBuffer.slice(1))
+        let result = leb128.decodeUInt64(addressBuffer, 1).value;
+
         formattedAddress += result;
     } else {
 
-        switch(addressBuffer[0]) {
+        switch (addressBuffer[0]) {
             case 0x01:
                 formattedAddress += "1";
                 break;
@@ -78,8 +79,8 @@ function formatAddress(a) {
         let h = blake2.createHash('blake2b', {digestLength: 4});
         h.update(addressBuffer);
         let cksm = h.digest();
-        let b = Buffer.concat([addressBuffer.slice(1), cksm])
-        let result = base32Encode(b, 'RFC3548', { padding: false });
+        let b = Buffer.concat([addressBuffer.slice(1), cksm]);
+        let result = base32Encode(b, 'RFC3548', {padding: false});
 
         formattedAddress += result.toLowerCase();
 

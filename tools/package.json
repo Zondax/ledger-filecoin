@@ -5,7 +5,7 @@
     "base32-encode": "^1.1.1",
     "blake2": "^4.0.0",
     "cbor": "^5.0.1",
-    "varint": "^5.0.0"
+    "@webassemblyjs/leb128": "^1.8.5"
   },
   "scripts": {
     "generate": "node generate.js"

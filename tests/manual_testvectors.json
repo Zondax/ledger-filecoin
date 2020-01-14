@@ -53,7 +53,7 @@
     },
     {
         "description": "Using Protocol 0 addresses 3",
-        "to": "f018446744073709552000",
+        "to": "f018446744073709551615",
         "from": "f00",
         "nonce": 1,
         "value": "100000",
@@ -284,5 +284,18 @@
         "encoded_tx": "h1gyAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABYMgMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUMBhqBCCcRCYagA",
         "valid": false,
         "encoded_tx_hex": "87583203000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005832030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001430186a04209c44261a800"
+    },
+    {
+        "description": "Address with unknown protocol",
+        "to": "faaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaryyc34i",
+        "from": "faaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaryyc34i",
+        "nonce": 1,
+        "value": "100000",
+        "gasprice": "2500",
+        "gaslimit": "25000",
+        "method": 0,
+        "encoded_tx": "h1UEAAAAAAAAAAAAAAAAAAAAAAAAAABVBAAAAAAAAAAAAAAAAAAAAAAAAAAAAUMBhqBCCcRCYagA",
+        "valid": false,
+        "encoded_tx_hex": "87550400000000000000000000000000000000000000005504000000000000000000000000000000000000000001430186a04209c44261a800"
     }
 ]
