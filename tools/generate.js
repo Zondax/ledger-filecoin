@@ -8,7 +8,8 @@ function bigintToArray(v) {
     tmp = BigInt(v).toString(16);
     // not sure why it is not padding and buffer does not like it
     if (tmp.length % 2 === 1) tmp = "0" + tmp;
-    return Buffer.from(tmp, "hex");
+    // Adding byte sign
+    return Buffer.concat([Buffer.from("00", "hex"), Buffer.from(tmp, "hex")]);
 }
 
 function toCBOR(message) {
