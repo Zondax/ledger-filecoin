@@ -274,6 +274,18 @@
     "method" : 0,
     "encoded_tx": "",
     "valid": false
+  },
+  {
+    "description": "Negative sign byte",
+    "to": "01d1500504e4d1ac3e89ac891a4502586fabd9b417",
+    "from": "01b882619d46558f3d9e316d11b48dcf211327026a",
+    "nonce": 1,
+    "value" : "-100000",
+    "gasprice" : "2500",
+    "gaslimit" : "25000",
+    "method" : 0,
+    "encoded_tx": "",
+    "valid": false
   }
 ]
 

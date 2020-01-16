@@ -9,7 +9,11 @@ function bigintToArray(v) {
     // not sure why it is not padding and buffer does not like it
     if (tmp.length % 2 === 1) tmp = "0" + tmp;
     // Adding byte sign
-    return Buffer.concat([Buffer.from("00", "hex"), Buffer.from(tmp, "hex")]);
+    let signByte = "00";
+    if (v < 0) {
+        signByte = "01";
+    }
+    return Buffer.concat([Buffer.from(signByte, "hex"), Buffer.from(tmp, "hex")]);
 }
 
 function toCBOR(message) {
