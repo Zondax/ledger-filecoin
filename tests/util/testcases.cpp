@@ -98,8 +98,8 @@ std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &j) {
 
     addTo(answer, "5 | Gas Limit : {}", FormatAmount(j["gaslimit"].asString()));
 
-    if (j["method"] == 0) {
-        addTo(answer, "6 | Method : No Method");
+    if (j["method"] != 0) {
+        addTo(answer, "6 | Method : Some method");
     }
 
     // If 0 we have a no parameters

@@ -5,10 +5,24 @@ const base32Encode = require('base32-encode');
 const leb128 = require('@webassemblyjs/leb128');
 
 function bigintToArray(v) {
-    tmp = BigInt(v).toString(16);
-    // not sure why it is not padding and buffer does not like it
-    if (tmp.length % 2 === 1) tmp = "0" + tmp;
-    return Buffer.from(tmp, "hex");
+    let tmp;
+
+    // Adding byte sign
+    let signByte = "00";
+    if (BigInt(v) < 0) {
+        signByte = "01";
+    }
+
+    if (v == "") {
+        // to test with null bigint
+        return Buffer.from(signByte, "hex");
+    } else {
+        tmp = BigInt(v).toString(16);
+        // not sure why it is not padding and buffer does not like it
+        if (tmp.length % 2 === 1) tmp = "0" + tmp;
+    }
+
+    return Buffer.concat([Buffer.from(signByte, "hex"), Buffer.from(tmp, "hex")]);
 }
 
 function toCBOR(message) {
@@ -42,6 +56,8 @@ function toCBOR(message) {
     if (message.params) {
         // "params"
         answer.push(message.params);
+    } else {
+        answer.push(Buffer.alloc(0));
     }
 
 
