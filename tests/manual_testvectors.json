@@ -310,5 +310,18 @@
         "encoded_tx": "h1UB0VAFBOTRrD6JrIkaRQJYb6vZtBdVAbiCYZ1GVY89njFtEbSNzyETJwJqAUEBQwAJxEMAYagA",
         "valid": false,
         "encoded_tx_hex": "875501d1500504e4d1ac3e89ac891a4502586fabd9b4175501b882619d46558f3d9e316d11b48dcf211327026a014101430009c4430061a800"
+    },
+    {
+        "description": "Empty value",
+        "to": "f12fiakbhe2gwd5cnmrenekasyn6v5tnaxaqizq6a",
+        "from": "f1xcbgdhkgkwht3hrrnui3jdopeejsoatkzmoltqy",
+        "nonce": 1,
+        "value": "",
+        "gasprice": "2500",
+        "gaslimit": "25000",
+        "method": 0,
+        "encoded_tx": "h1UB0VAFBOTRrD6JrIkaRQJYb6vZtBdVAbiCYZ1GVY89njFtEbSNzyETJwJqAUEAQwAJxEMAYagA",
+        "valid": false,
+        "encoded_tx_hex": "875501d1500504e4d1ac3e89ac891a4502586fabd9b4175501b882619d46558f3d9e316d11b48dcf211327026a014100430009c4430061a800"
     }
 ]
