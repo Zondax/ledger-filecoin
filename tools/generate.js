@@ -56,6 +56,8 @@ function toCBOR(message) {
     if (message.params) {
         // "params"
         answer.push(message.params);
+    } else {
+        answer.push(Buffer.alloc(0));
     }
 
 

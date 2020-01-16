@@ -23,6 +23,8 @@ set(CMAKE_CXX_STANDARD 11)
 include(cmake/conan/CMakeLists.txt)
 add_subdirectory(cmake/gtest)
 
+add_definitions(-DNDEBUG)
+
 string(APPEND CMAKE_CXX_FLAGS " -fsanitize=address -fno-omit-frame-pointer")
 string(APPEND CMAKE_LINKER_FLAGS " -fsanitize=address -fno-omit-frame-pointer")
 

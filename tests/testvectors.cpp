@@ -73,6 +73,31 @@ void check_testcase(const testcase_t &testcase) {
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 
+class KnownIssuesTests : public ::testing::TestWithParam<testcase_t> {
+public:
+    struct PrintToStringParamName {
+        template<class ParamType>
+        std::string operator()(const testing::TestParamInfo<ParamType> &info) const {
+            auto p = static_cast<testcase_t>(info.param);
+            std::stringstream ss;
+            ss << std::setfill('0') << std::setw(5) << p.index << "_" << p.description;
+            return ss.str();
+        }
+    };
+};
+
+INSTANTIATE_TEST_SUITE_P(
+        KnownIssues,
+        KnownIssuesTests,
+        ::testing::ValuesIn(GetJsonTestCases("issues_testvectors.json")), KnownIssuesTests::PrintToStringParamName()
+);
+
+TEST_P(KnownIssuesTests, CheckUIOutput_Manual) { check_testcase(GetParam()); }
+
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+
 class ManualTests : public ::testing::TestWithParam<testcase_t> {
 public:
     struct PrintToStringParamName {
