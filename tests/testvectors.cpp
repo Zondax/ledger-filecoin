@@ -32,7 +32,12 @@ void check_testcase(const testcase_t &testcase) {
     parser_error_t err;
 
     // Define mainnet or testnet through derivation path
-    bip44Path[1] = tc.testnet ? BIP44_1_TESTNET : BIP44_1_DEFAULT;
+    bip44Path[0] = BIP44_0_DEFAULT;
+    bip44Path[1] = BIP44_1_DEFAULT;
+    if (tc.testnet) {
+        bip44Path[0] = BIP44_0_TESTNET;
+        bip44Path[1] = BIP44_1_TESTNET;
+    }
 
     auto buffer = prepareBlob(tc.encoded_tx);
 
