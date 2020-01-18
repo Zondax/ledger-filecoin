@@ -10,6 +10,7 @@
         "method": 0,
         "encoded_tx": "iFUBYFX4eMzkUraMsLeLqqimg6cSS2VVASMIDACm8q1tEAM+jnMvR3rzdcOtAEIAAkIAA0MAA+gAQA==",
         "valid": true,
+        "testnet": false,
         "encoded_tx_hex": "8855016055f878cce452b68cb0b78baaa8a683a7124b65550123080c00a6f2ad6d10033e8e732f477af375c3ad00420002420003430003e80040"
     }
 ]

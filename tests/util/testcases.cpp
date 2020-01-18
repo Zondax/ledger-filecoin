@@ -20,7 +20,6 @@
 #include <fmt/core.h>
 #include <gtest/gtest.h>
 #include <algorithm>
-#include <parser_txdef.h>
 
 bool TestcaseIsValid(const Json::Value &tc) {
     return true;
@@ -134,6 +133,7 @@ testcaseData_t ReadTestCaseData(const std::shared_ptr<Json::Value> &jsonSource, 
             v["method"].asUInt64(),
             v["encoded_tx"].asString(),
             v["valid"].asBool() && TestcaseIsValid(v),
+            v["testnet"].asBool(),
             GenerateExpectedUIOutput(v)
     };
 }
