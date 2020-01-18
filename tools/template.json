@@ -26,7 +26,7 @@
     "testnet" : false
   },
   {
-    "description": "Basic test case - Testnet",
+    "description": "Basic test case Testnet",
     "to": "01FD1D0F4DFCD7E99AFCB99A8326B7DC459D32C628",
     "from": "01B882619D46558F3D9E316D11B48DCF211327025A",
     "nonce": 1,
