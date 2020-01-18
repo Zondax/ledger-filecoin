@@ -64,8 +64,12 @@ function toCBOR(message) {
     return cbor.encode(answer);
 }
 
-function formatAddress(a) {
+function formatAddress(a, testnet) {
     let formattedAddress = "f";
+    if (testnet) {
+        formattedAddress = "t";
+    }
+
     addressBuffer = Buffer.from(a, 'hex');
 
     if (addressBuffer.length < 1) {
@@ -113,8 +117,8 @@ jsonData.forEach(tc => {
     let cborBuf = toCBOR(tc);
 
     // Format address
-    tc["to"] = formatAddress(tc["to"]);
-    tc["from"] = formatAddress(tc["from"]);
+    tc["to"] = formatAddress(tc["to"], tc["testnet"]);
+    tc["from"] = formatAddress(tc["from"], tc["testnet"]);
 
     tc['encoded_tx'] = cborBuf.toString('base64');
     tc['encoded_tx_hex'] = cborBuf.toString('hex');

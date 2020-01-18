@@ -29,6 +29,7 @@ typedef struct {
 
     std::string encoded_tx;
     bool valid;
+    bool testnet;
     std::vector<std::string> expected_ui_output;
 } testcaseData_t;
 
