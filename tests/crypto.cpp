@@ -40,22 +40,30 @@ TEST(CRYPTO, fillAddress) {
 
     uint16_t addrLen = crypto_fillAddress(buffer, 100);
 
-    EXPECT_THAT(addrLen, ::testing::Eq(74));
+    EXPECT_THAT(addrLen, ::testing::Eq(97));
 
     std::cout << std::endl;
 
     char pk[100];
     array_to_hexstr(pk, buffer, 33);
-    char *addr = (char *) (buffer + 33);
+    uint8_t *addrByte = (buffer + 33 + 1);
+    char addrByteToHexStr[21];
+    array_to_hexstr(addrByteToHexStr, addrByte, 21);
+    char *addrString = (char *) (addrByte + 21 + 1);
 
     EXPECT_THAT(std::string(pk),
                 ::testing::Eq("03CD4569C4FE16556D74DFD1372A2F3AE7B6C43121C7C2902F9AE935B80A7C254B"));
 
-    EXPECT_THAT(std::string(addr),
+    EXPECT_THAT(std::string(addrByteToHexStr),
+                ::testing::Eq("01cea85dd723499eec84db41cadb28f7d8d8cf31cf"));
+
+
+    EXPECT_THAT(std::string(addrString),
                 ::testing::Eq("f1z2uf3vzdjgpozbg3ihfnwkhx3dmm6mop6d4vlii"));
 
     std::cout << pk << std::endl;
-    std::cout << addr << std::endl;
+    std::cout << addrByteToHexStr << std::endl;
+    std::cout << addrString << std::endl;
 }
 
 /// Test that we can generate the address from a known mnemonic (use default = test mnemonic)
@@ -66,22 +74,29 @@ TEST(CRYPTO, fillAddressTestMnemonic) {
 
     uint16_t addrLen = crypto_fillAddress(buffer, 100);
 
-    EXPECT_THAT(addrLen, ::testing::Eq(74));
+    EXPECT_THAT(addrLen, ::testing::Eq(97));
 
     std::cout << std::endl;
 
     char pk[100];
     array_to_hexstr(pk, buffer, 33);
-    char *addr = (char *) (buffer + 33);
+    uint8_t *addrByte = (buffer + 33 + 1);
+    char addrByteToHexStr[21];
+    array_to_hexstr(addrByteToHexStr, addrByte, 21);
+    char *addrString = (char *) (addrByte + 21 + 1);
 
     EXPECT_THAT(std::string(pk),
                 ::testing::Eq("8D16D62802CA55326EC52BF76A8543B90E2ABA5BCF6CD195C0D6FC1EF38FA1B300"));
 
-    EXPECT_THAT(std::string(addr),
+    EXPECT_THAT(std::string(addrByteToHexStr),
+                ::testing::Eq("012f611293c5ca653cf74b48f9f3123c09242fa746"));
+
+    EXPECT_THAT(std::string(addrString),
                 ::testing::Eq("f1f5qrfe6fzjstz52ljd47ger4besc7j2gzz3e4ea"));
 
     std::cout << pk << std::endl;
-    std::cout << addr << std::endl;
+    std::cout << addrByteToHexStr << std::endl;
+    std::cout << addrString << std::endl;
 }
 
 TEST(CRYPTO, extractBitsFromLEB128_small) {
