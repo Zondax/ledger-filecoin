@@ -25,6 +25,7 @@ using ::testing::TestWithParam;
 using ::testing::Values;
 
 extern const char *crypto_testPubKey;
+#define ADDRESS_BYTE_TO_STRING_LEN    (42 + 1)
 
 /// Test that we can generate the address from a known mnemonic
 TEST(CRYPTO, fillAddress) {
@@ -47,7 +48,7 @@ TEST(CRYPTO, fillAddress) {
     char pk[100];
     array_to_hexstr(pk, buffer, 33);
     uint8_t *addrByte = (buffer + 33 + 1);
-    char addrByteToHexStr[21];
+    char addrByteToHexStr[ADDRESS_BYTE_TO_STRING_LEN];
     array_to_hexstr(addrByteToHexStr, addrByte, 21);
     char *addrString = (char *) (addrByte + 21 + 1);
 
@@ -55,7 +56,7 @@ TEST(CRYPTO, fillAddress) {
                 ::testing::Eq("03CD4569C4FE16556D74DFD1372A2F3AE7B6C43121C7C2902F9AE935B80A7C254B"));
 
     EXPECT_THAT(std::string(addrByteToHexStr),
-                ::testing::Eq("01cea85dd723499eec84db41cadb28f7d8d8cf31cf"));
+                ::testing::Eq("01CEA85DD723499EEC84DB41CADB28F7D8D8CF31CF"));
 
 
     EXPECT_THAT(std::string(addrString),
@@ -81,7 +82,7 @@ TEST(CRYPTO, fillAddressTestMnemonic) {
     char pk[100];
     array_to_hexstr(pk, buffer, 33);
     uint8_t *addrByte = (buffer + 33 + 1);
-    char addrByteToHexStr[21];
+    char addrByteToHexStr[ADDRESS_BYTE_TO_STRING_LEN];
     array_to_hexstr(addrByteToHexStr, addrByte, 21);
     char *addrString = (char *) (addrByte + 21 + 1);
 
@@ -89,7 +90,7 @@ TEST(CRYPTO, fillAddressTestMnemonic) {
                 ::testing::Eq("8D16D62802CA55326EC52BF76A8543B90E2ABA5BCF6CD195C0D6FC1EF38FA1B300"));
 
     EXPECT_THAT(std::string(addrByteToHexStr),
-                ::testing::Eq("012f611293c5ca653cf74b48f9f3123c09242fa746"));
+                ::testing::Eq("012F611293C5CA653CF74B48F9F3123C09242FA746"));
 
     EXPECT_THAT(std::string(addrString),
                 ::testing::Eq("f1f5qrfe6fzjstz52ljd47ger4besc7j2gzz3e4ea"));
