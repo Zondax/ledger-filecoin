@@ -49,3 +49,4 @@ build/
 \deps/nano2-sdk
 
 tests/peda-session-unknown.txt
+.venv/

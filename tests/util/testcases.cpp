@@ -95,7 +95,7 @@ std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &j) {
 
     addTo(answer, "4 | Gas Price : {}", FormatAmount(j["gasprice"].asString()));
 
-    addTo(answer, "5 | Gas Limit : {}", FormatAmount(j["gaslimit"].asString()));
+    addTo(answer, "5 | Gas Limit : {}", j["gaslimit"].asString());
 
     if (j["method"] != 0) {
         addTo(answer, "6 | Method : Some method");
