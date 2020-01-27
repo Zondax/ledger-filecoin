@@ -163,3 +163,21 @@ TEST(CRYPTO, extractBitsFromLEB128_tooBig) {
     auto expected = std::string("0");
     EXPECT_THAT(std::string(bufferUI), testing::Eq(expected)) << "decimal output not matching";
 }
+
+TEST(CRYPTO, prepareMessageDigest) {
+    uint8_t input[61];
+    auto inputLen = parseHexString("885501FD1D0F4DFCD7E99AFCB99A8326B7DC459D32C6285501B882619D46558F3D9E316D11B48DCF211327025A0144000186A0430009C4430061A80040", 122, input);
+
+    uint8_t output[32];
+    auto err = prepareDigestToSign(input, inputLen, output, sizeof(output));
+
+    char message_digest[100];
+    array_to_hexstr(message_digest, output, 32);
+    std::cout << message_digest << std::endl;
+
+    EXPECT_THAT(std::string(message_digest),
+                ::testing::Eq("5A51287D2E5401B75014DA0F050C8DB96FE0BACDAD75FCE964520CA063B697E1"));
+
+    EXPECT_THAT(err, ::testing::Eq(0));
+
+}
