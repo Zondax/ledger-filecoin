@@ -26,7 +26,8 @@ namespace {
     TEST(CBORParserTest, MinimalListTest) {
         // [1,2,3]
         uint8_t inBuffer[100];
-        auto inBufferLen = parseHexString("83010203", inBuffer);
+        const char *tmp = "83010203";
+        auto inBufferLen = parseHexString(tmp, strlen(tmp), inBuffer);
 
         CborParser parser;
         CborValue it;
@@ -87,7 +88,8 @@ namespace {
     TEST(CBORParserTest, MinimalDictTest) {
         // { "x" : 1, "y" : 2, "z" : "test" }
         uint8_t inBuffer[100];
-        auto inBufferLen = parseHexString("A3617801617902617A6474657374", inBuffer);
+        const char *tmp = "A3617801617902617A6474657374";
+        auto inBufferLen = parseHexString(tmp, strlen(tmp), inBuffer);
 
         CborParser parser;
         CborValue it;
