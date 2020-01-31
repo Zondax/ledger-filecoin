@@ -29,7 +29,7 @@ extern const char *crypto_testPubKey;
 
 /// Test that we can generate the address from a known mnemonic
 TEST(CRYPTO, fillAddress) {
-    uint8_t buffer[100];
+    uint8_t buffer[200];
 
 // FIXME: use real values from Lotus and confirm functionality
 //    wage retreat alpha skull cactus inform device despair finish enforce chief young
@@ -37,30 +37,30 @@ TEST(CRYPTO, fillAddress) {
 //    Public key (hex): 03cd4569c4fe16556d74dfd1372a2f3ae7b6c43121c7c2902f9ae935b80a7c254b
 //    Address: f1Z2UF3VZDJGPOZBG3IHFNWKHX3DMM6MOPKFHQOYY
 
-    crypto_testPubKey = "03cd4569c4fe16556d74dfd1372a2f3ae7b6c43121c7c2902f9ae935b80a7c254b";
+    crypto_testPubKey = "0466f2bdb19e90fd7c29e4bf63612eb98515e5163c97888042364ba777d818e88b765c649056ba4a62292ae4e2ccdabd71b845d8fa0991c140f664d2978ac0972a";
 
-    uint16_t addrLen = crypto_fillAddress(buffer, 100);
+    uint16_t addrLen = crypto_fillAddress(buffer, sizeof(buffer));
 
-    EXPECT_THAT(addrLen, ::testing::Eq(97));
+    ASSERT_THAT(addrLen, ::testing::Eq(129));
 
     std::cout << std::endl;
 
-    char pk[100];
-    array_to_hexstr(pk, buffer, 33);
-    uint8_t *addrByte = (buffer + 33 + 1);
+    char pk[200];
+    array_to_hexstr(pk, sizeof(pk), buffer, PK_LEN);
+    uint8_t *addrByte = (buffer + PK_LEN + 1);
     char addrByteToHexStr[ADDRESS_BYTE_TO_STRING_LEN];
-    array_to_hexstr(addrByteToHexStr, addrByte, 21);
+    array_to_hexstr(addrByteToHexStr, sizeof(addrByteToHexStr), addrByte, 21);
     char *addrString = (char *) (addrByte + 21 + 1);
 
     EXPECT_THAT(std::string(pk),
-                ::testing::Eq("03CD4569C4FE16556D74DFD1372A2F3AE7B6C43121C7C2902F9AE935B80A7C254B"));
+                ::testing::Eq("0466F2BDB19E90FD7C29E4BF63612EB98515E5163C97888042364BA777D818E88B765C649056BA4A62292AE4E2CCDABD71B845D8FA0991C140F664D2978AC0972A"));
 
     EXPECT_THAT(std::string(addrByteToHexStr),
-                ::testing::Eq("01CEA85DD723499EEC84DB41CADB28F7D8D8CF31CF"));
+                ::testing::Eq("01DFE49184D46ADC8F89D44638BEB45F78FCAD2590"));
 
 
     EXPECT_THAT(std::string(addrString),
-                ::testing::Eq("f1z2uf3vzdjgpozbg3ihfnwkhx3dmm6mop6d4vlii"));
+                ::testing::Eq("f137sjdbgunloi7couiy4l5nc7pd6k2jmq32vizpy"));
 
     std::cout << pk << std::endl;
     std::cout << addrByteToHexStr << std::endl;
@@ -69,31 +69,31 @@ TEST(CRYPTO, fillAddress) {
 
 /// Test that we can generate the address from a known mnemonic (use default = test mnemonic)
 TEST(CRYPTO, fillAddressTestMnemonic) {
-    uint8_t buffer[100];
+    uint8_t buffer[200];
 
     crypto_testPubKey = nullptr;   // Use default test mnemonic
 
-    uint16_t addrLen = crypto_fillAddress(buffer, 100);
+    uint16_t addrLen = crypto_fillAddress(buffer, sizeof(buffer));
 
-    EXPECT_THAT(addrLen, ::testing::Eq(97));
+    ASSERT_THAT(addrLen, ::testing::Eq(129));
 
     std::cout << std::endl;
 
-    char pk[100];
-    array_to_hexstr(pk, buffer, 33);
-    uint8_t *addrByte = (buffer + 33 + 1);
+    char pk[200];
+    array_to_hexstr(pk, sizeof(pk), buffer, PK_LEN);
+    uint8_t *addrByte = (buffer + PK_LEN + 1);
     char addrByteToHexStr[ADDRESS_BYTE_TO_STRING_LEN];
-    array_to_hexstr(addrByteToHexStr, addrByte, 21);
+    array_to_hexstr(addrByteToHexStr, sizeof(addrByteToHexStr), addrByte, 21);
     char *addrString = (char *) (addrByte + 21 + 1);
 
     EXPECT_THAT(std::string(pk),
-                ::testing::Eq("8D16D62802CA55326EC52BF76A8543B90E2ABA5BCF6CD195C0D6FC1EF38FA1B300"));
+                ::testing::Eq("0466F2BDB19E90FD7C29E4BF63612EB98515E5163C97888042364BA777D818E88B765C649056BA4A62292AE4E2CCDABD71B845D8FA0991C140F664D2978AC0972A"));
 
     EXPECT_THAT(std::string(addrByteToHexStr),
-                ::testing::Eq("012F611293C5CA653CF74B48F9F3123C09242FA746"));
+                ::testing::Eq("01DFE49184D46ADC8F89D44638BEB45F78FCAD2590"));
 
     EXPECT_THAT(std::string(addrString),
-                ::testing::Eq("f1f5qrfe6fzjstz52ljd47ger4besc7j2gzz3e4ea"));
+                ::testing::Eq("f137sjdbgunloi7couiy4l5nc7pd6k2jmq32vizpy"));
 
     std::cout << pk << std::endl;
     std::cout << addrByteToHexStr << std::endl;
@@ -172,7 +172,7 @@ TEST(CRYPTO, prepareMessageDigest) {
     auto err = prepareDigestToSign(input, inputLen, output, sizeof(output));
 
     char message_digest[100];
-    array_to_hexstr(message_digest, output, 32);
+    array_to_hexstr(message_digest, sizeof(message_digest), output, 32);
     std::cout << message_digest << std::endl;
 
     EXPECT_THAT(std::string(message_digest),
