@@ -23,8 +23,6 @@ set(CMAKE_CXX_STANDARD 11)
 include(cmake/conan/CMakeLists.txt)
 add_subdirectory(cmake/gtest)
 
-add_definitions(-DNDEBUG)
-
 string(APPEND CMAKE_CXX_FLAGS " -fsanitize=address -fno-omit-frame-pointer")
 string(APPEND CMAKE_LINKER_FLAGS " -fsanitize=address -fno-omit-frame-pointer")
 
@@ -50,10 +48,6 @@ file(GLOB_RECURSE LIB_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/src/ledger/src/lib/parser_impl.c
         )
 
-file(GLOB_RECURSE TESTS_SRC
-        ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp)
-
-
 add_library(cbor_parser STATIC ${LIB_SRC} ${TINYCBOR_SRC})
 target_include_directories(cbor_parser PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/src/ledger/deps/tinycbor/src
@@ -63,7 +57,11 @@ target_include_directories(cbor_parser PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/BLAKE/ref
         )
 
-set(JSON_BuildTests OFF CACHE INTERNAL "")
+##############################################################
+##############################################################
+#  Tests
+file(GLOB_RECURSE TESTS_SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp)
 
 add_executable(unittests ${TESTS_SRC})
 target_include_directories(unittests PUBLIC

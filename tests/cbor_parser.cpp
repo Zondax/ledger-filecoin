@@ -27,7 +27,7 @@ namespace {
         // [1,2,3]
         uint8_t inBuffer[100];
         const char *tmp = "83010203";
-        auto inBufferLen = parseHexString(tmp, strlen(tmp), inBuffer);
+        auto inBufferLen = parseHexString(inBuffer, sizeof(inBuffer), tmp);
 
         CborParser parser;
         CborValue it;
@@ -89,7 +89,7 @@ namespace {
         // { "x" : 1, "y" : 2, "z" : "test" }
         uint8_t inBuffer[100];
         const char *tmp = "A3617801617902617A6474657374";
-        auto inBufferLen = parseHexString(tmp, strlen(tmp), inBuffer);
+        auto inBufferLen = parseHexString(inBuffer, sizeof(inBuffer), tmp);
 
         CborParser parser;
         CborValue it;
