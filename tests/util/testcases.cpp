@@ -65,44 +65,47 @@ std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &j) {
         return answer;
     }
 
+    auto message = j["message"];
     uint8_t dummy;
 
-    if (j["to"].asString().length() > 40) {
-        addTo(answer, "0 | To : {}", FormatAddress(j["to"].asString(), 0, &dummy));
-        addTo(answer, "0 | To : {}", FormatAddress(j["to"].asString(), 1, &dummy));
-        if (j["to"].asString().length() > 80) {
-            addTo(answer, "0 | To : {}", FormatAddress(j["to"].asString(), 2, &dummy));
+    auto to = message["to"].asString();
+    if (to.length() > 40) {
+        addTo(answer, "0 | To : {}", FormatAddress(to, 0, &dummy));
+        addTo(answer, "0 | To : {}", FormatAddress(to, 1, &dummy));
+        if (to.length() > 80) {
+            addTo(answer, "0 | To : {}", FormatAddress(to, 2, &dummy));
         }
     } else {
         // To print protocol 0 addresses which seems to be always less than 20char
-        addTo(answer, "0 | To : {}", FormatAddress(j["to"].asString(), 0, &dummy));
+        addTo(answer, "0 | To : {}", FormatAddress(to, 0, &dummy));
     }
 
-    if (j["from"].asString().length() > 40) {
-        addTo(answer, "1 | From : {}", FormatAddress(j["from"].asString(), 0, &dummy));
-        addTo(answer, "1 | From : {}", FormatAddress(j["from"].asString(), 1, &dummy));
-        if (j["to"].asString().length() > 80) {
-            addTo(answer, "1 | From : {}", FormatAddress(j["from"].asString(), 2, &dummy));
+    auto from = message["from"].asString();
+    if (from.length() > 40) {
+        addTo(answer, "1 | From : {}", FormatAddress(from, 0, &dummy));
+        addTo(answer, "1 | From : {}", FormatAddress(from, 1, &dummy));
+        if (from.length() > 80) {
+            addTo(answer, "1 | From : {}", FormatAddress(from, 2, &dummy));
         }
     } else {
         // To print protocol 0 addresses which seems to be always less than 20char
-        addTo(answer, "1 | From : {}", FormatAddress(j["from"].asString(), 0, &dummy));
+        addTo(answer, "1 | From : {}", FormatAddress(from, 0, &dummy));
     }
 
-    addTo(answer, "2 | Nonce : {}", j["nonce"].asUInt64());
+    addTo(answer, "2 | Nonce : {}", message["nonce"].asUInt64());
 
-    addTo(answer, "3 | Value : {}", FormatAmount(j["value"].asString()));
+    addTo(answer, "3 | Value : {}", FormatAmount(message["value"].asString()));
 
-    addTo(answer, "4 | Gas Price : {}", FormatAmount(j["gasprice"].asString()));
+    addTo(answer, "4 | Gas Price : {}", FormatAmount(message["gasprice"].asString()));
 
-    addTo(answer, "5 | Gas Limit : {}", j["gaslimit"].asString());
+    addTo(answer, "5 | Gas Limit : {}", message["gaslimit"].asString());
 
-    if (j["method"] != 0) {
+    if (message["method"] != 0) {
         addTo(answer, "6 | Method : Some method");
     }
 
     // If 0 we have a no parameters
-    if (j["method"] != 0) {
+    if (message["method"] != 0) {
         addTo(answer, "7 | Params :  ");
     }
 
@@ -121,16 +124,18 @@ testcaseData_t ReadTestCaseData(const std::shared_ptr<Json::Value> &jsonSource, 
     }
     description.erase(remove_if(description.begin(), description.end(), isspace), description.end());
 
+    auto message = v["message"];
+
     return {
             description,
             //////
-            v["to"].asString(),
-            v["from"].asString(),
-            v["nonce"].asUInt64(),
-            v["value"].asString(),
-            v["gasprice"].asString(),
-            v["gaslimit"].asString(),
-            v["method"].asUInt64(),
+            message["to"].asString(),
+            message["from"].asString(),
+            message["nonce"].asUInt64(),
+            message["value"].asString(),
+            message["gasprice"].asString(),
+            message["gaslimit"].asString(),
+            message["method"].asUInt64(),
             v["encoded_tx"].asString(),
             v["valid"].asBool() && TestcaseIsValid(v),
             v["testnet"].asBool(),

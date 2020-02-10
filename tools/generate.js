@@ -13,7 +13,7 @@ function bigintToArray(v) {
         signByte = "01";
     }
 
-    if (v == "") {
+    if (v === "") {
         // to test with null bigint
         return Buffer.from(signByte, "hex");
     } else {
@@ -25,41 +25,40 @@ function bigintToArray(v) {
     return Buffer.concat([Buffer.from(signByte, "hex"), Buffer.from(tmp, "hex")]);
 }
 
-function toCBOR(message) {
+function toCBOR(tc) {
     let answer = [];
 
 
     // "to" field
-    answer.push(Buffer.from(message.to, 'hex'));
+    answer.push(Buffer.from(tc.message.to, 'hex'));
 
     // "from" field
-    answer.push(Buffer.from(message.from, 'hex'));
+    answer.push(Buffer.from(tc.message.from, 'hex'));
 
     // "nonce" field
-    answer.push(message.nonce);
+    answer.push(tc.message.nonce);
 
     // "value"
-    buf = bigintToArray(message.value);
+    let buf = bigintToArray(tc.message.value);
     answer.push(buf);
 
     // "gasprice"
-    buf = bigintToArray(message.gasprice);
+    buf = bigintToArray(tc.message.gasprice);
     answer.push(buf);
 
     // "gaslimit"
-    buf = bigintToArray(message.gaslimit);
+    buf = bigintToArray(tc.message.gaslimit);
     answer.push(buf);
 
     // "method"
-    answer.push(message.method);
+    answer.push(tc.message.method);
 
-    if (message.params) {
+    if (tc.message.params) {
         // "params"
-        answer.push(message.params);
+        answer.push(tc.message.params);
     } else {
         answer.push(Buffer.alloc(0));
     }
-
 
     return cbor.encode(answer);
 }
@@ -70,7 +69,7 @@ function formatAddress(a, testnet) {
         formattedAddress = "t";
     }
 
-    addressBuffer = Buffer.from(a, 'hex');
+    let addressBuffer = Buffer.from(a, 'hex');
 
     if (addressBuffer.length < 1) {
         // empty address
@@ -117,8 +116,8 @@ jsonData.forEach(tc => {
     let cborBuf = toCBOR(tc);
 
     // Format address
-    tc["to"] = formatAddress(tc["to"], tc["testnet"]);
-    tc["from"] = formatAddress(tc["from"], tc["testnet"]);
+    tc.message["to"] = formatAddress(tc.message.to, tc.testnet);
+    tc.message["from"] = formatAddress(tc.message.from, tc.testnet);
 
     tc['encoded_tx'] = cborBuf.toString('base64');
     tc['encoded_tx_hex'] = cborBuf.toString('hex');
