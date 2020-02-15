@@ -103,3 +103,6 @@ dev_ca2:
 
 dev_ca_delete2:
 	@python -m ledgerblue.resetCustomCA --targetId 0x33000004
+
+update_zxlib:
+	rsync -a --exclude='.git/' ../ledger-zxlib src/ledger/deps/

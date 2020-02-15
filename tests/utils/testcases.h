@@ -13,14 +13,11 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
-
 #pragma once
+#include <json/json.h>
+#include <fstream>
+#include "types.h"
 
-#include <lib/parser_impl.h>
-#include <vector>
+testcaseData_t ReadTestCaseData(const std::shared_ptr<Json::Value>& jsonSource, int index);
 
-#define EXPECT_EQ_STR(_STR1, _STR2, _ERROR_MESSAGE) { if (_STR1 != nullptr & _STR2 != nullptr) \
-EXPECT_TRUE(!strcmp(_STR1, _STR2)) << _ERROR_MESSAGE << ", expected: " << _STR2 << ", received: " << _STR1; \
-else FAIL() << "One of the strings is null"; }
-
-std::vector<std::string> dumpUI(parser_context_t *ctx, uint16_t maxKeyLen, uint16_t maxValueLen);
+std::vector<testcase_t> GetJsonTestCases(const std::string& filename);
