@@ -1,3 +1,5 @@
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cert-err58-cpp"
 /*******************************************************************************
 *   (c) 2019 ZondaX GmbH
 *
@@ -15,12 +17,12 @@
 ********************************************************************************/
 
 #include <gmock/gmock.h>
-#include "util/testcases.h"
+#include "utils/testcases.h"
 
 #include <iostream>
 #include <memory>
 #include "lib/parser.h"
-#include "util/common.h"
+#include "utils/common.h"
 
 using ::testing::TestWithParam;
 using ::testing::Values;
@@ -32,16 +34,14 @@ void check_testcase(const testcase_t &testcase) {
     parser_error_t err;
 
     // Define mainnet or testnet through derivation path
-    bip44Path[0] = BIP44_0_DEFAULT;
-    bip44Path[1] = BIP44_1_DEFAULT;
+    hdPath[0] = HDPATH_0_DEFAULT;
+    hdPath[1] = HDPATH_1_DEFAULT;
     if (tc.testnet) {
-        bip44Path[0] = BIP44_0_TESTNET;
-        bip44Path[1] = BIP44_1_TESTNET;
+        hdPath[0] = HDPATH_0_TESTNET;
+        hdPath[1] = HDPATH_1_TESTNET;
     }
 
-    auto buffer = prepareBlob(tc.encoded_tx);
-
-    err = parser_parse(&ctx, buffer.data(), buffer.size());
+    err = parser_parse(&ctx, tc.blob.data(), tc.blob.size());
     if (tc.valid) {
         ASSERT_EQ(err, parser_ok) << parser_getErrorDescription(err);
     } else {
@@ -81,7 +81,7 @@ void check_testcase(const testcase_t &testcase) {
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 
-class KnownIssuesTests : public ::testing::TestWithParam<testcase_t> {
+class VerifyTestVectors : public ::testing::TestWithParam<testcase_t> {
 public:
     struct PrintToStringParamName {
         template<class ParamType>
@@ -96,33 +96,16 @@ public:
 
 INSTANTIATE_TEST_SUITE_P(
         KnownIssues,
-        KnownIssuesTests,
-        ::testing::ValuesIn(GetJsonTestCases("issues_testvectors.json")), KnownIssuesTests::PrintToStringParamName()
+        VerifyTestVectors,
+        ::testing::ValuesIn(GetJsonTestCases("testvectors/issues.json")), VerifyTestVectors::PrintToStringParamName()
 );
-
-TEST_P(KnownIssuesTests, CheckUIOutput_Manual) { check_testcase(GetParam()); }
-
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-
-class ManualTests : public ::testing::TestWithParam<testcase_t> {
-public:
-    struct PrintToStringParamName {
-        template<class ParamType>
-        std::string operator()(const testing::TestParamInfo<ParamType> &info) const {
-            auto p = static_cast<testcase_t>(info.param);
-            std::stringstream ss;
-            ss << std::setfill('0') << std::setw(5) << p.index << "_" << p.description;
-            return ss.str();
-        }
-    };
-};
 
 INSTANTIATE_TEST_SUITE_P(
-        Manual,
-        ManualTests,
-        ::testing::ValuesIn(GetJsonTestCases("manual_testvectors.json")), ManualTests::PrintToStringParamName()
+        Multisig,
+        VerifyTestVectors,
+        ::testing::ValuesIn(GetJsonTestCases("testvectors/manual.json")), VerifyTestVectors::PrintToStringParamName()
 );
 
-TEST_P(ManualTests, CheckUIOutput_Manual) { check_testcase(GetParam()); }
+TEST_P(VerifyTestVectors, CheckUIOutput_Manual) { check_testcase(GetParam()); }
+
+#pragma clang diagnostic pop

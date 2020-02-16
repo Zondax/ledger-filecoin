@@ -14,8 +14,6 @@
 *  limitations under the License.
 ********************************************************************************/
 #pragma once
-#include <json/json.h>
-#include <fstream>
 
 typedef struct {
     std::string description;
@@ -30,6 +28,8 @@ typedef struct {
     std::string encoded_tx;
     bool valid;
     bool testnet;
+
+    std::vector<uint8_t> blob;
     std::vector<std::string> expected_ui_output;
 } testcaseData_t;
 
@@ -38,12 +38,3 @@ typedef struct {
     int64_t index;
     std::string description;
 } testcase_t;
-
-std::vector<uint8_t> prepareBlob(const std::string &base64Cbor);
-
-testcaseData_t ReadTestCaseData(const std::shared_ptr<Json::Value>& jsonSource, int index);
-
-std::vector<testcase_t> GetJsonTestCases(const std::string& filename);
-
-std::vector<std::string> GenerateExpectedUIOutput(const Json::Value& j);
-
