@@ -34,11 +34,11 @@ void check_testcase(const testcase_t &testcase) {
     parser_error_t err;
 
     // Define mainnet or testnet through derivation path
-    bip44Path[0] = BIP44_0_DEFAULT;
-    bip44Path[1] = BIP44_1_DEFAULT;
+    hdPath[0] = HDPATH_0_DEFAULT;
+    hdPath[1] = HDPATH_1_DEFAULT;
     if (tc.testnet) {
-        bip44Path[0] = BIP44_0_TESTNET;
-        bip44Path[1] = BIP44_1_TESTNET;
+        hdPath[0] = HDPATH_0_TESTNET;
+        hdPath[1] = HDPATH_1_TESTNET;
     }
 
     err = parser_parse(&ctx, tc.blob.data(), tc.blob.size());
