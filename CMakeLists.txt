@@ -30,22 +30,21 @@ string(APPEND CMAKE_LINKER_FLAGS " -fsanitize=address -fno-omit-frame-pointer")
 ##############################################################
 #  static libs
 file(GLOB_RECURSE TINYCBOR_SRC
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/ledger/deps/tinycbor/src/cborparser.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/ledger/deps/tinycbor/src/cborvalidation.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/tinycbor/src/cborparser.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/tinycbor/src/cborvalidation.c
         )
 
 file(GLOB_RECURSE LIB_SRC
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/BLAKE/ref/blake2b-ref.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/ledger/src/lib/crypto.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/ledger/src/lib/base32.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/ledger/deps/ledger-zxlib/src/hexutils.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/ledger/deps/ledger-zxlib/src/bignum.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/ledger/deps/ledger-zxlib/src/zxmacros.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/ledger/deps/ledger-zxlib/hexutils.c
-        ${CMAKE_CURRENT_SOURCE_DIR}src/ledger/src/lib/crypto.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/BLAKE2/ref/blake2b-ref.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/src/hexutils.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/src/bignum.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/src/zxmacros.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/hexutils.c
         #########
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/ledger/src/lib/parser.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/ledger/src/lib/parser_impl.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/lib/base32.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/lib/crypto.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/lib/parser.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/lib/parser_impl.c
         )
 
 add_library(app_lib STATIC
@@ -54,11 +53,11 @@ add_library(app_lib STATIC
         )
 
 target_include_directories(app_lib PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/ledger/deps/ledger-zxlib/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/ledger/src
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/ledger/src/lib
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/ledger/deps/tinycbor/src
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/BLAKE/ref
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/BLAKE2/ref
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/tinycbor/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/lib
         )
 
 ##############################################################
@@ -73,8 +72,8 @@ target_include_directories(unittests PUBLIC
         ${gmock_SOURCE_DIR}/include
         ${CONAN_INCLUDE_DIRS_FMT}
         ${CONAN_INCLUDE_DIRS_JSONCPP}
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/BLAKE/ref
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/ledger/deps/tinycbor/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/BLAKE2/ref
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/tinycbor/src
         )
 
 target_link_libraries(unittests PRIVATE
