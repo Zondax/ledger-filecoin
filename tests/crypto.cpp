@@ -18,7 +18,7 @@
 
 #include <iostream>
 #include <hexutils.h>
-#include <lib/crypto.h>
+#include <crypto.h>
 #include <bignum.h>
 
 using ::testing::TestWithParam;

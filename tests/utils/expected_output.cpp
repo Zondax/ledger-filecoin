@@ -14,7 +14,7 @@
 *  limitations under the License.
 ********************************************************************************/
 #include <fmt/core.h>
-#include <lib/coin.h>
+#include <coin.h>
 #include "testcases.h"
 #include "zxmacros.h"
 

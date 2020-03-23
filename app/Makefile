@@ -1,7 +1,7 @@
 #*******************************************************************************
 #   Ledger App
+#   (c) 2020 ZondaX GmbH
 #   (c) 2017 Ledger
-#   (c) 2018 ZondaX GmbH
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -27,8 +27,8 @@ include $(BOLOS_SDK)/Makefile.defines
 # Main app configuration
 APPNAME = "Filecoin"
 APPVERSION_M=0
-APPVERSION_N=10
-APPVERSION_P=3
+APPVERSION_N=11
+APPVERSION_P=0
 
 APPPATH = "44'/461'"
 APP_LOAD_PARAMS = --appFlags 0x200 --delete $(COMMON_LOAD_PARAMS) --path ${APPPATH} --path "44'/1'"
@@ -56,7 +56,7 @@ all: default
 	@echo "APPHEX=\"" >> $(CURDIR)/pkg/zxtool.sh
 	@cat $(CURDIR)/bin/app.hex >> $(CURDIR)/pkg/zxtool.sh
 	@echo "\"" >> $(CURDIR)/pkg/zxtool.sh
-	@cat $(CURDIR)/scripts/template.sh >> $(CURDIR)/pkg/zxtool.sh
+	@cat $(CURDIR)/../deps/ledger-zxlib/scripts/template.sh >> $(CURDIR)/pkg/zxtool.sh
 	@chmod +x $(CURDIR)/pkg/zxtool.sh
 
 ############
@@ -100,8 +100,8 @@ DEFINES          += HAVE_UX_FLOW
 SDK_SOURCE_PATH  += lib_ux
 else
 # Assume Nano S
-DEFINES += IO_SEPROXYHAL_BUFFER_SIZE_B=128
-DEFINES += HAVE_BOLOS_UX COMPLIANCE_UX_160 HAVE_UX_LEGACY HAVE_UX_FLOW
+DEFINES       += IO_SEPROXYHAL_BUFFER_SIZE_B=128
+DEFINES       += HAVE_BOLOS_UX COMPLIANCE_UX_160 HAVE_UX_LEGACY HAVE_UX_FLOW
 endif
 
 # X specific
@@ -112,7 +112,7 @@ DEFINES   += LEDGER_SPECIFIC
 # Compiler, assembler, and linker
 
 ifneq ($(BOLOS_ENV),)
-$(info BOLOS_ENV=$(BOLOS_ENV))
+$(info BOLOS_ENV is $(BOLOS_ENV))
 CLANGPATH := $(BOLOS_ENV)/clang-arm-fropi/bin/
 GCCPATH := $(BOLOS_ENV)/gcc-arm-none-eabi-5_3-2016q1/bin/
 else
@@ -130,7 +130,7 @@ endif
 #########################
 
 CC := $(CLANGPATH)clang
-CFLAGS += -O3 -Os
+CFLAGS += -O3 -Os -Wno-unknown-pragmas
 
 AS := $(GCCPATH)arm-none-eabi-gcc
 AFLAGS +=
@@ -145,13 +145,13 @@ include $(BOLOS_SDK)/Makefile.glyphs
 APP_SOURCE_PATH += $(MY_DIR)/src
 APP_SOURCE_PATH += $(MY_DIR)/../deps/ledger-zxlib/include
 APP_SOURCE_PATH += $(MY_DIR)/../deps/ledger-zxlib/src
+APP_SOURCE_PATH += $(MY_DIR)/../deps/ledger-zxlib/app/common
 
 SDK_SOURCE_PATH += lib_stusb lib_u2f lib_stusb_impl
 
-# TODO: we need a fix in NanoX SDK for this to work because the X SDK is not +=
-INCLUDES_PATH += $(MY_DIR)/../deps/tinycbor/src
-SOURCE_FILES += $(MY_DIR)/../deps/tinycbor/src/cborparser.c
-SOURCE_FILES += $(MY_DIR)/../deps/tinycbor/src/cborvalidation.c
+# NanoX SDK does not allow += in APP_SOURCE_PATH or INCLUDES_PATH
+CFLAGS += -I$(MY_DIR)/../deps/tinycbor/src
+APP_SOURCE_PATH += $(MY_DIR)/../deps/tinycbor-ledger
 
 #SDK_SOURCE_PATH  += lib_blewbxx lib_blewbxx_impl
 SDK_SOURCE_PATH  += lib_ux
@@ -161,6 +161,16 @@ include $(BOLOS_SDK)/Makefile.rules
 
 #add dependency on custom makefile filename
 dep/%.d: %.c Makefile
+
+rust:
+	# Do nothing
+
+# load, delete and listvariants are provided to comply with Ledger requirements
+load:
+	python -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
+
+delete:
+	python -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)
 
 listvariants:
 	@echo VARIANTS COIN FIL

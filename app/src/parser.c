@@ -16,9 +16,8 @@
 
 #include <stdio.h>
 #include <zxmacros.h>
-#include "lib/parser_impl.h"
+#include "parser_impl.h"
 #include "bignum.h"
-#include "view_internal.h"
 #include "parser.h"
 #include "parser_txdef.h"
 #include "coin.h"

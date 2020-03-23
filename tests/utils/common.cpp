@@ -13,7 +13,7 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
-#include <lib/parser.h>
+#include <parser.h>
 #include <sstream>
 #include <string>
 #include "common.h"

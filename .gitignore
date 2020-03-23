@@ -81,4 +81,5 @@ cmake-build-fuzz/
 !\deps/nanos-secure-sdk
 !\deps/ledger-zxlib
 !\deps/tinycbor
+!\deps/tinycbor-ledger
 !\deps/BLAKE

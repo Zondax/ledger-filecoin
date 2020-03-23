@@ -21,7 +21,7 @@
 
 #include <iostream>
 #include <memory>
-#include "lib/parser.h"
+#include "parser.h"
 #include "utils/common.h"
 
 using ::testing::TestWithParam;

@@ -1,6 +1,5 @@
 /*******************************************************************************
-*   (c) 2019 ZondaX GmbH
-*   (c) 2016 Ledger
+*  (c) 2019 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -16,27 +15,34 @@
 ********************************************************************************/
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
+#include <stddef.h>
 
-#if defined(LEDGER_SPECIFIC)
-#include "bolos_target.h"
-#if defined(BOLOS_SDK)
-#include "os.h"
-#include "cx.h"
+#define HDPATH_0_DEFAULT     (0x80000000u | 0x2cu)
+#define HDPATH_1_DEFAULT     (0x80000000u | 0x1cdu)
+#define HDPATH_2_DEFAULT     (0x80000000u | 0u)
+#define HDPATH_3_DEFAULT     (0u)
+#define HDPATH_4_DEFAULT     (0u)
+
+#define HDPATH_0_TESTNET     (0x80000000u | 0x2cu)
+#define HDPATH_1_TESTNET     (0x80000000u | 0x1u)
+
+#define COIN_AMOUNT_DECIMAL_PLACES 18
+
+#define MENU_MAIN_APP_LINE1 "Filecoin"
+
+#ifdef TESTING_ENABLED
+#define MENU_MAIN_APP_LINE2 ""
+#else
+#define MENU_MAIN_APP_LINE2 "DRAFT Version"
 #endif
+
+#define VIEW_ADDRESS_BUFFER_OFFSET    (PK_LEN + ADDRESS_PROTOCOL_SECP256K1_PAYLOAD_LEN + ADDRESS_PROTOCOL_LEN + 2)
+
+#ifdef __cplusplus
+}
 #endif
-
-/// view_init (initializes UI)
-void view_init();
-
-/// view_idle_show (idle view - main menu + status)
-void view_idle_show(unsigned int ignored);
-
-/// view_error (error view)
-void view_error_show();
-
-// shows address in the screen
-void view_address_show();
-
-// Shows review screen + later sign menu
-void view_sign_show();
