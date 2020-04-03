@@ -54,7 +54,7 @@ typedef struct {
     uint64_t nonce;
     bigint_t value;
     bigint_t gasprice;
-    bigint_t gaslimit;
+    int64_t gaslimit;
     uint64_t method;
     // params are not supported at this moment
     // char *params

@@ -245,7 +245,7 @@ parser_error_t _read(const parser_context_t *c, parser_tx_t *v) {
     CHECK_CBOR_ERR(cbor_value_advance(&arrayContainer))
 
     // "gasLimit" field
-    CHECK_PARSER_ERR(_readBigInt(&v->gaslimit, &arrayContainer))
+    CHECK_PARSER_ERR(cbor_value_get_int64(&arrayContainer, &v->gaslimit))
     CHECK_CBOR_ERR(cbor_value_advance(&arrayContainer))
 
     // "method" field
