@@ -47,7 +47,7 @@ function toCBOR(tc) {
     answer.push(buf);
 
     // "gaslimit"
-    answer.push(tc.message.gaslimit);
+    answer.push( parseInt(tc.message.gaslimit, 10));
 
     // "method"
     answer.push(tc.message.method);

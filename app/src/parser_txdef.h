@@ -17,7 +17,6 @@
 
 #define CBOR_PARSER_MAX_RECURSIONS 4
 
-#include <cbor.h>
 #include <coin.h>
 #include <zxtypes.h>
 
