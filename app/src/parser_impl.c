@@ -17,13 +17,35 @@
 #include <zxmacros.h>
 #include "parser_impl.h"
 #include "parser_txdef.h"
-#include "cbor_helper.h"
+#include "cbor.h"
 
 parser_tx_t parser_tx_obj;
 
-parser_error_t parser_init_context(parser_context_t *ctx,
-                                   const uint8_t *buffer,
-                                   uint16_t bufferSize) {
+__Z_INLINE parser_error_t parser_mapCborError(CborError err);
+
+#define CHECK_CBOR_MAP_ERR(CALL) { \
+    CborError err = CALL;  \
+    if (err!=CborNoError) return parser_mapCborError(err);}
+
+#define PARSER_ASSERT_OR_ERROR(CALL, ERROR) if (!(CALL)) return ERROR;
+
+#define CHECK_CBOR_TYPE(type, expected) {if (type!=expected) return parser_unexpected_type;}
+
+#define INIT_CBOR_PARSER(c, it)  \
+    CborParser parser;           \
+    CHECK_CBOR_MAP_ERR(cbor_parser_init(c->buffer + c->offset, c->bufferLen - c->offset, 0, &parser, &it))
+
+__Z_INLINE parser_error_t _matchKey(CborValue *value, const char *expectedKey) {
+    CHECK_CBOR_TYPE(cbor_value_get_type(value), CborTextStringType)
+
+    bool result;
+    CHECK_CBOR_MAP_ERR(cbor_value_text_string_equals(value, expectedKey, &result))
+    PARSER_ASSERT_OR_ERROR(result, parser_unexpected_field)
+
+    return parser_ok;
+}
+
+parser_error_t parser_init_context(parser_context_t *ctx, const uint8_t *buffer, uint16_t bufferSize) {
     ctx->offset = 0;
 
     if (bufferSize == 0 || buffer == NULL) {
@@ -40,11 +62,21 @@ parser_error_t parser_init_context(parser_context_t *ctx,
 }
 
 parser_error_t parser_init(parser_context_t *ctx, const uint8_t *buffer, uint16_t bufferSize) {
-    parser_error_t err = parser_init_context(ctx, buffer, bufferSize);
-    if (err != parser_ok)
-        return err;
+    CHECK_PARSER_ERR(parser_init_context(ctx, buffer, bufferSize));
+    return parser_ok;
+}
 
-    return err;
+__Z_INLINE parser_error_t parser_mapCborError(CborError err) {
+    switch (err) {
+        case CborErrorUnexpectedEOF:
+            return parser_cbor_unexpected_EOF;
+        case CborErrorMapNotSorted:
+            return parser_cbor_not_canonical;
+        case CborNoError:
+            return parser_ok;
+        default:
+            return parser_cbor_unexpected;
+    }
 }
 
 const char *parser_getErrorDescription(parser_error_t err) {
@@ -107,41 +139,34 @@ const char *parser_getErrorDescription(parser_error_t err) {
 
 __Z_INLINE parser_error_t _readAddress(address_t *address, CborValue *value) {
     CHECK_CBOR_TYPE(cbor_value_get_type(value), CborByteStringType)
+
     CborValue dummy;
     MEMZERO(address, sizeof(address_t));
-    address->len = sizeof_field(address_t , buffer);
-    CHECK_CBOR_ERR(cbor_value_copy_byte_string(value, (uint8_t *) address->buffer, &address->len, &dummy))
+    address->len = sizeof_field(address_t, buffer);
 
-    if (address->len < 2) {
-        // Addresses are at least 2 characters Protocol + random data
-        return parser_invalid_address;
-    }
+    PARSER_ASSERT_OR_ERROR(cbor_value_is_byte_string(value), parser_unexpected_type)
+    CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(value, (uint8_t *) address->buffer, &address->len, &dummy))
+
+    // Addresses are at least 2 characters Protocol + random data
+    PARSER_ASSERT_OR_ERROR(address->len > 1, parser_invalid_address)
 
     // Verify size and protocol
     switch (address->buffer[0]) {
         case ADDRESS_PROTOCOL_ID:
             // protocol 0
-            if (address->len - 1 > 20 ) {
-                return parser_invalid_address;
-            }
+            PARSER_ASSERT_OR_ERROR(address->len - 1 < 21, parser_invalid_address)
             break;
         case ADDRESS_PROTOCOL_SECP256K1:
             // protocol 1
-            if (address->len - 1 != ADDRESS_PROTOCOL_SECP256K1_PAYLOAD_LEN) {
-                return parser_invalid_address;
-            }
+            PARSER_ASSERT_OR_ERROR(address->len - 1 == ADDRESS_PROTOCOL_SECP256K1_PAYLOAD_LEN, parser_invalid_address)
             break;
         case ADDRESS_PROTOCOL_ACTOR:
             // protocol 2
-            if (address->len - 1 != ADDRESS_PROTOCOL_ACTOR_PAYLOAD_LEN) {
-                return parser_invalid_address;
-            }
+            PARSER_ASSERT_OR_ERROR(address->len - 1 == ADDRESS_PROTOCOL_ACTOR_PAYLOAD_LEN, parser_invalid_address)
             break;
         case ADDRESS_PROTOCOL_BLS:
             // protocol 3
-            if (address->len -1 != ADDRESS_PROTOCOL_BLS_PAYLOAD_LEN) {
-                return parser_invalid_address;
-            }
+            PARSER_ASSERT_OR_ERROR(address->len - 1 == ADDRESS_PROTOCOL_BLS_PAYLOAD_LEN, parser_invalid_address)
             break;
         default:
             return parser_invalid_address;
@@ -153,49 +178,50 @@ __Z_INLINE parser_error_t _readAddress(address_t *address, CborValue *value) {
 __Z_INLINE parser_error_t _readBigInt(bigint_t *bigint, CborValue *value) {
     CHECK_CBOR_TYPE(cbor_value_get_type(value), CborByteStringType)
     CborValue dummy;
-    MEMZERO(bigint, sizeof(address_t));
-    bigint->len = sizeof_field(bigint_t , buffer);
-    CHECK_CBOR_ERR(cbor_value_copy_byte_string(value, (uint8_t *) bigint->buffer, &bigint->len, &dummy))
 
-    if (bigint->len == 0) {
-        // We have an empty value == zero
-        return parser_ok;
-    }
+    MEMZERO(bigint, sizeof(bigint_t));
+    bigint->len = sizeof_field(bigint_t, buffer);
 
-    if (bigint->len < 2) {
-        // We only have a byte sign, no good
-        return parser_unexpected_value;
-    }
+    PARSER_ASSERT_OR_ERROR(cbor_value_is_byte_string(value), parser_unexpected_type)
+    CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(value, (uint8_t *) bigint->buffer, &bigint->len, &dummy))
 
-    if (bigint->buffer[0] == 0x01) {
-        // negative bigint, should be positive
-        return parser_unexpected_value;
-    }
+    // We have an empty value so value is default (zero)
+    PARSER_ASSERT_OR_ERROR(bigint->len != 0, parser_ok)
+
+    // We only have a byte sign, no good
+    PARSER_ASSERT_OR_ERROR(bigint->len > 1, parser_unexpected_value)
+
+    // negative bigint, should be positive
+    PARSER_ASSERT_OR_ERROR(bigint->buffer[0] == 0x00, parser_unexpected_value)
 
     return parser_ok;
 }
 
-__Z_INLINE parser_error_t _readMethod(parser_tx_t *v, CborValue *it) {
+__Z_INLINE parser_error_t _readMethod(parser_tx_t *tx, CborValue *value) {
 
     uint64_t methodValue;
-    CHECK_CBOR_ERR(cbor_value_get_uint64(it, &methodValue))
+    PARSER_ASSERT_OR_ERROR(cbor_value_is_unsigned_integer(value), parser_unexpected_type)
+    CHECK_CBOR_MAP_ERR(cbor_value_get_uint64(value, &methodValue))
 
-    switch(methodValue) {
-        case method0:
-            CHECK_CBOR_ERR(cbor_value_advance(it))
-            CHECK_CBOR_TYPE(it->type, CborByteStringType)
+    switch (methodValue) {
+        case method0: {
+            PARSER_ASSERT_OR_ERROR(value->type != CborInvalidType, parser_unexpected_type)
+            CHECK_CBOR_MAP_ERR(cbor_value_advance(value))
+            CHECK_CBOR_TYPE(value->type, CborByteStringType)
 
             size_t arraySize;
-            cbor_value_get_string_length(it, &arraySize);
-            if (arraySize!=0) {
-                return parser_unexpected_number_items;
-            }
-        break;
+            PARSER_ASSERT_OR_ERROR(cbor_value_is_byte_string(value) || cbor_value_is_text_string(value), parser_unexpected_type)
+            CHECK_CBOR_MAP_ERR(cbor_value_get_string_length(value, &arraySize))
+
+            // method0 should have zero arguments
+            PARSER_ASSERT_OR_ERROR(arraySize == 0, parser_unexpected_number_items)
+            break;
+        }
         default:
             return parser_unexpected_method;
     }
 
-    v->method = methodValue;
+    tx->method = methodValue;
 
     return parser_ok;
 }
@@ -203,64 +229,64 @@ __Z_INLINE parser_error_t _readMethod(parser_tx_t *v, CborValue *it) {
 parser_error_t _read(const parser_context_t *c, parser_tx_t *v) {
     CborValue it;
     INIT_CBOR_PARSER(c, it)
-
-    if (cbor_value_at_end(&it)) {
-        return parser_unexpected_buffer_end;
-    }
+    PARSER_ASSERT_OR_ERROR(!cbor_value_at_end(&it), parser_unexpected_buffer_end)
 
     // It is an array
-    if (!cbor_value_is_array(&it)) {
-        return parser_unexpected_type;
-    }
-
+    PARSER_ASSERT_OR_ERROR(cbor_value_is_array(&it), parser_unexpected_type)
     size_t arraySize;
-    cbor_value_get_array_length(&it, &arraySize);
+    CHECK_CBOR_MAP_ERR(cbor_value_get_array_length(&it, &arraySize))
 
     // Depends if we have params or not
-    if (arraySize != 8 && arraySize != 7) {
-        return parser_unexpected_number_items;
-    }
+    PARSER_ASSERT_OR_ERROR(arraySize == 8 || arraySize == 7, parser_unexpected_number_items);
 
     CborValue arrayContainer;
-    CHECK_CBOR_ERR(cbor_value_enter_container(&it, &arrayContainer))
+    PARSER_ASSERT_OR_ERROR(cbor_value_is_container(&it), parser_unexpected_type)
+    CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&it, &arrayContainer))
 
     // "to" field
     CHECK_PARSER_ERR(_readAddress(&v->to, &arrayContainer))
-    CHECK_CBOR_ERR(cbor_value_advance(&arrayContainer))
+    PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
+    CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // "from" field
     CHECK_PARSER_ERR(_readAddress(&v->from, &arrayContainer))
-    CHECK_CBOR_ERR(cbor_value_advance(&arrayContainer))
+    PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
+    CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // "nonce" field
+    PARSER_ASSERT_OR_ERROR(cbor_value_is_unsigned_integer(&arrayContainer), parser_unexpected_type)
     CHECK_PARSER_ERR(cbor_value_get_uint64(&arrayContainer, &v->nonce))
-    CHECK_CBOR_ERR(cbor_value_advance(&arrayContainer))
+    PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
+    CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // "value" field
     CHECK_PARSER_ERR(_readBigInt(&v->value, &arrayContainer))
-    CHECK_CBOR_ERR(cbor_value_advance(&arrayContainer))
+    PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
+    CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // "gasPrice" field
     CHECK_PARSER_ERR(_readBigInt(&v->gasprice, &arrayContainer))
-    CHECK_CBOR_ERR(cbor_value_advance(&arrayContainer))
+    PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
+    CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // "gasLimit" field
-    CHECK_PARSER_ERR(_readBigInt(&v->gaslimit, &arrayContainer))
-    CHECK_CBOR_ERR(cbor_value_advance(&arrayContainer))
+    PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(&arrayContainer), parser_unexpected_type)
+    CHECK_PARSER_ERR(cbor_value_get_int64(&arrayContainer, &v->gaslimit))
+    PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
+    CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // "method" field
     CHECK_PARSER_ERR(_readMethod(v, &arrayContainer))
-    CHECK_CBOR_ERR(cbor_value_advance(&arrayContainer))
+    PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
+    CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // "params" field is consumed inside readMethod
+    PARSER_ASSERT_OR_ERROR(cbor_value_is_container(&it), parser_unexpected_type)
+    PARSER_ASSERT_OR_ERROR(arrayContainer.type == CborInvalidType, parser_unexpected_type)
+    CHECK_CBOR_MAP_ERR(cbor_value_leave_container(&it, &arrayContainer))
 
-    CHECK_CBOR_ERR(cbor_value_leave_container(&it, &arrayContainer))
-
-    // REVIEW: maybe use cbor_value_validate_basic to verify that there is no extra bytes
-    if (it.ptr != c->buffer + c->bufferLen) {
-        // End of buffer does not match end of parsed data
-        return parser_cbor_unexpected_EOF;
-    }
+    // End of buffer does not match end of parsed data
+    PARSER_ASSERT_OR_ERROR(it.ptr == c->buffer + c->bufferLen, parser_cbor_unexpected_EOF)
 
     return parser_ok;
 }
@@ -268,9 +294,6 @@ parser_error_t _read(const parser_context_t *c, parser_tx_t *v) {
 parser_error_t _validateTx(const parser_context_t *c, const parser_tx_t *v) {
     CborValue it;
     INIT_CBOR_PARSER(c, it)
-
-    // TODO: Complete this
-
     return parser_ok;
 }
 

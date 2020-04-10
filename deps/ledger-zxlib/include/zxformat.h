@@ -187,7 +187,7 @@ __Z_INLINE uint64_t uint64_from_BEarray(const uint8_t data[8]) {
     return result;
 }
 
-__Z_INLINE uint16_t array_to_hexstr(char *dst, uint16_t dstLen, const uint8_t *src, uint8_t count) {
+__Z_INLINE uint32_t array_to_hexstr(char *dst, uint16_t dstLen, const uint8_t *src, uint8_t count) {
 
     if (dstLen < (count * 2 + 1)) {
         return 0;
@@ -207,6 +207,7 @@ __Z_INLINE void pageStringExt(char *outValue, uint16_t outValueLen,
                               const char *inValue, uint16_t inValueLen,
                               uint8_t pageIdx, uint8_t *pageCount) {
     MEMZERO(outValue, outValueLen);
+    *pageCount = 0;
 
     outValueLen--;  // leave space for NULL termination
     if (outValueLen == 0) {
@@ -214,7 +215,6 @@ __Z_INLINE void pageStringExt(char *outValue, uint16_t outValueLen,
     }
 
     if (inValueLen == 0) {
-        *pageCount = 0;
         return;
     }
 

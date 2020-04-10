@@ -47,8 +47,7 @@ function toCBOR(tc) {
     answer.push(buf);
 
     // "gaslimit"
-    buf = bigintToArray(tc.message.gaslimit);
-    answer.push(buf);
+    answer.push( parseInt(tc.message.gaslimit, 10));
 
     // "method"
     answer.push(tc.message.method);
@@ -127,4 +126,4 @@ jsonData.forEach(tc => {
 
 let rawdata = JSON.stringify(newJsonData, null, 4);
 
-fs.writeFileSync('../tests/manual_testvectors.json', rawdata);
+fs.writeFileSync('../tests/testvectors/manual.json', rawdata);
