@@ -46,7 +46,6 @@ namespace {
         ASSERT_EQ(err, zxerr_out_of_bounds);
 
         std::cout << addr_out << std::endl;
-
     }
 
     TEST(BECH32, small_output) {
@@ -68,6 +67,5 @@ namespace {
         }
 
         std::cout << addr_out << std::endl;
-
     }
 }
