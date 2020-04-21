@@ -27,8 +27,8 @@ include $(BOLOS_SDK)/Makefile.defines
 # Main app configuration
 APPNAME = "Filecoin"
 APPVERSION_M=0
-APPVERSION_N=12
-APPVERSION_P=0
+APPVERSION_N=13
+APPVERSION_P=1
 
 APPPATH = "44'/461'"
 APP_LOAD_PARAMS = --appFlags 0x200 --delete $(COMMON_LOAD_PARAMS) --path ${APPPATH} --path "44'/1'"
@@ -79,7 +79,6 @@ DEFINES   += U2F_PROXY_MAGIC=\"FIL\"
 DEFINES   += USB_SEGMENT_SIZE=64
 DEFINES   += U2F_MAX_MESSAGE_SIZE=264 #257+5+2
 DEFINES   += HAVE_BOLOS_APP_STACK_CANARY
-DEFINES   += NDEBUG
 
 WEBUSB_URL     = www.ledgerwallet.com
 DEFINES       += HAVE_WEBUSB WEBUSB_URL_SIZE_B=$(shell echo -n $(WEBUSB_URL) | wc -c) WEBUSB_URL=$(shell echo -n $(WEBUSB_URL) | sed -e "s/./\\\'\0\\\',/g")
