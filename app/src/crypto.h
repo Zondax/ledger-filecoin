@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2019 ZondaX GmbH
+*   (c) 2019 Zondax GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -25,9 +25,6 @@
 extern "C" {
 #endif
 
-#define HDPATH_LEN_DEFAULT           5u
-#define SECP256K1_PK_LEN            65u
-#define PK_LEN                      SECP256K1_PK_LEN
 #define CHECKSUM_LENGTH             4
 
 extern uint32_t hdPath[HDPATH_LEN_DEFAULT];
