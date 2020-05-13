@@ -39,6 +39,7 @@ typedef enum {
     parser_cbor_unexpected_EOF,
     parser_cbor_not_canonical,
     // Coin specific
+    parser_unexpected_tx_version,
     parser_unexpected_type,
     parser_unexpected_method,
     parser_unexpected_buffer_end,

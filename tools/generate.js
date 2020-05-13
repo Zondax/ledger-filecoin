@@ -28,6 +28,8 @@ function bigintToArray(v) {
 function toCBOR(tc) {
     let answer = [];
 
+    // "version" field
+    answer.push(tc.message.version);
 
     // "to" field
     answer.push(Buffer.from(tc.message.to, 'hex'));

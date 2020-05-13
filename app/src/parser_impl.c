@@ -102,6 +102,8 @@ const char *parser_getErrorDescription(parser_error_t err) {
         case parser_cbor_unexpected_EOF:
             return "Unexpected CBOR EOF";
             // Coin specific
+        case parser_unexpected_tx_version:
+            return "tx version is not supported";
         case parser_unexpected_type:
             return "Unexpected data type";
         case parser_unexpected_method:
@@ -249,6 +251,10 @@ parser_error_t _read(const parser_context_t *c, parser_tx_t *v) {
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
+    if (v->version != COIN_SUPPORTED_TX_VERSION) {
+        return parser_unexpected_tx_version;
+    }
+
     // "to" field
     CHECK_PARSER_ERR(_readAddress(&v->to, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
@@ -298,8 +304,6 @@ parser_error_t _read(const parser_context_t *c, parser_tx_t *v) {
 }
 
 parser_error_t _validateTx(const parser_context_t *c, const parser_tx_t *v) {
-    CborValue it;
-    INIT_CBOR_PARSER(c, it)
     return parser_ok;
 }
 

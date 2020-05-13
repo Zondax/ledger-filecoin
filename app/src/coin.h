@@ -45,6 +45,8 @@ typedef enum {
 
 #define COIN_AMOUNT_DECIMAL_PLACES 18
 
+#define COIN_SUPPORTED_TX_VERSION           0
+
 #define MENU_MAIN_APP_LINE1 "Filecoin"
 #define MENU_MAIN_APP_LINE2 ""
 #define APPVERSION_LINE1 "Version"

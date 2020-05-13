@@ -46,8 +46,8 @@ TEST(CRYPTO, fillAddress) {
     std::cout << std::endl;
 
     char pk[200];
-    array_to_hexstr(pk, sizeof(pk), buffer, PK_LEN);
-    uint8_t *addrByte = (buffer + PK_LEN + 1);
+    array_to_hexstr(pk, sizeof(pk), buffer, SECP256K1_PK_LEN);
+    uint8_t *addrByte = (buffer + SECP256K1_PK_LEN + 1);
     char addrByteToHexStr[ADDRESS_BYTE_TO_STRING_LEN];
     array_to_hexstr(addrByteToHexStr, sizeof(addrByteToHexStr), addrByte, 21);
     char *addrString = (char *) (addrByte + 21 + 1);
@@ -80,8 +80,8 @@ TEST(CRYPTO, fillAddressTestMnemonic) {
     std::cout << std::endl;
 
     char pk[200];
-    array_to_hexstr(pk, sizeof(pk), buffer, PK_LEN);
-    uint8_t *addrByte = (buffer + PK_LEN + 1);
+    array_to_hexstr(pk, sizeof(pk), buffer, SECP256K1_PK_LEN);
+    uint8_t *addrByte = (buffer + SECP256K1_PK_LEN + 1);
     char addrByteToHexStr[ADDRESS_BYTE_TO_STRING_LEN];
     array_to_hexstr(addrByteToHexStr, sizeof(addrByteToHexStr), addrByte, 21);
     char *addrString = (char *) (addrByte + 21 + 1);
