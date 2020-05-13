@@ -1,5 +1,5 @@
 /*******************************************************************************
-*  (c) 2019 ZondaX GmbH
+*  (c) 2019 Zondax GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -102,6 +102,8 @@ const char *parser_getErrorDescription(parser_error_t err) {
         case parser_cbor_unexpected_EOF:
             return "Unexpected CBOR EOF";
             // Coin specific
+        case parser_unexpected_tx_version:
+            return "tx version is not supported";
         case parser_unexpected_type:
             return "Unexpected data type";
         case parser_unexpected_method:
@@ -237,11 +239,21 @@ parser_error_t _read(const parser_context_t *c, parser_tx_t *v) {
     CHECK_CBOR_MAP_ERR(cbor_value_get_array_length(&it, &arraySize))
 
     // Depends if we have params or not
-    PARSER_ASSERT_OR_ERROR(arraySize == 8 || arraySize == 7, parser_unexpected_number_items);
+    PARSER_ASSERT_OR_ERROR(arraySize == 9 || arraySize == 8, parser_unexpected_number_items);
 
     CborValue arrayContainer;
     PARSER_ASSERT_OR_ERROR(cbor_value_is_container(&it), parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&it, &arrayContainer))
+
+    // "version" field
+    PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(&arrayContainer), parser_unexpected_type)
+    CHECK_PARSER_ERR(cbor_value_get_int64(&arrayContainer, &v->version))
+    PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
+    CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
+
+    if (v->version != COIN_SUPPORTED_TX_VERSION) {
+        return parser_unexpected_tx_version;
+    }
 
     // "to" field
     CHECK_PARSER_ERR(_readAddress(&v->to, &arrayContainer))
@@ -270,7 +282,8 @@ parser_error_t _read(const parser_context_t *c, parser_tx_t *v) {
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // "gasLimit" field
-    CHECK_PARSER_ERR(_readBigInt(&v->gaslimit, &arrayContainer))
+    PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(&arrayContainer), parser_unexpected_type)
+    CHECK_PARSER_ERR(cbor_value_get_int64(&arrayContainer, &v->gaslimit))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
@@ -291,8 +304,6 @@ parser_error_t _read(const parser_context_t *c, parser_tx_t *v) {
 }
 
 parser_error_t _validateTx(const parser_context_t *c, const parser_tx_t *v) {
-    CborValue it;
-    INIT_CBOR_PARSER(c, it)
     return parser_ok;
 }
 

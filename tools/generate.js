@@ -28,6 +28,8 @@ function bigintToArray(v) {
 function toCBOR(tc) {
     let answer = [];
 
+    // "version" field
+    answer.push(tc.message.version);
 
     // "to" field
     answer.push(Buffer.from(tc.message.to, 'hex'));
@@ -47,8 +49,7 @@ function toCBOR(tc) {
     answer.push(buf);
 
     // "gaslimit"
-    buf = bigintToArray(tc.message.gaslimit);
-    answer.push(buf);
+    answer.push( parseInt(tc.message.gaslimit, 10));
 
     // "method"
     answer.push(tc.message.method);

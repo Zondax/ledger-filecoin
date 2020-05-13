@@ -1,5 +1,6 @@
 /*******************************************************************************
-*  (c) 2019 Zondax GmbH
+*   (c) 2018, 2019 Zondax GmbH
+*   (c) 2016 Ledger
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -13,26 +14,24 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
-#pragma once
 
-#include "parser_common.h"
-#include "parser_txdef.h"
+#include "view.h"
+#include "coin.h"
 #include "crypto.h"
+#include "view_internal.h"
+#include <os_io_seproxyhal.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <string.h>
+#include <stdio.h>
 
-extern parser_tx_t parser_tx_obj;
-
-parser_error_t parser_init(parser_context_t *ctx, const uint8_t *buffer, uint16_t bufferSize);
-
-parser_error_t _read(const parser_context_t *c, parser_tx_t *v);
-
-parser_error_t _validateTx(const parser_context_t *c, const parser_tx_t *v);
-
-uint8_t _getNumItems(const parser_context_t *c, const parser_tx_t *v);
-
-#ifdef __cplusplus
+view_error_t view_printAddr() {
+    snprintf(viewdata.addr, MAX_CHARS_ADDR, "%s", (char *) (G_io_apdu_buffer + VIEW_ADDRESS_OFFSET_SECP256K1));
+    splitValueField();
+    return view_no_error;
 }
-#endif
+
+view_error_t view_printPath() {
+    bip32_to_str(viewdata.addr, MAX_CHARS_ADDR, hdPath, HDPATH_LEN_DEFAULT);
+    splitValueField();
+    return view_no_error;
+}

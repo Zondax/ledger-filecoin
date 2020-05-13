@@ -1,5 +1,5 @@
 /*******************************************************************************
-*  (c) 2019 ZondaX GmbH
+*  (c) 2019 Zondax GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -46,14 +46,15 @@ typedef struct {
     size_t len;
 } bigint_t;
 
-// https://github.com/filecoin-project/lotus/blob/65c669b0f2dfd8c28b96755e198b9cdaf0880df8/chain/types/message.go#L14-L27
+// https://github.com/filecoin-project/lotus/blob/eb4f4675a5a765e4898ec6b005ba2e80da8e7e1a/chain/types/message.go#L24-L39
 typedef struct {
+    int64_t version;
     address_t to;
     address_t from;
     uint64_t nonce;
     bigint_t value;
     bigint_t gasprice;
-    bigint_t gaslimit;
+    int64_t gaslimit;
     uint64_t method;
     // params are not supported at this moment
     // char *params

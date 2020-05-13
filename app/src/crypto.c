@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2019 ZondaX GmbH
+*   (c) 2019 Zondax GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -34,21 +34,21 @@ void crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *p
     cx_ecfp_private_key_t cx_privateKey;
     uint8_t privateKeyData[32];
 
-    if (pubKeyLen < PK_LEN) {
+    if (pubKeyLen < SECP256K1_PK_LEN) {
         return;
     }
 
     BEGIN_TRY
     {
         TRY {
-            SAFE_HEARTBEAT(os_perso_derive_node_bip32(CX_CURVE_256K1,
-                                                      path,
-                                                      HDPATH_LEN_DEFAULT,
-                                                      privateKeyData, NULL));
+            os_perso_derive_node_bip32(CX_CURVE_256K1,
+                                       path,
+                                       HDPATH_LEN_DEFAULT,
+                                       privateKeyData, NULL);
 
-            SAFE_HEARTBEAT(cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey));
-            SAFE_HEARTBEAT(cx_ecfp_init_public_key(CX_CURVE_256K1, NULL, 0, &cx_publicKey));
-            SAFE_HEARTBEAT(cx_ecfp_generate_pair(CX_CURVE_256K1, &cx_publicKey, &cx_privateKey, 1));
+            cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey);
+            cx_ecfp_init_public_key(CX_CURVE_256K1, NULL, 0, &cx_publicKey);
+            cx_ecfp_generate_pair(CX_CURVE_256K1, &cx_publicKey, &cx_privateKey, 1);
         }
         FINALLY {
             MEMZERO(&cx_privateKey, sizeof(cx_privateKey));
@@ -57,7 +57,7 @@ void crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *p
     }
     END_TRY;
 
-    memcpy(pubKey, cx_publicKey.W, PK_LEN);
+    memcpy(pubKey, cx_publicKey.W, SECP256K1_PK_LEN);
 }
 
 __Z_INLINE int blake_hash(const unsigned char *in, unsigned int inLen,
@@ -99,8 +99,8 @@ uint16_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *m
     uint8_t tmp[BLAKE2B_256_SIZE];
     uint8_t message_digest[BLAKE2B_256_SIZE];
 
-    SAFE_HEARTBEAT(blake_hash(message, messageLen, tmp, BLAKE2B_256_SIZE));
-    SAFE_HEARTBEAT(blake_hash_cid(tmp, BLAKE2B_256_SIZE, message_digest, BLAKE2B_256_SIZE));
+    blake_hash(message, messageLen, tmp, BLAKE2B_256_SIZE);
+    blake_hash_cid(tmp, BLAKE2B_256_SIZE, message_digest, BLAKE2B_256_SIZE);
 
     cx_ecfp_private_key_t cx_privateKey;
     uint8_t privateKeyData[32];
@@ -114,24 +114,22 @@ uint16_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *m
         TRY
         {
             // Generate keys
-            SAFE_HEARTBEAT(os_perso_derive_node_bip32(CX_CURVE_256K1,
+            os_perso_derive_node_bip32(CX_CURVE_256K1,
                                                       hdPath,
                                                       HDPATH_LEN_DEFAULT,
-                                                      privateKeyData, NULL));
+                                                      privateKeyData, NULL);
 
-            SAFE_HEARTBEAT(cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey));
+            cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey);
 
             // Sign
-            SAFE_HEARTBEAT(
-                signatureLength = cx_ecdsa_sign(&cx_privateKey,
-                                                CX_RND_RFC6979 | CX_LAST,
-                                                CX_BLAKE2B,
-                                                message_digest,
-                                                BLAKE2B_256_SIZE,
-                                                signature->der_signature,
-                                                sizeof_field(signature_t, der_signature),
-                                                &info));
-
+            signatureLength = cx_ecdsa_sign(&cx_privateKey,
+                                            CX_RND_RFC6979 | CX_LAST,
+                                            CX_BLAKE2B,
+                                            message_digest,
+                                            BLAKE2B_256_SIZE,
+                                            signature->der_signature,
+                                            sizeof_field(signature_t, der_signature),
+                                            &info);
         }
         FINALLY {
             MEMZERO(&cx_privateKey, sizeof(cx_privateKey));
@@ -197,7 +195,7 @@ __Z_INLINE int blake_hash_cid(const unsigned char *in, unsigned int inLen,
 }
 
 int prepareDigestToSign(const unsigned char *in, unsigned int inLen,
-                  unsigned char *out, unsigned int outLen) {
+                        unsigned char *out, unsigned int outLen) {
 
     uint8_t tmp[BLAKE2B_256_SIZE];
 
@@ -323,7 +321,7 @@ uint16_t formatProtocol(const uint8_t *addressBytes,
 }
 
 typedef struct {
-    uint8_t publicKey[PK_LEN];
+    uint8_t publicKey[SECP256K1_PK_LEN];
 
     // payload as described in https://filecoin-project.github.io/specs/#protocol-1-libsecpk1-elliptic-curve-public-keys
     // payload [prot][hashed(pk)]       // 1 + 20
@@ -347,7 +345,7 @@ uint16_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len) {
     // addr bytes
     answer->addrBytesLen = sizeof_field(answer_t, addrBytes);
     answer->addrBytes[0] = ADDRESS_PROTOCOL_SECP256K1;
-    blake_hash(answer->publicKey, PK_LEN, answer->addrBytes + 1, answer->addrBytesLen - 1);
+    blake_hash(answer->publicKey, SECP256K1_PK_LEN, answer->addrBytes + 1, answer->addrBytesLen - 1);
 
     // addr str
     answer->addrStrLen = sizeof_field(answer_t, addrStr);

@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2019 ZondaX GmbH
+*   (c) 2019 Zondax GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -186,7 +186,11 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
 
     if (displayIdx == 5) {
         snprintf(outKey, outKeyLen, "Gas Limit");
-        return parser_printBigInt(&parser_tx_obj.gaslimit, outVal, outValLen, pageIdx, pageCount);
+        if (int64_to_str(outVal, outValLen, parser_tx_obj.gaslimit) != NULL) {
+            return parser_unexepected_error;
+        }
+        *pageCount = 1;
+        return parser_ok;
     }
 
     if (displayIdx == 6 && parser_tx_obj.method != method0) {
