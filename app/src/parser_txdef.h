@@ -46,8 +46,9 @@ typedef struct {
     size_t len;
 } bigint_t;
 
-// https://github.com/filecoin-project/lotus/blob/65c669b0f2dfd8c28b96755e198b9cdaf0880df8/chain/types/message.go#L14-L27
+// https://github.com/filecoin-project/lotus/blob/eb4f4675a5a765e4898ec6b005ba2e80da8e7e1a/chain/types/message.go#L24-L39
 typedef struct {
+    int64_t version;
     address_t to;
     address_t from;
     uint64_t nonce;

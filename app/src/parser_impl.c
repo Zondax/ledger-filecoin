@@ -237,11 +237,17 @@ parser_error_t _read(const parser_context_t *c, parser_tx_t *v) {
     CHECK_CBOR_MAP_ERR(cbor_value_get_array_length(&it, &arraySize))
 
     // Depends if we have params or not
-    PARSER_ASSERT_OR_ERROR(arraySize == 8 || arraySize == 7, parser_unexpected_number_items);
+    PARSER_ASSERT_OR_ERROR(arraySize == 9 || arraySize == 8, parser_unexpected_number_items);
 
     CborValue arrayContainer;
     PARSER_ASSERT_OR_ERROR(cbor_value_is_container(&it), parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&it, &arrayContainer))
+
+    // "version" field
+    PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(&arrayContainer), parser_unexpected_type)
+    CHECK_PARSER_ERR(cbor_value_get_int64(&arrayContainer, &v->version))
+    PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
+    CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // "to" field
     CHECK_PARSER_ERR(_readAddress(&v->to, &arrayContainer))
