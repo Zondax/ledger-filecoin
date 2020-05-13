@@ -276,7 +276,8 @@ parser_error_t _read(const parser_context_t *c, parser_tx_t *v) {
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // "gasLimit" field
-    CHECK_PARSER_ERR(_readBigInt(&v->gaslimit, &arrayContainer))
+    PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(&arrayContainer), parser_unexpected_type)
+    CHECK_PARSER_ERR(cbor_value_get_int64(&arrayContainer, &v->gaslimit))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
