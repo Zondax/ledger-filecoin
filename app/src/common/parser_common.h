@@ -22,9 +22,10 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
-#define CHECK_PARSER_ERR(CALL) { \
-    parser_error_t err = CALL;  \
-    if (err!=parser_ok) return err;}
+#define CHECK_PARSER_ERR(__CALL) { \
+    parser_error_t __err = __CALL;  \
+    CHECK_APP_CANARY()  \
+    if (__err!=parser_ok) return __err;}
 
 typedef enum {
     // Generic errors

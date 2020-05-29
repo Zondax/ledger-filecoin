@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2019 Zondax GmbH
+*   (c) 2018 Zondax GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -15,12 +15,6 @@
 ********************************************************************************/
 #pragma once
 
-#include <stdint.h>
-
-void app_sign();
-
-uint8_t app_fill_address();
-
-void app_reply_address();
-
-void app_reply_error();
+#define ZXLIB_MAJOR     2
+#define ZXLIB_MINOR     0
+#define ZXLIB_PATCH     0

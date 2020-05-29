@@ -1,0 +1,217 @@
+import jest, {expect} from "jest";
+import Zemu from "@zondax/zemu";
+import FilecoinApp from "@zondax/ledger-filecoin";
+
+const Resolve = require("path").resolve;
+const APP_PATH = Resolve("../app/bin/app.elf");
+
+const APP_SEED = "equip will roof matter pink blind book anxiety banner elbow sun young"
+const sim_options = {
+    logging: true,
+    start_delay: 3000,
+    custom: `-s "${APP_SEED}"`
+//    , X11: true
+};
+
+jest.setTimeout(15000)
+
+function compareSnapshots(snapshotPrefixTmp, snapshotPrefixGolden, snapshotCount) {
+    for (let i = 0; i < snapshotCount; i++) {
+        const img1 = Zemu.LoadPng2RGB(`${snapshotPrefixTmp}${i}.png`);
+        const img2 = Zemu.LoadPng2RGB(`${snapshotPrefixGolden}${i}.png`);
+        expect(img1).toEqual(img2);
+    }
+}
+
+describe('Basic checks', function () {
+    it('can start and stop container', async function () {
+        const sim = new Zemu(APP_PATH);
+        try {
+            await sim.start(sim_options);
+        } finally {
+            await sim.close();
+        }
+    });
+
+    it('app version', async function () {
+        const sim = new Zemu(APP_PATH);
+        try {
+            await sim.start(sim_options);
+            const app = new FilecoinApp(sim.getTransport());
+            const resp = await app.getVersion();
+
+            console.log(resp);
+
+            expect(resp.return_code).toEqual(0x9000);
+            expect(resp.error_message).toEqual("No errors");
+            expect(resp).toHaveProperty("test_mode");
+            expect(resp).toHaveProperty("major");
+            expect(resp).toHaveProperty("minor");
+            expect(resp).toHaveProperty("patch");
+        } finally {
+            await sim.close();
+        }
+    });
+
+    it('device info', async function () {
+        const sim = new Zemu(APP_PATH);
+        try {
+            await sim.start(sim_options);
+            const app = new FilecoinApp(sim.getTransport());
+            const resp = await app.deviceInfo();
+
+            console.log(resp);
+
+            expect(resp.return_code).toEqual(0x9000);
+            expect(resp.error_message).toEqual("No errors");
+            expect(resp).toHaveProperty("targetId");
+            expect(resp).toHaveProperty("seVersion");
+            expect(resp).toHaveProperty("flag");
+            expect(resp).toHaveProperty("mcuVersion");
+        } finally {
+            await sim.close();
+        }
+    });
+
+    it('get address', async function () {
+        const sim = new Zemu(APP_PATH);
+        try {
+            await sim.start(sim_options);
+            const app = new FilecoinApp(sim.getTransport());
+
+            const path = "m/44'/461'/5'/0/3";
+            const resp = await app.getAddressAndPubKey(path);
+
+            console.log(resp)
+
+            expect(resp.return_code).toEqual(0x9000);
+            expect(resp.error_message).toEqual("No errors");
+
+            const expected_address_string = "f1mk3zcefvlgpay4f32c5vmruk5gqig6dumc7pz6q";
+            const expected_pk = "0425d0dbeedb2053e690a58e9456363158836b1361f30dba0332f440558fa803d056042b50d0e70e4a2940428e82c7cea54259d65254aed4663e4d0cffd649f4fb";
+
+            expect(resp.addrString).toEqual(expected_address_string);
+            expect(resp.compressed_pk.toString('hex')).toEqual(expected_pk);
+
+        } finally {
+            await sim.close();
+        }
+    });
+
+    it('show address', async function () {
+        const snapshotPrefixGolden = "snapshots/show-address/";
+        const snapshotPrefixTmp = "snapshots-tmp/show-address/";
+        let snapshotCount = 0;
+
+        const sim = new Zemu(APP_PATH);
+        try {
+            await sim.start(sim_options);
+            const app = new FilecoinApp(sim.getTransport());
+
+            // Derivation path. First 3 items are automatically hardened!
+            const path = "m/44'/461'/5'/0/3";
+            const respRequest = app.showAddressAndPubKey(path);
+
+            // We need to wait until the app responds to the APDU
+            await Zemu.sleep(2000);
+
+            // Now navigate the address / path
+            await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            await sim.clickBoth(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+
+            const resp = await respRequest;
+            console.log(resp);
+
+            compareSnapshots(snapshotPrefixTmp, snapshotPrefixGolden, snapshotCount);
+
+            expect(resp.return_code).toEqual(0x9000);
+            expect(resp.error_message).toEqual("No errors");
+
+            const expected_address_string = "f1mk3zcefvlgpay4f32c5vmruk5gqig6dumc7pz6q";
+            const expected_pk = "0425d0dbeedb2053e690a58e9456363158836b1361f30dba0332f440558fa803d056042b50d0e70e4a2940428e82c7cea54259d65254aed4663e4d0cffd649f4fb";
+
+            expect(resp.addrString).toEqual(expected_address_string);
+            expect(resp.compressed_pk.toString('hex')).toEqual(expected_pk);
+        } finally {
+            await sim.close();
+        }
+    });
+
+    it('sign basic', async function () {
+        const snapshotPrefixGolden = "snapshots/sign-basic/";
+        const snapshotPrefixTmp = "snapshots-tmp/sign-basic/";
+        let snapshotCount = 0;
+
+        const sim = new Zemu(APP_PATH);
+        try {
+            await sim.start(sim_options);
+            const app = new FilecoinApp(sim.getTransport());
+
+            const path = "m/44'/461'/0'/0/1";
+            const txBlob = Buffer.from(
+                "890055026d21137eb4c4814269e894d296cf6500e43cd7145502e0c7c75f82d55e5ed55db28033630df4274a984f0144000186a0430009c41961a80040",
+                "hex",
+            );
+
+            const pkResponse = await app.getAddressAndPubKey(path);
+            console.log(pkResponse);
+            expect(pkResponse.return_code).toEqual(0x9000);
+            expect(pkResponse.error_message).toEqual("No errors");
+
+            // do not wait here..
+            const signatureRequest = app.sign(path, txBlob);
+
+            await Zemu.sleep(2000);
+
+            // Reference window
+            await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            for (let i = 0; i < 9; i++) {
+                await sim.clickRight(Resolve(`${snapshotPrefixTmp}${snapshotCount++}.png`));
+            }
+            await sim.clickBoth();
+
+            let resp = await signatureRequest;
+            console.log(resp);
+
+            compareSnapshots(snapshotPrefixTmp, snapshotPrefixGolden, snapshotCount);
+
+            expect(resp.return_code).toEqual(0x9000);
+            expect(resp.error_message).toEqual("No errors");
+        } finally {
+            await sim.close();
+        }
+    });
+
+    it('sign basic - invalid', async function () {
+        const sim = new Zemu(APP_PATH);
+        try {
+            await sim.start(sim_options);
+            const app = new FilecoinApp(sim.getTransport());
+
+            const path = "m/44'/461'/0'/0/1";
+            let invalidMessage = Buffer.from(
+                "890055026d21137eb4c4814269e894d296cf6500e43cd7145502e0c7c75f82d55e5ed55db28033630df4274a984f0144000186a0430009c41961a80040",
+                "hex",
+            );
+            invalidMessage += "1";
+
+            const pkResponse = await app.getAddressAndPubKey(path);
+            console.log(pkResponse);
+            expect(pkResponse.return_code).toEqual(0x9000);
+            expect(pkResponse.error_message).toEqual("No errors");
+
+            // do not wait here..
+            const signatureResponse = await app.sign(path, invalidMessage);
+            console.log(signatureResponse);
+
+            expect(signatureResponse.return_code).toEqual(0x6984);
+            expect(signatureResponse.error_message).toEqual("Data is invalid : Unexpected data type");
+        } finally {
+            await sim.close();
+        }
+    });
+});

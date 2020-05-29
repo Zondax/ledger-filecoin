@@ -43,12 +43,14 @@ typedef enum {
 #define VIEW_ADDRESS_ITEM_COUNT             2
 #define VIEW_ADDRESS_LAST_PAGE_DEFAULT      0
 
+#define CRYPTO_BLOB_SKIP_BYTES              1
+
 #define COIN_AMOUNT_DECIMAL_PLACES 18
 
 #define COIN_SUPPORTED_TX_VERSION           0
 
 #define MENU_MAIN_APP_LINE1 "Filecoin"
-#define MENU_MAIN_APP_LINE2 ""
+#define MENU_MAIN_APP_LINE2 "Network"
 #define APPVERSION_LINE1 "Version"
 #define APPVERSION_LINE2 "v"APPVERSION
 

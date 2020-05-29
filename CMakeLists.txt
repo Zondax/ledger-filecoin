@@ -26,6 +26,8 @@ add_subdirectory(cmake/gtest)
 string(APPEND CMAKE_CXX_FLAGS " -fsanitize=address -fno-omit-frame-pointer")
 string(APPEND CMAKE_LINKER_FLAGS " -fsanitize=address -fno-omit-frame-pointer")
 
+add_definitions(-DAPP_CONSUMER)
+
 ##############################################################
 ##############################################################
 #  static libs
@@ -35,16 +37,15 @@ file(GLOB_RECURSE TINYCBOR_SRC
         )
 
 file(GLOB_RECURSE LIB_SRC
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/BLAKE2/ref/blake2b-ref.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/src/hexutils.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/src/bignum.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/src/zxmacros.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/hexutils.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/BLAKE2/ref/blake2b-ref.c
         #########
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser_impl.c
         app/src/base32.c
         app/src/crypto.c
-        app/src/parser.c
-        app/src/parser_impl.c
         )
 
 add_library(app_lib STATIC
@@ -57,8 +58,8 @@ target_include_directories(app_lib PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/include
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/tinycbor/src
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src
-        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/common
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/lib
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/common
         )
 
 ##############################################################
@@ -73,8 +74,8 @@ target_include_directories(unittests PUBLIC
         ${gmock_SOURCE_DIR}/include
         ${CONAN_INCLUDE_DIRS_FMT}
         ${CONAN_INCLUDE_DIRS_JSONCPP}
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/BLAKE2/ref
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/tinycbor/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/BLAKE2/ref
         )
 
 target_link_libraries(unittests PRIVATE
@@ -85,17 +86,3 @@ target_link_libraries(unittests PRIVATE
 
 add_test(unittests ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/unittests)
 set_tests_properties(unittests PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
-
-###############################################################
-# Force tests to depend from app compiling
-###############################################################
-
-#set(DISABLE_DOCKER_BUILDS OFF CACHE BOOL "Disables Docker Builds")
-#
-#if (NOT DISABLE_DOCKER_BUILDS)
-#    add_custom_target(ledger_app
-#            COMMAND make build
-#            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-#            )
-#    add_dependencies(unittests ledger_app)
-#endif()

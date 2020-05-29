@@ -35,16 +35,6 @@ __Z_INLINE parser_error_t parser_mapCborError(CborError err);
     CborParser parser;           \
     CHECK_CBOR_MAP_ERR(cbor_parser_init(c->buffer + c->offset, c->bufferLen - c->offset, 0, &parser, &it))
 
-__Z_INLINE parser_error_t _matchKey(CborValue *value, const char *expectedKey) {
-    CHECK_CBOR_TYPE(cbor_value_get_type(value), CborTextStringType)
-
-    bool result;
-    CHECK_CBOR_MAP_ERR(cbor_value_text_string_equals(value, expectedKey, &result))
-    PARSER_ASSERT_OR_ERROR(result, parser_unexpected_field)
-
-    return parser_ok;
-}
-
 parser_error_t parser_init_context(parser_context_t *ctx, const uint8_t *buffer, uint16_t bufferSize) {
     ctx->offset = 0;
 
