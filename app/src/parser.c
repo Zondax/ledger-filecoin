@@ -29,7 +29,7 @@ void __assert_fail(const char * assertion, const char * file, unsigned int line,
 }
 #endif
 
-parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data, uint16_t dataLen) {
+parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data, size_t dataLen) {
     CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
     return _read(ctx, &parser_tx_obj);
 }
@@ -37,22 +37,24 @@ parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data, uint16_t
 parser_error_t parser_validate(const parser_context_t *ctx) {
     CHECK_PARSER_ERR(_validateTx(ctx, &parser_tx_obj))
 
-    uint8_t numItems = parser_getNumItems(ctx);
+    // Iterate through all items to check that all can be shown and are valid
+    uint8_t numItems = 0;
+    CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems));
 
     char tmpKey[40];
     char tmpVal[40];
 
     for (uint8_t idx = 0; idx < numItems; idx++) {
-        uint8_t pageCount;
+        uint8_t pageCount = 0;
         CHECK_PARSER_ERR(parser_getItem(ctx, idx, tmpKey, sizeof(tmpKey), tmpVal, sizeof(tmpVal), 0, &pageCount))
     }
 
     return parser_ok;
 }
 
-uint8_t parser_getNumItems(const parser_context_t *ctx) {
-    uint8_t itemCount = _getNumItems(ctx, &parser_tx_obj);
-    return itemCount;
+parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_items) {
+    *num_items = _getNumItems(ctx, &parser_tx_obj);
+    return parser_ok;
 }
 
 #define LESS_THAN_64_DIGIT(num_digit) if (num_digit > 64) return parser_value_out_of_range;
@@ -139,7 +141,7 @@ __Z_INLINE parser_error_t parser_printAddress(const address_t *a,
 }
 
 parser_error_t parser_getItem(const parser_context_t *ctx,
-                              int8_t displayIdx,
+                              uint8_t displayIdx,
                               char *outKey, uint16_t outKeyLen,
                               char *outVal, uint16_t outValLen,
                               uint8_t pageIdx, uint8_t *pageCount) {
@@ -149,7 +151,11 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
     snprintf(outVal, outValLen, " ");
     *pageCount = 0;
 
-    if (displayIdx < 0 || displayIdx >= parser_getNumItems(ctx)) {
+    uint8_t numItems = 0;
+    CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems))
+    CHECK_APP_CANARY()
+
+    if (displayIdx < 0 || displayIdx >= numItems) {
         return parser_no_data;
     }
 
