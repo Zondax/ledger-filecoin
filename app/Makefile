@@ -24,14 +24,34 @@ MY_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 
 include $(BOLOS_SDK)/Makefile.defines
 
-# Main app configuration
-APPNAME = "Filecoin"
+ifndef COIN
+COIN=FIL
+endif
+
 APPVERSION_M=0
 APPVERSION_N=15
-APPVERSION_P=1
+APPVERSION_P=2
 
+$(info COIN  = [$(COIN)])
+ifeq ($(COIN),FIL)
+# Main app configuration
+DEFINES += APP_CONSUMER
+APPNAME = "Filecoin"
 APPPATH = "44'/461'"
-APP_LOAD_PARAMS = --appFlags 0x200 --delete $(COMMON_LOAD_PARAMS) --path ${APPPATH} --path "44'/1'"
+
+else ifeq ($(COIN),FIL_validator)
+else
+define error_message
+
+
+COIN value not supported: [$(COIN)]
+
+
+endef
+$(error "$(error_message)")
+endif
+
+APP_LOAD_PARAMS = --appFlags 0x200 --delete $(COMMON_LOAD_PARAMS) --path $(APPPATH) --path "44'/1'"
 
 ifeq ($(TARGET_NAME),TARGET_NANOS)
 SCRIPT_LD:=$(CURDIR)/script.ld
@@ -84,7 +104,7 @@ WEBUSB_URL     = www.ledgerwallet.com
 DEFINES       += HAVE_WEBUSB WEBUSB_URL_SIZE_B=$(shell echo -n $(WEBUSB_URL) | wc -c) WEBUSB_URL=$(shell echo -n $(WEBUSB_URL) | sed -e "s/./\\\'\0\\\',/g")
 
 ifeq ($(TARGET_NAME),TARGET_NANOX)
-DEFINES += IO_SEPROXYHAL_BUFFER_SIZE_B=300
+DEFINES       += IO_SEPROXYHAL_BUFFER_SIZE_B=300
 
 DEFINES       += HAVE_GLO096
 DEFINES       += HAVE_BAGL BAGL_WIDTH=128 BAGL_HEIGHT=64
@@ -93,7 +113,7 @@ DEFINES       += HAVE_BAGL_FONT_OPEN_SANS_REGULAR_11PX
 DEFINES       += HAVE_BAGL_FONT_OPEN_SANS_EXTRABOLD_11PX
 DEFINES       += HAVE_BAGL_FONT_OPEN_SANS_LIGHT_16PX
 
-DEFINES          += HAVE_UX_FLOW
+DEFINES       += HAVE_UX_FLOW
 
 #SDK_SOURCE_PATH  += lib_blewbxx lib_blewbxx_impl
 SDK_SOURCE_PATH  += lib_ux
@@ -137,6 +157,7 @@ AFLAGS +=
 LD       := $(GCCPATH)arm-none-eabi-gcc
 LDFLAGS  += -O3 -Os
 LDLIBS   += -lm -lgcc -lc
+#LDLIBS   += -Lrust/target/thumbv6m-none-eabi/release -lrslib
 
 ##########################
 include $(BOLOS_SDK)/Makefile.glyphs
@@ -155,14 +176,13 @@ APP_SOURCE_PATH += $(MY_DIR)/../deps/tinycbor-ledger
 #SDK_SOURCE_PATH  += lib_blewbxx lib_blewbxx_impl
 SDK_SOURCE_PATH  += lib_ux
 
-# Import generic rules from the SDK
-include $(BOLOS_SDK)/Makefile.rules
-
-#add dependency on custom makefile filename
-dep/%.d: %.c Makefile
-
 rust:
-	# Do nothing
+	@echo "No rust code"
+#	cd rust && CARGO_HOME="$(CURDIR)/rust/.cargo" cargo build --target thumbv6m-none-eabi --release
+
+rust_clean:
+	@echo "No rust code"
+#	cd rust && CARGO_HOME="$(CURDIR)/rust/.cargo" cargo clean
 
 # load, delete and listvariants are provided to comply with Ledger requirements
 load:
@@ -170,6 +190,16 @@ load:
 
 delete:
 	python -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)
+
+.PHONY: rust
+
+all: default rust
+
+# Import generic rules from the SDK
+include $(BOLOS_SDK)/Makefile.rules
+
+#add dependency on custom makefile filename
+dep/%.d: %.c Makefile
 
 listvariants:
 	@echo VARIANTS COIN FIL

@@ -1,5 +1,5 @@
+# Filecoin App
 
-# Filecoin App - Ledger Nano S
 ## General structure
 
 The general structure of commands and responses is as follows:
@@ -55,7 +55,7 @@ The general structure of commands and responses is as follows:
 
 | Field   | Type     | Content          | Note                            |
 | ------- | -------- | ---------------- | ------------------------------- |
-| CLA     | byte (1) | Test Mode        | 0xFF means test mode is enabled |
+| TEST    | byte (1) | Test Mode        | 0xFF means test mode is enabled |
 | MAJOR   | byte (1) | Version Major    |                                 |
 | MINOR   | byte (1) | Version Minor    |                                 |
 | PATCH   | byte (1) | Version Patch    |                                 |
@@ -91,8 +91,6 @@ The general structure of commands and responses is as follows:
 | ADDR_S_LEN | byte (1)| ADDR_S Len    |[Specs](https://filecoin-project.github.io/specs/#protocol-1-libsecpk1-elliptic-curve-public-keys) |
 | ADDR_S    | byte (??) | Address as String               |  |
 | SW1-SW2 | byte (2)  | Return code           | see list of return codes |
-
---------------
 
 ### INS_SIGN_SECP256K1
 
