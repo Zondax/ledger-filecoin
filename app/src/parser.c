@@ -73,30 +73,6 @@ __Z_INLINE bool format_quantity(const bigint_t *b,
     return bignumBigEndian_bcdprint(bignum, bignumSize, bcd, bcdSize);
 }
 
-__Z_INLINE parser_error_t parser_printBigInt(const bigint_t *b,
-                                             char *outVal, uint16_t outValLen,
-                                             uint8_t pageIdx, uint8_t *pageCount) {
-
-    LESS_THAN_64_DIGIT(b->len)
-
-    char bignum[160];
-    union {
-        // overlapping arrays to avoid excessive stack usage. Do not use at the same time
-        uint8_t bcd[80];
-        char output[160];
-    } overlapped;
-
-    MEMZERO(overlapped.bcd, sizeof(overlapped.bcd));
-    MEMZERO(bignum, sizeof(bignum));
-
-    if (!format_quantity(b, overlapped.bcd, sizeof(overlapped.bcd), bignum, sizeof(bignum))) {
-        return parser_unexpected_value;
-    }
-
-    pageString(outVal, outValLen, bignum, pageIdx, pageCount);
-    return parser_ok;
-}
-
 __Z_INLINE parser_error_t parser_printBigIntFixedPoint(const bigint_t *b,
                                                        char *outVal, uint16_t outValLen,
                                                        uint8_t pageIdx, uint8_t *pageCount) {
