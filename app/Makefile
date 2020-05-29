@@ -28,7 +28,7 @@ include $(BOLOS_SDK)/Makefile.defines
 APPNAME = "Filecoin"
 APPVERSION_M=0
 APPVERSION_N=15
-APPVERSION_P=0
+APPVERSION_P=1
 
 APPPATH = "44'/461'"
 APP_LOAD_PARAMS = --appFlags 0x200 --delete $(COMMON_LOAD_PARAMS) --path ${APPPATH} --path "44'/1'"
