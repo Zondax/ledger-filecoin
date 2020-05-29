@@ -1,5 +1,5 @@
 import Zemu from "@zondax/zemu";
-import Oasis from "@zondax/ledger-oasis";
+import FilecoinApp from "@zondax/ledger-filecoin";
 import path from "path";
 
 const APP_PATH = path.resolve(`./../../app/bin/app.elf`);
@@ -28,14 +28,13 @@ async function beforeEnd() {
 async function debugScenario(sim, app) {
     // Here you can customize what you want to do :)
 
-    const path = [44, 474, 5, 0x80000000, 0x80000003];
-    const context = "oasis-core/consensus: tx for chain testing";
+    const path = "m/44'/461'/0'/0/1";
     const txBlob = Buffer.from(
-        "pGNmZWWiY2dhcwBmYW1vdW50QGRib2R5omd4ZmVyX3RvWCBkNhaFWEyIEubmS3EVtRLTanD3U+vDV5fke4Obyq83CWt4ZmVyX3Rva2Vuc0Blbm9uY2UAZm1ldGhvZHBzdGFraW5nLlRyYW5zZmVy",
-        "base64",
+        "890055026d21137eb4c4814269e894d296cf6500e43cd7145502e0c7c75f82d55e5ed55db28033630df4274a984f0144000186a0430009c41961a80040",
+        "hex",
     );
 
-    const signatureRequest = await app.sign(path, context, txBlob);
+    const signatureRequest = await app.sign(path, txBlob);
     const signatureResponse = await signatureRequest;
     console.log(signatureResponse)
 }
@@ -51,7 +50,7 @@ async function main() {
 
     try {
         await sim.start(SIM_OPTIONS);
-        const app = new Oasis.OasisApp(sim.getTransport());
+        const app = new FilecoinApp.default(sim.getTransport());
 
         ////////////
         /// TIP you can use zemu commands here to take the app to the point where you trigger a breakpoint
