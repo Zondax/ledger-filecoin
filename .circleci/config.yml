@@ -92,10 +92,3 @@ workflows:
             branches:
               only:
                 - master
-      - build_package_validator:
-          requires:
-            - build_package
-          filters:
-            branches:
-              only:
-                - master
