@@ -94,6 +94,8 @@ public:
     };
 };
 
+GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(VerifyTestVectors);
+
 INSTANTIATE_TEST_SUITE_P(
         KnownIssues,
         VerifyTestVectors,

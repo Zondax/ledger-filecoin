@@ -53,10 +53,10 @@ TEST(CRYPTO, fillAddress) {
     char *addrString = (char *) (addrByte + 21 + 1);
 
     EXPECT_THAT(std::string(pk),
-                ::testing::Eq("0466F2BDB19E90FD7C29E4BF63612EB98515E5163C97888042364BA777D818E88B765C649056BA4A62292AE4E2CCDABD71B845D8FA0991C140F664D2978AC0972A"));
+                ::testing::Eq("0466f2bdb19e90fd7c29e4bf63612eb98515e5163c97888042364ba777d818e88b765c649056ba4a62292ae4e2ccdabd71b845d8fa0991c140f664d2978ac0972a"));
 
     EXPECT_THAT(std::string(addrByteToHexStr),
-                ::testing::Eq("01DFE49184D46ADC8F89D44638BEB45F78FCAD2590"));
+                ::testing::Eq("01dfe49184d46adc8f89d44638beb45f78fcad2590"));
 
 
     EXPECT_THAT(std::string(addrString),
@@ -87,10 +87,10 @@ TEST(CRYPTO, fillAddressTestMnemonic) {
     char *addrString = (char *) (addrByte + 21 + 1);
 
     EXPECT_THAT(std::string(pk),
-                ::testing::Eq("0466F2BDB19E90FD7C29E4BF63612EB98515E5163C97888042364BA777D818E88B765C649056BA4A62292AE4E2CCDABD71B845D8FA0991C140F664D2978AC0972A"));
+                ::testing::Eq("0466f2bdb19e90fd7c29e4bf63612eb98515e5163c97888042364ba777d818e88b765c649056ba4a62292ae4e2ccdabd71b845d8fa0991c140f664d2978ac0972a"));
 
     EXPECT_THAT(std::string(addrByteToHexStr),
-                ::testing::Eq("01DFE49184D46ADC8F89D44638BEB45F78FCAD2590"));
+                ::testing::Eq("01dfe49184d46adc8f89d44638beb45f78fcad2590"));
 
     EXPECT_THAT(std::string(addrString),
                 ::testing::Eq("f137sjdbgunloi7couiy4l5nc7pd6k2jmq32vizpy"));
@@ -176,7 +176,7 @@ TEST(CRYPTO, prepareMessageDigest) {
     std::cout << message_digest << std::endl;
 
     EXPECT_THAT(std::string(message_digest),
-                ::testing::Eq("5A51287D2E5401B75014DA0F050C8DB96FE0BACDAD75FCE964520CA063B697E1"));
+                ::testing::Eq("5a51287d2e5401b75014da0f050c8db96fe0bacdad75fce964520ca063b697e1"));
 
     EXPECT_THAT(err, ::testing::Eq(0));
 
