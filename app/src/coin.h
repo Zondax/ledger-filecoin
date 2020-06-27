@@ -50,7 +50,7 @@ typedef enum {
 #define COIN_SUPPORTED_TX_VERSION           0
 
 #define MENU_MAIN_APP_LINE1 "Filecoin"
-#define MENU_MAIN_APP_LINE2 "Network"
+#define MENU_MAIN_APP_LINE2 "Ready"
 #define APPVERSION_LINE1 "Version"
 #define APPVERSION_LINE2 "v"APPVERSION
 

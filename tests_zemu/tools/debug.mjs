@@ -35,8 +35,15 @@ async function debugScenario(sim, app) {
     );
 
     const signatureRequest = await app.sign(path, txBlob);
-    const signatureResponse = await signatureRequest;
+    const signatureResponse = signatureRequest;
     console.log(signatureResponse)
+}
+
+async function debugScenario2(sim, app) {
+    await Zemu.default.sleep(20000);
+
+    // const response = await app.getVersion();
+    // console.log(response)
 }
 
 async function main() {
@@ -55,7 +62,7 @@ async function main() {
         ////////////
         /// TIP you can use zemu commands here to take the app to the point where you trigger a breakpoint
 
-        await debugScenario(sim, app);
+        await debugScenario2(sim, app);
 
         /// TIP
 

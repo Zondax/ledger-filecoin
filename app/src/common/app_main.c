@@ -280,6 +280,13 @@ void app_init() {
     USB_power(0);
     USB_power(1);
     view_idle_show(0);
+
+    // FIXME: Remove this
+    if (app_mode_expert()) {
+        zemu_log_stack("Expert mode");
+    } else {
+        zemu_log_stack("Simple mode");
+    }
 }
 
 #pragma clang diagnostic push

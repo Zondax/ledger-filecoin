@@ -25,7 +25,13 @@
 extern "C" {
 #endif
 
+void check_app_canary();
+
+#include <inttypes.h>
+#include <stdint.h>
+#include <stdio.h>
 #include "string.h"
+
 #ifndef __APPLE__
 extern void explicit_bzero(void *__s, size_t __n) __THROW __nonnull ((1));
 #endif
@@ -37,31 +43,9 @@ void handle_stack_overflow();
 #include "bolos_target.h"
 #endif
 
-#if defined(TARGET_NANOX)
-#define NV_CONST const
-#define NV_VOL volatile
-#else
-#define NV_CONST
-#define NV_VOL
-#endif
-
-#ifndef PIC
-#define PIC(x) (x)
-#endif
-
 #define NV_ALIGN __attribute__ ((aligned(64)))
 
 #if defined (TARGET_NANOS) || defined(TARGET_NANOX)
-
-__Z_INLINE void debug_log(char *buf)
-{
-    asm volatile (
-    "movs r0, #0x04\n"
-    "movs r1, %0\n"
-    "svc      0xab\n"
-    :: "r"(buf) : "r0", "r1"
-    );
-}
 
 #include "bolos_target.h"
 #include "os.h"
@@ -69,11 +53,17 @@ __Z_INLINE void debug_log(char *buf)
 
 #if defined(TARGET_NANOX)
 #include "ux.h"
+#define NV_CONST const
+#define NV_VOL volatile
+#define IS_UX_ALLOWED (G_ux_params.len != BOLOS_UX_IGNORE && G_ux_params.len != BOLOS_UX_CONTINUE)
 #else
 #include "os_io_seproxyhal.h"
+#define NV_CONST
+#define NV_VOL
+#define IS_UX_ALLOWED (ux.params.len != BOLOS_UX_IGNORE && ux.params.len != BOLOS_UX_CONTINUE)
 #endif
 
-#define CHECK_APP_CANARY() { if (app_stack_canary != APP_STACK_CANARY_MAGIC) handle_stack_overflow(); }
+#define CHECK_APP_CANARY() check_app_canary();
 #define APP_STACK_CANARY_MAGIC 0xDEAD0031
 extern unsigned int app_stack_canary;
 
@@ -85,12 +75,6 @@ extern unsigned int app_stack_canary;
     io_seproxyhal_general_status(); \
     WAIT_EVENT()
 
-#if defined(TARGET_NANOX)
-#define IS_UX_ALLOWED (G_ux_params.len != BOLOS_UX_IGNORE && G_ux_params.len != BOLOS_UX_CONTINUE)
-#else
-#define IS_UX_ALLOWED (ux.params.len != BOLOS_UX_IGNORE && ux.params.len != BOLOS_UX_CONTINUE)
-#endif
-
 #define MEMMOVE os_memmove
 #define MEMSET os_memset
 #define MEMCPY os_memcpy
@@ -99,6 +83,10 @@ extern unsigned int app_stack_canary;
 #define MEMZERO explicit_bzero
 
 #else
+
+#ifndef PIC
+#define PIC(x) (x)
+#endif
 
 #define CHECK_APP_CANARY() {}
 
@@ -118,10 +106,6 @@ __Z_INLINE void __memzero(void *buffer, size_t s) { memset(buffer, 0, s); }
 #define MEMZERO __memzero
 #endif
 #endif
-
-#include <inttypes.h>
-#include <stdint.h>
-#include <stdio.h>
 
 #define SET_NV(DST, TYPE, VAL) { \
     TYPE nvset_tmp=(VAL); \
@@ -143,6 +127,22 @@ __Z_INLINE void __memzero(void *buffer, size_t s) { memset(buffer, 0, s); }
 __Z_INLINE void strncpy_s(char *dst, const char *src, size_t dstSize) {
     MEMZERO(dst, dstSize);
     strncpy(dst, src, dstSize - 1);
+}
+
+void zemu_log_stack(char *ctx);
+
+__Z_INLINE void zemu_log(char *buf)
+{
+#if defined(ZEMU_LOGGING)
+    #if defined (TARGET_NANOS) || defined(TARGET_NANOX)
+    asm volatile (
+    "movs r0, #0x04\n"
+    "movs r1, %0\n"
+    "svc      0xab\n"
+    :: "r"(buf) : "r0", "r1"
+    );
+    #endif
+#endif
 }
 
 #ifdef __cplusplus

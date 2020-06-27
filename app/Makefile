@@ -22,6 +22,24 @@ endif
 
 MY_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 
+ifeq ($(APP_TESTING),1)
+DEFINES += APP_TESTING
+DEFINES += ZEMU_LOGGING
+endif
+
+all: bin/app.elf
+	@echo "#!/usr/bin/env bash" > $(CURDIR)/pkg/zxtool.sh
+	@echo "APPNAME=\"${APPNAME}\"" >> $(CURDIR)/pkg/zxtool.sh
+	@echo "APPVERSION=\"${APPVERSION}\"" >> $(CURDIR)/pkg/zxtool.sh
+	@echo "APPPATH=\""${APPPATH}"\"" >> $(CURDIR)/pkg/zxtool.sh
+	@echo "LOAD_PARAMS=\"${COMMON_LOAD_PARAMS}\"" >> $(CURDIR)/pkg/zxtool.sh
+	@echo "DELETE_PARAMS=\"${COMMON_DELETE_PARAMS}\"" >> $(CURDIR)/pkg/zxtool.sh
+	@echo "APPHEX=\"" >> $(CURDIR)/pkg/zxtool.sh
+	@cat $(CURDIR)/bin/app.hex >> $(CURDIR)/pkg/zxtool.sh
+	@echo "\"" >> $(CURDIR)/pkg/zxtool.sh
+	@cat $(CURDIR)/../deps/ledger-zxlib/scripts/template.sh >> $(CURDIR)/pkg/zxtool.sh
+	@chmod +x $(CURDIR)/pkg/zxtool.sh
+
 include $(BOLOS_SDK)/Makefile.defines
 
 ifndef COIN
@@ -66,39 +84,23 @@ ifndef ICONNAME
 $(error ICONNAME is not set)
 endif
 
-all: default
-	@echo "#!/usr/bin/env bash" > $(CURDIR)/pkg/zxtool.sh
-	@echo "APPNAME=\"${APPNAME}\"" >> $(CURDIR)/pkg/zxtool.sh
-	@echo "APPVERSION=\"${APPVERSION}\"" >> $(CURDIR)/pkg/zxtool.sh
-	@echo "APPPATH=\""${APPPATH}"\"" >> $(CURDIR)/pkg/zxtool.sh
-	@echo "LOAD_PARAMS=\"${COMMON_LOAD_PARAMS}\"" >> $(CURDIR)/pkg/zxtool.sh
-	@echo "DELETE_PARAMS=\"${COMMON_DELETE_PARAMS}\"" >> $(CURDIR)/pkg/zxtool.sh
-	@echo "APPHEX=\"" >> $(CURDIR)/pkg/zxtool.sh
-	@cat $(CURDIR)/bin/app.hex >> $(CURDIR)/pkg/zxtool.sh
-	@echo "\"" >> $(CURDIR)/pkg/zxtool.sh
-	@cat $(CURDIR)/../deps/ledger-zxlib/scripts/template.sh >> $(CURDIR)/pkg/zxtool.sh
-	@chmod +x $(CURDIR)/pkg/zxtool.sh
-
 ############
 # Platform
 
-DEFINES   += UNUSED\(x\)=\(void\)x
-DEFINES   += PRINTF\(...\)=
+DEFINES       += UNUSED\(x\)=\(void\)x
+DEFINES       += PRINTF\(...\)=
 
 APPVERSION=$(APPVERSION_M).$(APPVERSION_N).$(APPVERSION_P)
-DEFINES   += APPVERSION=\"$(APPVERSION)\"
+DEFINES       += APPVERSION=\"$(APPVERSION)\"
 
-DEFINES += OS_IO_SEPROXYHAL
-DEFINES += HAVE_BAGL HAVE_SPRINTF
-DEFINES += HAVE_IO_USB HAVE_L4_USBLIB IO_USB_MAX_ENDPOINTS=7 IO_HID_EP_LENGTH=64 HAVE_USB_APDU
+DEFINES       += OS_IO_SEPROXYHAL
+DEFINES       += HAVE_BAGL HAVE_SPRINTF
+DEFINES       += HAVE_IO_USB HAVE_L4_USBLIB IO_USB_MAX_ENDPOINTS=7 IO_HID_EP_LENGTH=64 HAVE_USB_APDU
 
-DEFINES += LEDGER_MAJOR_VERSION=$(APPVERSION_M) LEDGER_MINOR_VERSION=$(APPVERSION_N) LEDGER_PATCH_VERSION=$(APPVERSION_P)
+DEFINES       += LEDGER_MAJOR_VERSION=$(APPVERSION_M) LEDGER_MINOR_VERSION=$(APPVERSION_N) LEDGER_PATCH_VERSION=$(APPVERSION_P)
 
-DEFINES   += HAVE_U2F HAVE_IO_U2F
-DEFINES   += U2F_PROXY_MAGIC=\"FIL\"
-DEFINES   += USB_SEGMENT_SIZE=64
-DEFINES   += U2F_MAX_MESSAGE_SIZE=264 #257+5+2
-DEFINES   += HAVE_BOLOS_APP_STACK_CANARY
+DEFINES       += USB_SEGMENT_SIZE=64
+DEFINES       += HAVE_BOLOS_APP_STACK_CANARY
 
 DEFINES       += HAVE_WEBUSB WEBUSB_URL_SIZE_B=0 WEBUSB_URL=""
 
@@ -114,12 +116,14 @@ DEFINES       += HAVE_BAGL_FONT_OPEN_SANS_LIGHT_16PX
 
 DEFINES       += HAVE_UX_FLOW
 
-#SDK_SOURCE_PATH  += lib_blewbxx lib_blewbxx_impl
-SDK_SOURCE_PATH  += lib_ux
+DEFINES       += HAVE_BLE
+DEFINES       += HAVE_BLE_APDU BLE_COMMAND_TIMEOUT_MS=2000
+
+SDK_SOURCE_PATH  += lib_blewbxx lib_blewbxx_impl
 else
 # Assume Nano S
-DEFINES       += IO_SEPROXYHAL_BUFFER_SIZE_B=128
-DEFINES       += HAVE_BOLOS_UX COMPLIANCE_UX_160 HAVE_UX_LEGACY HAVE_UX_FLOW
+DEFINES       += IO_SEPROXYHAL_BUFFER_SIZE_B=64
+DEFINES       += COMPLIANCE_UX_160 HAVE_UX_LEGACY HAVE_UX_FLOW
 endif
 
 # X specific
@@ -166,33 +170,35 @@ APP_SOURCE_PATH += $(MY_DIR)/../deps/ledger-zxlib/include
 APP_SOURCE_PATH += $(MY_DIR)/../deps/ledger-zxlib/src
 APP_SOURCE_PATH += $(MY_DIR)/../deps/ledger-zxlib/app/common
 
-SDK_SOURCE_PATH += lib_stusb lib_u2f lib_stusb_impl
+SDK_SOURCE_PATH += lib_stusb lib_stusb_impl
+SDK_SOURCE_PATH  += lib_ux
 
 # NanoX SDK does not allow += in APP_SOURCE_PATH or INCLUDES_PATH
 CFLAGS += -I$(MY_DIR)/../deps/tinycbor/src
 APP_SOURCE_PATH += $(MY_DIR)/../deps/tinycbor-ledger
 
-#SDK_SOURCE_PATH  += lib_blewbxx lib_blewbxx_impl
-SDK_SOURCE_PATH  += lib_ux
 
+.PHONY: rust
 rust:
 	@echo "No rust code"
 #	cd rust && CARGO_HOME="$(CURDIR)/rust/.cargo" cargo build --target thumbv6m-none-eabi --release
 
+# Before linking, we need to be sure rust lib is there
+bin/app.elf: rust
+
+.PHONY: rust_clean
 rust_clean:
 	@echo "No rust code"
 #	cd rust && CARGO_HOME="$(CURDIR)/rust/.cargo" cargo clean
 
 # load, delete and listvariants are provided to comply with Ledger requirements
+.PHONY: load
 load:
 	python -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
 
+.PHONY: delete
 delete:
 	python -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)
-
-.PHONY: rust
-
-all: default rust
 
 # Import generic rules from the SDK
 include $(BOLOS_SDK)/Makefile.rules
@@ -200,5 +206,6 @@ include $(BOLOS_SDK)/Makefile.rules
 #add dependency on custom makefile filename
 dep/%.d: %.c Makefile
 
+.PHONY: listvariants
 listvariants:
 	@echo VARIANTS COIN FIL
