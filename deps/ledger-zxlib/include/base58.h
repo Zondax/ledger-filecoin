@@ -1,5 +1,7 @@
 /*******************************************************************************
-*   (c) 2018 Zondax GmbH
+*   Ledger App - Bitcoin Wallet
+*   (c) 2019 Zondax GmbH
+*   (c) 2016-2019 Ledger
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -16,22 +18,20 @@
 
 #pragma once
 
+#include <stdlib.h>
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define CHECK_ZXERR(CALL) { \
-    zxerr_t err = CALL;  \
-    if (err!=zxerr_ok) return err;}
+int decode_base58(const char *in, size_t length,
+                  unsigned char *out, size_t *outlen);
 
-typedef enum {
-    zxerr_ok,
-    zxerr_no_data,
-    zxerr_buffer_too_small,
-    zxerr_out_of_bounds,
-    zxerr_encoding_failed,
-    zxerr_unknown
-} zxerr_t;
+int encode_base58(const unsigned char *in, size_t length,
+                  unsigned char *out, size_t *outlen);
+
+char encode_base58_clip(const unsigned char v);
 
 #ifdef __cplusplus
 }

@@ -1,6 +1,5 @@
 /*******************************************************************************
-*   (c) 2018, 2019 Zondax GmbH
-*   (c) 2016 Ledger
+*   (c) 2020 Zondax GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -15,23 +14,21 @@
 *  limitations under the License.
 ********************************************************************************/
 
-#include "view.h"
-#include "coin.h"
-#include "crypto.h"
-#include "view_internal.h"
-#include <os_io_seproxyhal.h>
+#pragma once
 
-#include <string.h>
-#include <stdio.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-view_error_t view_printAddr() {
-    snprintf(viewdata.addr, MAX_CHARS_ADDR, "%s", (char *) (G_io_apdu_buffer + VIEW_ADDRESS_OFFSET_SECP256K1));
-    splitValueField();
-    return view_no_error;
+/// Return the number of items in the address view
+zxerr_t addr_getNumItems(uint8_t *num_items);
+
+/// Gets an specific item from the address view (including paging)
+zxerr_t addr_getItem(int8_t displayIdx,
+                     char *outKey, uint16_t outKeyLen,
+                     char *outValue, uint16_t outValueLen,
+                     uint8_t pageIdx, uint8_t *pageCount);
+
+#ifdef __cplusplus
 }
-
-view_error_t view_printPath() {
-    bip32_to_str(viewdata.addr, MAX_CHARS_ADDR, hdPath, HDPATH_LEN_DEFAULT);
-    splitValueField();
-    return view_no_error;
-}
+#endif

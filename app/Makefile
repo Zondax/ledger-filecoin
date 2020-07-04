@@ -122,8 +122,8 @@ DEFINES       += HAVE_BLE_APDU BLE_COMMAND_TIMEOUT_MS=2000
 SDK_SOURCE_PATH  += lib_blewbxx lib_blewbxx_impl
 else
 # Assume Nano S
-DEFINES       += IO_SEPROXYHAL_BUFFER_SIZE_B=64
-DEFINES       += COMPLIANCE_UX_160 HAVE_UX_LEGACY HAVE_UX_FLOW
+DEFINES       += IO_SEPROXYHAL_BUFFER_SIZE_B=128
+DEFINES       += HAVE_BOLOS_UX COMPLIANCE_UX_160 HAVE_UX_LEGACY
 endif
 
 # X specific
@@ -190,6 +190,8 @@ bin/app.elf: rust
 rust_clean:
 	@echo "No rust code"
 #	cd rust && CARGO_HOME="$(CURDIR)/rust/.cargo" cargo clean
+
+clean: rust_clean
 
 # load, delete and listvariants are provided to comply with Ledger requirements
 .PHONY: load
