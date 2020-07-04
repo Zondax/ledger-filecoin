@@ -43,7 +43,7 @@ describe('Basic checks', function () {
     it('can start and stop container', async function () {
         const sim = new Zemu(APP_PATH);
         try {
-            await sim.start(simOptions);
+            await sim.start(sim_options);
         } finally {
             await sim.close();
         }
@@ -135,8 +135,6 @@ describe('Basic checks', function () {
             await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
             await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
             await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
             await sim.clickBoth(`${snapshotPrefixTmp}${snapshotCount++}.png`);
 
             const resp = await respRequest;
@@ -185,7 +183,7 @@ describe('Basic checks', function () {
 
             // Reference window
             await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            for (let i = 0; i < 9; i++) {
+            for (let i = 0; i < 8; i++) {
                 await sim.clickRight(Resolve(`${snapshotPrefixTmp}${snapshotCount++}.png`));
             }
             await sim.clickBoth();
