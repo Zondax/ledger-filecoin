@@ -1,4 +1,5 @@
 /*******************************************************************************
+*   (c) 2016 Ledger
 *   (c) 2018 Zondax GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,25 +14,19 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
-
 #pragma once
+#include "zxmacros.h"
+#include "stdbool.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define CHECK_ZXERR(CALL) { \
-    zxerr_t err = CALL;  \
-    if (err!=zxerr_ok) return err;}
+void app_mode_reset();
 
-typedef enum {
-    zxerr_ok,
-    zxerr_no_data,
-    zxerr_buffer_too_small,
-    zxerr_out_of_bounds,
-    zxerr_encoding_failed,
-    zxerr_unknown
-} zxerr_t;
+bool app_mode_expert();
+
+void app_mode_set_expert(uint8_t val);
 
 #ifdef __cplusplus
 }

@@ -15,6 +15,7 @@
 *  limitations under the License.
 ********************************************************************************/
 
+#include "app_mode.h"
 #include "view.h"
 #include "view_internal.h"
 #include "actions.h"
@@ -24,16 +25,19 @@
 #include "zxmacros.h"
 #include "view_templates.h"
 #include "tx.h"
+#include "addr.h"
 
 #include <string.h>
 #include <stdio.h>
 
 #if defined(TARGET_NANOS)
 
+void h_expert_toggle();
+void h_expert_update();
 void h_review_button_left();
 void h_review_button_right();
 void view_review_show();
-void view_sign_show_s();
+void view_review_decision_s();
 
 ux_state_t ux;
 
@@ -43,49 +47,24 @@ void os_exit(uint32_t id) {
 
 const ux_menu_entry_t menu_main[] = {
     {NULL, NULL, 0, &C_icon_app, MENU_MAIN_APP_LINE1, MENU_MAIN_APP_LINE2, 33, 12},
+    {NULL, h_expert_toggle, 0, &C_icon_app, "Expert mode:", viewdata.value, 33, 12},
     {NULL, NULL, 0, &C_icon_app, APPVERSION_LINE1, APPVERSION_LINE2, 33, 12},
-    {NULL, NULL, 0, &C_icon_app, "Developed by", "Zondax.ch", 33, 12},
-    {NULL, NULL, 0, &C_icon_app, "under Apache", "License 2.0", 33, 12},
+    {NULL, NULL, 0, &C_icon_app, "Developed by:", "Zondax.ch", 33, 12},
+    {NULL, NULL, 0, &C_icon_app, "License: ", "Apache 2.0", 33, 12},
     {NULL, os_exit, 0, &C_icon_dashboard, "Quit", NULL, 50, 29},
     UX_MENU_END
 };
 
-#if !defined(HAVE_UX_FLOW)
-void h_addr_button_left();
-void h_addr_button_right();
-void h_addr_button_both();
-void view_addr_show();
-
-static const bagl_element_t view_address[] = {
-    UI_BACKGROUND_LEFT_RIGHT_ICONS,
-    UI_LabelLine(UIID_LABEL + 0, 0, 8, UI_SCREEN_WIDTH, UI_11PX, UI_WHITE, UI_BLACK, viewdata.key),
-    UI_LabelLine(UIID_LABEL + 0, 0, 19, UI_SCREEN_WIDTH, UI_11PX, UI_WHITE, UI_BLACK, viewdata.value),
-    UI_LabelLineScrolling(UIID_LABELSCROLL, 0, 30, 128, UI_11PX, UI_WHITE, UI_BLACK, viewdata.value2),
-};
-#else
-UX_STEP_NOCB_INIT(ux_addr_flow_1_step, paging,
-        { h_addr_update_item(CUR_FLOW.index); },
-        { .title = "Address", .text = viewdata.addr, });
-UX_STEP_NOCB_INIT(ux_addr_flow_2_step, paging,
-        { h_addr_update_item(CUR_FLOW.index); },
-        { .title = "Path", .text = viewdata.addr, });
-UX_STEP_VALID(ux_addr_flow_3_step, pb, h_address_accept(0), { &C_icon_validate_14, "Ok"});
-
-UX_FLOW(
-    ux_addr_flow,
-    &ux_addr_flow_1_step,
-    &ux_addr_flow_2_step,
-    &ux_addr_flow_3_step
-);
-
-#endif
-
 void h_review(unsigned int _) { UNUSED(_); view_sign_show_impl(); }
 
-const ux_menu_entry_t menu_sign[] = {
-    {NULL, h_review, 0, NULL, "View transaction", NULL, 0, 0},
-    {NULL, h_sign_accept, 0, NULL, "Sign transaction", NULL, 0, 0},
+const ux_menu_entry_t menu_decision_sign[] = {
+    {NULL, h_sign_accept, 0, NULL, "Approve", NULL, 0, 0},
     {NULL, h_sign_reject, 0, NULL, "Reject", NULL, 0, 0},
+    UX_MENU_END
+};
+
+const ux_menu_entry_t menu_decision_address[] = {
+    {NULL, h_address_accept, 0, NULL, "Accept", NULL, 0, 0},
     UX_MENU_END
 };
 
@@ -104,28 +83,6 @@ static const bagl_element_t view_error[] = {
     UI_LabelLineScrolling(UIID_LABELSCROLL, 0, 30, 128, UI_11PX, UI_WHITE, UI_BLACK, viewdata.value2),
 };
 
-#if !defined(HAVE_UX_FLOW)
-static unsigned int view_address_button(unsigned int button_mask, unsigned int button_mask_counter) {
-    switch (button_mask) {
-        case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT:
-            // Press both left and right buttons to quit
-            h_addr_button_both();
-            break;
-
-        case BUTTON_EVT_RELEASED | BUTTON_LEFT:
-            // Press left to progress to the previous element
-            h_addr_button_left();
-            break;
-
-        case BUTTON_EVT_RELEASED | BUTTON_RIGHT:
-            // Press right to progress to the next element
-            h_addr_button_right();
-            break;
-    }
-    return 0;
-}
-#endif
-
 static unsigned int view_error_button(unsigned int button_mask, unsigned int button_mask_counter) {
     switch (button_mask) {
         case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT:
@@ -141,8 +98,10 @@ static unsigned int view_error_button(unsigned int button_mask, unsigned int but
 static unsigned int view_review_button(unsigned int button_mask, unsigned int button_mask_counter) {
     switch (button_mask) {
         case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT:
-            // Press both left and right buttons to quit
-            view_sign_show_s();
+            if (app_mode_expert()) {
+                // Press both left and right buttons to quit
+                view_review_decision_s();
+            }
             break;
         case BUTTON_EVT_RELEASED | BUTTON_LEFT:
             // Press left to progress to the previous element
@@ -160,7 +119,15 @@ static unsigned int view_review_button(unsigned int button_mask, unsigned int bu
 const bagl_element_t *view_prepro(const bagl_element_t *element) {
     switch (element->component.userid) {
         case UIID_ICONLEFT:
+            if (!h_paging_can_decrease()){
+                return NULL;
+            }
+            UX_CALLBACK_SET_INTERVAL(2000);
+            break;
         case UIID_ICONRIGHT:
+            if (!h_paging_can_increase()){
+                return NULL;
+            }
             UX_CALLBACK_SET_INTERVAL(2000);
             break;
         case UIID_LABELSCROLL:
@@ -175,16 +142,15 @@ const bagl_element_t *view_prepro(const bagl_element_t *element) {
 void h_review_button_left() {
     h_paging_decrease();
 
-    view_error_t err = h_review_update_data();
+    zxerr_t err = h_review_update_data();
     switch(err) {
-        case view_no_error:
+        case zxerr_ok:
             view_review_show();
             UX_WAIT();
             break;
-        case view_no_data:
-            view_sign_show_s();
+        case zxerr_no_data:
+            view_review_decision_s();
             break;
-        case view_error_detected:
         default:
             view_error_show();
             UX_WAIT();
@@ -195,17 +161,16 @@ void h_review_button_left() {
 void h_review_button_right() {
     h_paging_increase();
 
-    view_error_t err = h_review_update_data();
+    zxerr_t err = h_review_update_data();
 
     switch(err) {
-        case view_no_error:
+        case zxerr_ok:
             view_review_show();
             UX_WAIT();
             break;
-        case view_no_data:
-            view_sign_show_s();
+        case zxerr_no_data:
+            view_review_decision_s();
             break;
-        case view_error_detected:
         default:
             view_error_show();
             UX_WAIT();
@@ -228,123 +193,74 @@ void splitValueField() {
 //////////////////////////
 //////////////////////////
 
-void view_idle_show_impl() {
-    UX_MENU_DISPLAY(0, menu_main, NULL);
-}
-
-void view_address_show_impl() {
-#if !defined(HAVE_UX_FLOW)
-    h_paging_init();
-
-    view_error_t err = h_addr_update_item(viewdata.itemIdx);
-    switch(err) {
-        case view_no_error:
-            view_addr_show();
-            break;
-        case view_error_detected:
-        default:
-            view_error_show();
-            break;
-    }
-#else
-    ux_layout_paging_reset();
-    if(G_ux.stack_count == 0) {
-        ux_stack_push();
-    }
-    ux_flow_init(0, ux_addr_flow, NULL);
-#endif
+void view_idle_show_impl(uint8_t item_idx) {
+    h_expert_update();
+    UX_MENU_DISPLAY(item_idx, menu_main, NULL);
 }
 
 void view_error_show_impl() {
     UX_DISPLAY(view_error, view_prepro);
 }
 
-void view_sign_show_impl() {
-    h_paging_init();
-
-    view_error_t err = h_review_update_data();
-    switch(err) {
-        case view_no_error:
-            view_review_show();
-            break;
-        case view_no_data:
-            view_sign_show_s();
-            break;
-        case view_error_detected:
-        default:
-            view_error_show();
-            break;
-    }
-}
-
-void view_sign_show_s(void){
-    UX_MENU_DISPLAY(0, menu_sign, NULL);
+void view_review_decision_s(void){
+            switch (viewdata.mode) {
+            case review_tx: {
+                UX_MENU_DISPLAY(0, menu_decision_sign, NULL);
+                break;
+            }
+            case review_address: {
+                UX_MENU_DISPLAY(0, menu_decision_address, NULL);
+                break;
+            }
+        }
 }
 
 void view_review_show() {
     UX_DISPLAY(view_review, view_prepro);
 }
 
-#if !defined(HAVE_UX_FLOW)
-void h_addr_button_left() {
-    h_paging_decrease();
+void h_expert_toggle() {
+    app_mode_set_expert(!app_mode_expert());
+    view_idle_show(1);
+}
 
-    view_error_t err = h_addr_update_item(viewdata.itemIdx);
+void h_expert_update() {
+    strcpy(viewdata.value, "disabled");
+    if (app_mode_expert()) {
+        strcpy(viewdata.value, "enabled");
+    }
+}
 
+void view_sign_show_impl() {
+    h_paging_init();
+
+    zxerr_t err = h_review_update_data();
     switch(err) {
-        case view_no_error:
-            view_addr_show();
+        case zxerr_ok:
+            view_review_show();
             break;
-        case view_no_data:
-            // FIXME:
-        case view_error_detected:
+        case zxerr_no_data:
+            view_review_decision_s();
+            break;
         default:
             view_error_show();
             break;
     }
-
-    UX_WAIT();
 }
 
-void h_addr_button_right() {
-    h_paging_increase();
-    view_error_t err = h_addr_update_item(viewdata.itemIdx);
-
+void view_address_show_impl() {
+    h_paging_init();
+    zxerr_t err = h_review_update_data();
     switch(err) {
-        case view_no_error:
-            view_addr_show();
+        case zxerr_ok:
+            view_review_show();
             break;
-        case view_no_data:
-            // FIXME:
-        case view_error_detected:
+        case zxerr_no_data:
+            view_review_decision_s();
+            break;
         default:
             view_error_show();
             break;
     }
-
-    UX_WAIT();
 }
-
-void h_addr_button_both() {
-    view_error_t err = h_addr_update_item(viewdata.itemIdx);
-
-    switch(err) {
-        case view_no_error:
-            h_address_accept(0);
-            break;
-        case view_no_data:
-            // FIXME:
-        case view_error_detected:
-        default:
-            view_error_show();
-            break;
-    }
-    UX_WAIT();
-}
-
-void view_addr_show() {
-    UX_DISPLAY(view_address, view_prepro);
-}
-#endif
-
 #endif

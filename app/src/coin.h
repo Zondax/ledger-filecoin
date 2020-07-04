@@ -19,6 +19,8 @@
 extern "C" {
 #endif
 
+#define CLA                             0x06
+
 #include <stdint.h>
 #include <stddef.h>
 
@@ -40,8 +42,6 @@ typedef enum {
 } address_kind_e;
 
 #define VIEW_ADDRESS_OFFSET_SECP256K1       (SECP256K1_PK_LEN + ADDRESS_PROTOCOL_SECP256K1_PAYLOAD_LEN + ADDRESS_PROTOCOL_LEN + 2)
-#define VIEW_ADDRESS_ITEM_COUNT             2
-#define VIEW_ADDRESS_LAST_PAGE_DEFAULT      0
 
 #define CRYPTO_BLOB_SKIP_BYTES              1
 
@@ -50,7 +50,7 @@ typedef enum {
 #define COIN_SUPPORTED_TX_VERSION           0
 
 #define MENU_MAIN_APP_LINE1 "Filecoin"
-#define MENU_MAIN_APP_LINE2 "Network"
+#define MENU_MAIN_APP_LINE2 "Ready"
 #define APPVERSION_LINE1 "Version"
 #define APPVERSION_LINE2 "v"APPVERSION
 
