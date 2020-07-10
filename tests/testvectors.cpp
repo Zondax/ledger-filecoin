@@ -21,6 +21,7 @@
 
 #include <iostream>
 #include <memory>
+#include <app_mode.h>
 #include "parser.h"
 #include "utils/common.h"
 
@@ -40,6 +41,8 @@ void check_testcase(const testcase_t &testcase) {
         hdPath[0] = HDPATH_0_TESTNET;
         hdPath[1] = HDPATH_1_TESTNET;
     }
+
+    app_mode_set_expert(tc.expert);
 
     err = parser_parse(&ctx, tc.blob.data(), tc.blob.size());
     if (tc.valid) {

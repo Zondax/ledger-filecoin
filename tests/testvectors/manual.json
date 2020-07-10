@@ -457,5 +457,23 @@
             "method": 0
         },
         "encoded_tx_hex": "89187b5501d1500504e4d1ac3e89ac891a4502586fabd9b4175501b882619d46558f3d9e316d11b48dcf211327026a014100430009c41961a80040"
+    },
+    {
+        "description": "Method 2",
+        "encoded_tx": "",
+        "valid": true,
+        "expert": true,
+        "testnet": false,
+        "message": {
+            "version": 123,
+            "to": "f01005",
+            "from": "f137sjdbgunloi7couiy4l5nc7pd6k2jmq32vizpy",
+            "nonce": 16,
+            "value": "0000000000000000000",
+            "gasprice": "1",
+            "gaslimit": "1000",
+            "method": 2
+        },
+        "encoded_tx_hex": "89004300ed075501dfe49184d46adc8f89d44638beb45f78fcad259010404200011903e8025823845501dfe49184d46adc8f89d44638beb45f78fcad259049000de0b6b3a76400000040"
     }
 ]
