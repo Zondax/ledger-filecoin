@@ -175,14 +175,42 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
         return parser_ok;
     }
 
-    if (displayIdx == 6 && parser_tx_obj.method != method0) {
+    if (displayIdx == 6) {
         snprintf(outKey, outKeyLen, "Method");
-        snprintf(outVal, outValLen, "Unknown Method");
-        return parser_ok;
+        *pageCount = 1;
+        switch(parser_tx_obj.method) {
+            case method0:
+                snprintf(outVal, outValLen, "Transfer");
+                return parser_ok;
+            case method1:
+                snprintf(outVal, outValLen, "Method1");
+                return parser_ok;
+            case method2:
+                snprintf(outVal, outValLen, "Method2");
+                return parser_ok;
+            case method3:
+                snprintf(outVal, outValLen, "Method3");
+                return parser_ok;
+            case method4:
+                snprintf(outVal, outValLen, "Method4");
+                return parser_ok;
+            case method5:
+                snprintf(outVal, outValLen, "Method5");
+                return parser_ok;
+            case method6:
+                snprintf(outVal, outValLen, "Method6");
+                return parser_ok;
+            case method7:
+                snprintf(outVal, outValLen, "Method7");
+                return parser_ok;
+        }
+        return parser_unexpected_method;
     }
 
     if (displayIdx == 7) {
+        *pageCount = 1;
         snprintf(outKey, outKeyLen, "Params");
+        snprintf(outVal, outValLen, "Not Available");
         return parser_ok;
     }
 

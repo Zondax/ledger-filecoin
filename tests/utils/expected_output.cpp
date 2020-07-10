@@ -82,12 +82,12 @@ std::vector<std::string> GenerateExpectedUIOutput(const testcaseData_t &tcd) {
     addTo(answer, "5 | Gas Limit : {}", tcd.gaslimit);
 
     if (tcd.method != 0) {
-        addTo(answer, "6 | Method : Some method");
+        addTo(answer, "6 | Method : Method{}", tcd.method);
     }
 
     // If 0 we have a no parameters
     if (tcd.method != 0) {
-        addTo(answer, "7 | Params :  ");
+        addTo(answer, "7 | Params : Not Available");
     }
 
     return answer;

@@ -29,7 +29,7 @@ const sim_options = {
 //    , X11: true
 };
 
-jest.setTimeout(15000)
+jest.setTimeout(25000)
 
 function compareSnapshots(snapshotPrefixTmp, snapshotPrefixGolden, snapshotCount) {
     for (let i = 0; i < snapshotCount; i++) {
@@ -224,6 +224,55 @@ describe('Basic checks', function () {
 
             expect(signatureResponse.return_code).toEqual(0x6984);
             expect(signatureResponse.error_message).toEqual("Data is invalid : Unexpected data type");
+        } finally {
+            await sim.close();
+        }
+    });
+
+    it('sign proposal', async function () {
+        const snapshotPrefixGolden = "snapshots/sign-proposal/";
+        const snapshotPrefixTmp = "snapshots-tmp/sign-proposal/";
+        let snapshotCount = 0;
+
+        const sim = new Zemu(APP_PATH);
+        try {
+            await sim.start(sim_options);
+            const app = new FilecoinApp(sim.getTransport());
+
+            // Put the app in expert mode
+            await sim.clickRight();
+            await sim.clickBoth();
+
+            const path = "m/44'/461'/0'/0/1";
+            const txBlob = Buffer.from(
+                "89004300ed075501dfe49184d46adc8f89d44638beb45f78fcad259010404200011903e8025823845501dfe49184d46adc8f89d44638beb45f78fcad259049000de0b6b3a76400000040",
+                "hex",
+            );
+
+            const pkResponse = await app.getAddressAndPubKey(path);
+            console.log(pkResponse);
+            expect(pkResponse.return_code).toEqual(0x9000);
+            expect(pkResponse.error_message).toEqual("No errors");
+
+            // do not wait here..
+            const signatureRequest = app.sign(path, txBlob);
+
+            await Zemu.sleep(2000);
+
+            // Reference window
+            await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            for (let i = 0; i < 9; i++) {
+                await sim.clickRight(Resolve(`${snapshotPrefixTmp}${snapshotCount++}.png`));
+            }
+            await sim.clickBoth();
+
+            let resp = await signatureRequest;
+            console.log(resp);
+
+            compareSnapshots(snapshotPrefixTmp, snapshotPrefixGolden, snapshotCount);
+
+            expect(resp.return_code).toEqual(0x9000);
+            expect(resp.error_message).toEqual("No errors");
         } finally {
             await sim.close();
         }

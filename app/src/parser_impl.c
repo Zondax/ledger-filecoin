@@ -18,6 +18,7 @@
 #include "parser_impl.h"
 #include "parser_txdef.h"
 #include "cbor.h"
+#include "app_mode.h"
 
 parser_tx_t parser_tx_obj;
 
@@ -210,6 +211,24 @@ __Z_INLINE parser_error_t _readMethod(parser_tx_t *tx, CborValue *value) {
             PARSER_ASSERT_OR_ERROR(arraySize == 0, parser_unexpected_number_items)
             break;
         }
+        case method1:
+        case method2:
+        case method3:
+        case method4:
+        case method5:
+        case method6:
+        case method7:
+            if (!app_mode_expert()) {
+                return parser_unexpected_method;
+            }
+            PARSER_ASSERT_OR_ERROR(value->type != CborInvalidType, parser_unexpected_type)
+            CHECK_CBOR_MAP_ERR(cbor_value_advance(value))
+            CHECK_CBOR_TYPE(value->type, CborByteStringType)
+
+            size_t arraySize;
+            PARSER_ASSERT_OR_ERROR(cbor_value_is_byte_string(value) || cbor_value_is_text_string(value), parser_unexpected_type)
+            CHECK_CBOR_MAP_ERR(cbor_value_get_string_length(value, &arraySize))
+            break;
         default:
             return parser_unexpected_method;
     }
@@ -301,9 +320,18 @@ parser_error_t _validateTx(const parser_context_t *c, const parser_tx_t *v) {
 uint8_t _getNumItems(const parser_context_t *c, const parser_tx_t *v) {
     uint8_t itemCount = 8;
 
-    if (v->method == method0) {
-        // Don't show method so only 6 items
-        itemCount = 6;
+    switch (v->method) {
+        case method0:
+            itemCount = 6;
+            break;
+        case method1:
+        case method2:
+        case method3:
+        case method4:
+        case method5:
+        case method6:
+        case method7:
+            itemCount = 8;
     }
 
     return itemCount;

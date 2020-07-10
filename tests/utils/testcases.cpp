@@ -51,6 +51,7 @@ testcaseData_t ReadRawTestCase(const std::shared_ptr<Json::Value> &jsonSource, i
             v["encoded_tx"].asString(),
             v["valid"].asBool(),
             v["testnet"].asBool(),
+            v["expert"].asBool(),
             blob
     };
 }

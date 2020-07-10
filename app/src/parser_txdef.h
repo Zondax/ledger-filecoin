@@ -29,6 +29,13 @@ extern "C" {
 
 typedef enum {
     method0 = 0,
+    method1 = 1,
+    method2 = 2,
+    method3 = 3,
+    method4 = 4,
+    method5 = 5,
+    method6 = 6,
+    method7 = 7,
 } method_e;
 
 // https://github.com/filecoin-project/lotus/blob/65c669b0f2dfd8c28b96755e198b9cdaf0880df8/chain/address/address.go#L36
