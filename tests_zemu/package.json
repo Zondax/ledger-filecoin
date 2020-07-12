@@ -36,6 +36,7 @@
     "jest": "26.1.0",
     "jest-serial-runner": "^1.1.0",
     "crypto-js": "4.0.0",
-    "tweetnacl": "^1.0.3"
+    "secp256k1": "^4.0.1",
+    "blakejs": "^1.1.0"
   }
 }

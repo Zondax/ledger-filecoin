@@ -17,6 +17,8 @@
 import jest, {expect} from "jest";
 import Zemu from "@zondax/zemu";
 import FilecoinApp from "@zondax/ledger-filecoin";
+import {getDigest} from "./utils";
+import * as secp256k1 from "secp256k1";
 
 const Resolve = require("path").resolve;
 const APP_PATH = Resolve("../app/bin/app.elf");
@@ -26,7 +28,7 @@ const sim_options = {
     logging: true,
     start_delay: 3000,
     custom: `-s "${APP_SEED}"`
-//    , X11: true
+    , X11: true
 };
 
 jest.setTimeout(25000)
@@ -127,9 +129,8 @@ describe('Basic checks', function () {
             // Derivation path. First 3 items are automatically hardened!
             const path = "m/44'/461'/5'/0/3";
             const respRequest = app.showAddressAndPubKey(path);
-
-            // We need to wait until the app responds to the APDU
-            await Zemu.sleep(2000);
+            // Wait until we are not in the main menu
+            await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
             // Now navigate the address / path
             await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
@@ -155,7 +156,7 @@ describe('Basic checks', function () {
         }
     });
 
-    it('sign basic', async function () {
+    it('sign basic & verify', async function () {
         const snapshotPrefixGolden = "snapshots/sign-basic/";
         const snapshotPrefixTmp = "snapshots-tmp/sign-basic/";
         let snapshotCount = 0;
@@ -178,8 +179,8 @@ describe('Basic checks', function () {
 
             // do not wait here..
             const signatureRequest = app.sign(path, txBlob);
-
-            await Zemu.sleep(2000);
+            // Wait until we are not in the main menu
+            await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
             // Reference window
             await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
@@ -195,6 +196,13 @@ describe('Basic checks', function () {
 
             expect(resp.return_code).toEqual(0x9000);
             expect(resp.error_message).toEqual("No errors");
+
+            // Verify signature
+            const pk = Uint8Array.from(pkResponse.compressed_pk)
+            const digest = getDigest( txBlob );
+            const signature = secp256k1.signatureImport(Uint8Array.from(resp.signature_der));
+            const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
+            expect(signatureOk).toEqual(true);
         } finally {
             await sim.close();
         }
@@ -242,6 +250,7 @@ describe('Basic checks', function () {
             // Put the app in expert mode
             await sim.clickRight();
             await sim.clickBoth();
+            await sim.clickLeft();
 
             const path = "m/44'/461'/0'/0/1";
             const txBlob = Buffer.from(
@@ -256,8 +265,8 @@ describe('Basic checks', function () {
 
             // do not wait here..
             const signatureRequest = app.sign(path, txBlob);
-
-            await Zemu.sleep(2000);
+            // Wait until we are not in the main menu
+            await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
             // Reference window
             await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
