@@ -28,7 +28,7 @@ const sim_options = {
     logging: true,
     start_delay: 3000,
     custom: `-s "${APP_SEED}"`
-//    , X11: true
+    , X11: true
 };
 
 jest.setTimeout(25000)
@@ -250,6 +250,7 @@ describe('Basic checks', function () {
             // Put the app in expert mode
             await sim.clickRight();
             await sim.clickBoth();
+            await sim.clickLeft();
 
             const path = "m/44'/461'/0'/0/1";
             const txBlob = Buffer.from(
