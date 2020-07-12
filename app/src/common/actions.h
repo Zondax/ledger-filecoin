@@ -27,8 +27,8 @@ extern uint8_t action_addr_len;
 __Z_INLINE void app_sign() {
     uint8_t *signature = G_io_apdu_buffer;
 
-    const uint8_t *message = tx_get_buffer() + CRYPTO_BLOB_SKIP_BYTES;
-    const uint16_t messageLength = tx_get_buffer_length() - CRYPTO_BLOB_SKIP_BYTES;
+    const uint8_t *message = tx_get_buffer();
+    const uint16_t messageLength = tx_get_buffer_length();
 
     const uint8_t replyLen = crypto_sign(signature, IO_APDU_BUFFER_SIZE - 3, message, messageLength);
     if (replyLen > 0) {
