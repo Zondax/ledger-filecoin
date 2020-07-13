@@ -82,9 +82,9 @@ UX_STEP_VALID(ux_sign_flow_4_step, pbb, h_sign_reject(0), { &C_icon_crossmark, "
 
 const ux_flow_step_t *const ux_sign_flow[] = {
   &ux_sign_flow_1_step,
+  &ux_review_flow_2_start_step,
   &ux_review_flow_2_step,
-  &ux_review_flow_2_step,
-  &ux_review_flow_2_step,
+  &ux_review_flow_2_end_step,
   &ux_sign_flow_3_step,
   &ux_sign_flow_4_step,
   FLOW_END_STEP,
@@ -95,9 +95,9 @@ UX_STEP_VALID(ux_address_flow_3_step, pbb, h_address_accept(0), { &C_icon_valida
 
 const ux_flow_step_t *const ux_address_flow[] = {
   &ux_address_flow_1_step,
+  &ux_review_flow_2_start_step,
   &ux_review_flow_2_step,
-  &ux_review_flow_2_step,
-  &ux_review_flow_2_step,
+  &ux_review_flow_2_end_step,
   &ux_address_flow_3_step,
   FLOW_END_STEP,
 };
