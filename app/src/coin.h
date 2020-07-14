@@ -50,7 +50,7 @@ typedef enum {
 #define MENU_MAIN_APP_LINE1 "Filecoin"
 #define MENU_MAIN_APP_LINE2 "Ready"
 #define APPVERSION_LINE1 "Version"
-#define APPVERSION_LINE2 "v"APPVERSION
+#define APPVERSION_LINE2 "v" APPVERSION
 
 #ifdef __cplusplus
 }
