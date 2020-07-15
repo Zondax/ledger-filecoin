@@ -111,3 +111,23 @@ target_link_libraries(unittests PRIVATE
 
 add_test(unittests ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/unittests)
 set_tests_properties(unittests PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+
+##############################################################
+##############################################################
+#  Fuzz Targets
+if(ENABLE_FUZZING)
+    set(FUZZ_TARGETS
+        base32_encode_decode
+        crypto_sign
+        decompressLEB128
+        formatProtocol
+        parseHexString
+        parser_parse
+        )
+
+    foreach(target ${FUZZ_TARGETS})
+        add_executable(fuzz-${target} ${CMAKE_CURRENT_SOURCE_DIR}/fuzz/${target}.cpp)
+        target_link_libraries(fuzz-${target} PRIVATE app_lib)
+        target_link_options(fuzz-${target} PRIVATE "-fsanitize=fuzzer")
+    endforeach()
+endif()
