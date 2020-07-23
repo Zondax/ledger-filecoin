@@ -27,6 +27,7 @@ DOCKER_APP_BIN=$(DOCKER_APP_SRC)/app/bin/app.elf
 DOCKER_BOLOS_SDK=/project/deps/nanos-secure-sdk
 DOCKER_BOLOS_SDKX=/project/deps/nano2-sdk
 
+# Note: This is not an SSH key, and being public represents no risk
 SCP_PUBKEY=049bc79d139c70c83a4b19e8922e5ee3e0080bb14a2e8b0752aa42cda90a1463f689b0fa68c1c0246845c2074787b649d0d8a6c0b97d4607065eee3057bdf16b83
 SCP_PRIVKEY=ff701d781f43ce106f72dc26a46b6a83e053b5d07bb3d4ceab79c91ca822a66b
 
