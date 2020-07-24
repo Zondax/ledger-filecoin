@@ -105,6 +105,10 @@ If you see conan is not found, check that you installed the package in the same 
     Use Zemu! Explained below!
     ```
 
+## Building and running fuzz tests
+
+- Consult the [fuzzing README](fuzz/README.md)
+
 ## How to test with Zemu?
 
 > What is Zemu?? Great you asked!!
