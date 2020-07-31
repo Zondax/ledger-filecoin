@@ -17,8 +17,9 @@
 .PHONY: all deps build clean load delete check_python show_info_recovery_mode
 
 TESTS_ZEMU_DIR?=$(CURDIR)/tests_zemu
-TESTS_ZEMU_JS_PACKAGE?=
-TESTS_ZEMU_JS_DIR?=
+EXAMPLE_VUE_DIR?=$(CURDIR)/example_vue
+TESTS_JS_PACKAGE?=
+TESTS_JS_DIR?=
 
 LEDGER_SRC=$(CURDIR)/app
 DOCKER_APP_SRC=/project
@@ -35,8 +36,9 @@ INTERACTIVE:=$(shell [ -t 0 ] && echo 1)
 USERID:=$(shell id -u)
 $(info USERID                : $(USERID))
 $(info TESTS_ZEMU_DIR        : $(TESTS_ZEMU_DIR))
-$(info TESTS_ZEMU_JS_DIR     : $(TESTS_ZEMU_JS_DIR))
-$(info TESTS_ZEMU_JS_PACKAGE : $(TESTS_ZEMU_JS_PACKAGE))
+$(info EXAMPLE_VUE_DIR       : $(EXAMPLE_VUE_DIR))
+$(info TESTS_JS_DIR          : $(TESTS_JS_DIR))
+$(info TESTS_JS_PACKAGE      : $(TESTS_JS_PACKAGE))
 
 ifeq ($(USERID),1001)
 # TODO: Use podman inside circleci machines?
@@ -168,21 +170,50 @@ dev_ca2: check_python
 dev_ca_delete2: check_python
 	@python -m ledgerblue.resetCustomCA --targetId 0x33000004
 
-########################## ZEMU Section ###############################
+########################## VUE Section ###############################
+
+.PHONY: vue_install_js_link
+ifeq ($(TESTS_JS_DIR),)
+vue_install_js_link:
+	@echo "No local package defined"
+else
+vue_install_js_link:
+	# First unlink everything
+	cd $(TESTS_JS_DIR) && yarn unlink || true
+	cd $(EXAMPLE_VUE_DIR) && yarn unlink $(TESTS_JS_PACKAGE) || true
+#	# Now build and link
+	cd $(TESTS_JS_DIR) && yarn install && yarn build && yarn link || true
+	cd $(EXAMPLE_VUE_DIR) && yarn link $(TESTS_JS_PACKAGE) && yarn install || true
+	@echo
+	# List linked packages
+	@echo
+	@cd $(EXAMPLE_VUE_DIR) && ( ls -l node_modules ; ls -l node_modules/@* ) | grep ^l || true
+	@echo
+endif
+
+.PHONY: zemu
+vue:
+	cd $(EXAMPLE_VUE_DIR) && yarn install && yarn serve
+
+########################## VUE Section ###############################
 
 .PHONY: zemu_install_js_link
-ifeq ($(TESTS_ZEMU_JS_DIR),)
+ifeq ($(TESTS_JS_DIR),)
 zemu_install_js_link:
 	@echo "No local package defined"
 else
 zemu_install_js_link:
 	# First unlink everything
-	cd $(TESTS_ZEMU_JS_DIR) && yarn unlink || true
-	cd $(TESTS_ZEMU_DIR) && yarn unlink $(TESTS_ZEMU_JS_PACKAGE) || true
+	cd $(TESTS_JS_DIR) && yarn unlink || true
+	cd $(TESTS_ZEMU_DIR) && yarn unlink $(TESTS_JS_PACKAGE) || true
 	# Now build and link
-	cd $(TESTS_ZEMU_JS_DIR) && yarn install && yarn build || true
-	cd $(TESTS_ZEMU_JS_DIR) && yarn link || true
-	cd $(TESTS_ZEMU_DIR) && yarn link $(TESTS_ZEMU_JS_PACKAGE) || true
+	cd $(TESTS_JS_DIR) && yarn install && yarn build && yarn link || true
+	cd $(TESTS_ZEMU_DIR) && yarn link $(TESTS_JS_PACKAGE) && yarn install || true
+	@echo
+	# List linked packages
+	@echo
+	@cd $(TESTS_ZEMU_DIR) && ( ls -l node_modules ; ls -l node_modules/@* ) | grep ^l || true
+	@echo
 endif
 
 .PHONY: zemu_install
