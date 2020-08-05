@@ -21,15 +21,15 @@
 
 #include <string.h>
 
-int base32_decode(const uint8_t *encoded, uint8_t *result,
-                  unsigned int bufSize) {
+int base32_decode(const uint8_t *encoded, unsigned int encodedSize,  uint8_t *result, unsigned int bufSize) {
     if (encoded == NULL) {
         return 0;
     }
+
     unsigned int buffer = 0;
     int bitsLeft = 0;
     unsigned int count = 0;
-    for (const uint8_t *ptr = encoded; count < bufSize && *ptr; ++ptr) {
+    for (const uint8_t *ptr = encoded; count < bufSize && *ptr && (ptr - encoded) < encodedSize; ++ptr) {
         uint8_t ch = *ptr;
         if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' || ch == '-') {
             continue;
@@ -64,11 +64,11 @@ int base32_decode(const uint8_t *encoded, uint8_t *result,
     if (count < bufSize) {
         result[count] = '\000';
     }
+
     return count;
 }
 
-int base32_encode(const uint8_t *data, unsigned int length, uint8_t *result,
-                  unsigned int bufSize) {
+int base32_encode(const uint8_t *data, unsigned int length, uint8_t *result, unsigned int bufSize) {
     if (length < 0 || length > (1 << 28)) {
         return -1;
     }

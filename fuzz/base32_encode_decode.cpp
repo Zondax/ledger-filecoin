@@ -11,7 +11,7 @@
 #endif
 
 
-static uint8_t ENCODED[1024];
+static uint8_t ENCODED[2048];
 static uint8_t DECODED[1024];
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t data_size)
@@ -24,7 +24,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t data_size)
         return 0;
     }
 
-    int decoded_size = base32_decode(ENCODED, DECODED, (int)sizeof(DECODED));
+    int decoded_size = base32_decode(ENCODED, encoded_size, DECODED, (int)sizeof(DECODED));
     if (decoded_size != (int)data_size) {
         fprintf(stderr, "expected decoded size %d but got %d\n", (int)data_size, decoded_size);
         assert(false);
