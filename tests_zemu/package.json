@@ -33,12 +33,10 @@
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-import": "^2.22.0",
-    "eslint-plugin-jest": "^23.18.0",
+    "eslint-plugin-jest": "^23.20.0",
     "eslint-plugin-prettier": "^3.1.4",
     "jest": "26.2.2",
     "jest-serial-runner": "^1.1.0",
-    "crypto-js": "4.0.0",
-    "secp256k1": "^4.0.1",
-    "blakejs": "^1.1.0"
+    "secp256k1": "^4.0.2"
   }
 }
