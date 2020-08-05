@@ -29,7 +29,7 @@ for config in CONFIGS:
     os.makedirs(artifact_dir, exist_ok=True)
     os.makedirs(corpus_dir, exist_ok=True)
 
-    fuzz_path = os.path.join(f'build/fuzz-{fuzzer}')
+    fuzz_path = os.path.join(f'build/bin/fuzz-{fuzzer}')
 
     env = os.environ.copy()
     env['ASAN_OPTIONS'] = 'halt_on_error=1:print_stacktrace=1'
