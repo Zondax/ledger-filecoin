@@ -45,10 +45,11 @@ extern uint32_t hdPath[HDPATH_LEN_DEFAULT];
 #define ADDRESS_PROTOCOL_ACTOR_PAYLOAD_LEN      20
 #define ADDRESS_PROTOCOL_BLS_PAYLOAD_LEN        48
 
-uint8_t decompressLEB128(const uint8_t *input, uint64_t *v);
+uint8_t decompressLEB128(const uint8_t *input, uint16_t inputSize, uint64_t *v);
 
 uint16_t formatProtocol(const uint8_t *addressBytes, uint16_t addressSize,
-                        uint8_t *formattedAddress, uint16_t formattedAddressSize);
+                        uint8_t *formattedAddress,
+                        uint16_t formattedAddressSize);
 
 bool isTestnet();
 
