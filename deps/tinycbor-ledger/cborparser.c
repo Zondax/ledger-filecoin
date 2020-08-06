@@ -1123,7 +1123,7 @@ static CborError iterate_string_chunks(const CborValue *value, char *buffer, siz
             return CborErrorDataTooLarge;
 
         if (*result && *buflen >= newTotal)
-            *result = !!func(buffer + total, (const uint8_t *)ptr, chunkLen);
+            *result = !!func(buffer ? buffer + total : NULL, (const uint8_t *) ptr, chunkLen);
         else
             *result = false;
 
@@ -1133,7 +1133,7 @@ static CborError iterate_string_chunks(const CborValue *value, char *buffer, siz
     /* is there enough room for the ending NUL byte? */
     if (*result && *buflen > total) {
         uint8_t nul[] = { 0 };
-        *result = !!func(buffer + total, nul, 1);
+        *result = !!func(buffer ? buffer + total : NULL, nul, 1);
     }
     *buflen = total;
     return CborNoError;
