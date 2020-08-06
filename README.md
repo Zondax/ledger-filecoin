@@ -23,6 +23,8 @@ Tip:
 
 - In releases, you will find a precompiled test app. If you are just curious, you can run `zxtool.sh` and avoid building.
 
+- If you want to build the development containers yourself. You can find them [here](https://github.com/Zondax/docker-builder)
+
 ## Download and install
 
 *Once the app is approved by Ledger, it will be available in their app store (Ledger Live).
