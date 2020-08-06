@@ -42,9 +42,9 @@ $(info TESTS_JS_PACKAGE      : $(TESTS_JS_PACKAGE))
 
 ifeq ($(USERID),1001)
 # TODO: Use podman inside circleci machines?
-DOCKER_IMAGE=zondax/builder-bolos-1001@sha256:d3d746a6ea897a0539cc99186ce3d146b4b8aa12dce315338891a85650af2fec
+DOCKER_IMAGE=zondax/builder-bolos-1001@sha256:423348672bb9f1e6aca573de29afa6763bcbead1a592cedb62c8fbfd82fb7f65
 else
-DOCKER_IMAGE=zondax/builder-bolos@sha256:5af9542b68b92c12c5c6ae5bd862ff9dbcce063b38755fe9d8153175f6a53338
+DOCKER_IMAGE=zondax/builder-bolos@sha256:2ce8f16b1e3face5464c538198e57a64340f664d932b3383d019f2636321f342
 endif
 
 ifdef INTERACTIVE
@@ -191,8 +191,8 @@ vue_install_js_link:
 	@echo
 endif
 
-.PHONY: zemu
-vue:
+.PHONY: vue
+vue: vue_install_js_link
 	cd $(EXAMPLE_VUE_DIR) && yarn install && yarn serve
 
 ########################## VUE Section ###############################
