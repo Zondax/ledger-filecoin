@@ -257,7 +257,7 @@ parser_error_t _read(const parser_context_t *c, parser_tx_t *v) {
 
     // "version" field
     PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(&arrayContainer), parser_unexpected_type)
-    CHECK_PARSER_ERR(cbor_value_get_int64(&arrayContainer, &v->version))
+    CHECK_PARSER_ERR(cbor_value_get_int64_checked(&arrayContainer, &v->version))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
@@ -314,6 +314,9 @@ parser_error_t _read(const parser_context_t *c, parser_tx_t *v) {
 }
 
 parser_error_t _validateTx(const parser_context_t *c, const parser_tx_t *v) {
+    // Note: This is place holder for transaction level checks that the project may require before accepting
+    // the parsed values. the parser already validates input
+    // This function is called by parser_validate, where additional checks are made (formatting, UI/UX, etc.(
     return parser_ok;
 }
 

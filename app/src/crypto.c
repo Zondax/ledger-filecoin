@@ -15,9 +15,10 @@
 ********************************************************************************/
 
 #include "crypto.h"
+
+#include "base32.h"
 #include "coin.h"
 #include "zxmacros.h"
-#include "base32.h"
 
 uint32_t hdPath[HDPATH_LEN_DEFAULT];
 
@@ -221,12 +222,12 @@ uint16_t crypto_sign(uint8_t *signature,
 
 #endif
 
-uint8_t decompressLEB128(const uint8_t *input, uint64_t *v) {
+uint8_t decompressLEB128(const uint8_t *input, uint16_t inputSize, uint64_t *v) {
     unsigned int i = 0;
 
     *v = 0;
     uint16_t shift = 0;
-    while (i < 10u) {
+    while (i < 10u && i < inputSize) {
         uint64_t b = input[i] & 0x7fu;
 
         if (shift >= 63 && b > 1) {
@@ -236,8 +237,9 @@ uint8_t decompressLEB128(const uint8_t *input, uint64_t *v) {
 
         *v |= b << shift;
 
-        if (!(input[i] & 0x80u))
+        if (!(input[i] & 0x80u)) {
             return 1;
+        }
 
         shift += 7;
         i++;
@@ -255,6 +257,10 @@ uint16_t formatProtocol(const uint8_t *addressBytes,
     if (formattedAddress == NULL) {
         return 0;
     }
+    if (addressBytes == NULL || addressSize < 2u) {
+        return 0;
+    }
+
     MEMZERO(formattedAddress, formattedAddressSize);
 
     const uint8_t protocol = addressBytes[0];
@@ -267,23 +273,24 @@ uint16_t formatProtocol(const uint8_t *addressBytes,
         case ADDRESS_PROTOCOL_ID: {
             uint64_t val = 0;
 
-            if (!decompressLEB128(addressBytes + 1, &val)) {
+            if (!decompressLEB128(addressBytes + 1, addressSize - 1, &val)) {
                 return 0;
             }
 
             if (uint64_to_str((char *) formattedAddress + 2,
-                              (uint32_t) (formattedAddressSize - 2), val) != NULL) {
+                              (uint32_t) (formattedAddressSize - 2),
+                              val) != NULL) {
                 return 0;
             }
 
             return strlen((const char *) formattedAddress);
         }
-        case ADDRESS_PROTOCOL_SECP256K1: { // NOLINT(bugprone-branch-clone)
+        case ADDRESS_PROTOCOL_SECP256K1: {  // NOLINT(bugprone-branch-clone)
             // payload 20 bytes + 4 bytes checksum
             payloadSize = ADDRESS_PROTOCOL_SECP256K1_PAYLOAD_LEN;
             break;
         }
-        case ADDRESS_PROTOCOL_ACTOR: { // NOLINT(bugprone-branch-clone)
+        case ADDRESS_PROTOCOL_ACTOR: {  // NOLINT(bugprone-branch-clone)
             // payload 20 bytes + 4 bytes checksum
             payloadSize = ADDRESS_PROTOCOL_ACTOR_PAYLOAD_LEN;
             break;
@@ -317,7 +324,7 @@ uint16_t formatProtocol(const uint8_t *addressBytes,
         return 0;
     }
 
-    return strlen((char *) formattedAddress);
+    return strnlen((char *) formattedAddress, formattedAddressSize);
 }
 
 typedef struct {

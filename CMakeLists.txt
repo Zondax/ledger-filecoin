@@ -23,10 +23,34 @@ set(CMAKE_CXX_STANDARD 11)
 include(cmake/conan/CMakeLists.txt)
 add_subdirectory(cmake/gtest)
 
-string(APPEND CMAKE_CXX_FLAGS " -fsanitize=address -fno-omit-frame-pointer")
-string(APPEND CMAKE_LINKER_FLAGS " -fsanitize=address -fno-omit-frame-pointer")
+option(ENABLE_FUZZING "Build with fuzzing instrumentation and build fuzz targets" OFF)
+option(ENABLE_COVERAGE "Build with source code coverage instrumentation" OFF)
+option(ENABLE_SANITIZERS "Build with ASAN and UBSAN" OFF)
+
+string(APPEND CMAKE_C_FLAGS " -fno-omit-frame-pointer -g")
+string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -g")
+string(APPEND CMAKE_LINKER_FLAGS " -fno-omit-frame-pointer -g")
 
 add_definitions(-DAPP_CONSUMER)
+
+if(ENABLE_FUZZING)
+        add_definitions(-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=1)
+        string(APPEND CMAKE_C_FLAGS " -fsanitize=fuzzer-no-link")
+        string(APPEND CMAKE_CXX_FLAGS " -fsanitize=fuzzer-no-link")
+        string(APPEND CMAKE_LINKER_FLAGS " -fsanitize=fuzzer-no-link")
+endif()
+
+if(ENABLE_COVERAGE)
+    string(APPEND CMAKE_C_FLAGS " -fprofile-instr-generate -fcoverage-mapping")
+    string(APPEND CMAKE_CXX_FLAGS " -fprofile-instr-generate -fcoverage-mapping")
+    string(APPEND CMAKE_LINKER_FLAGS " -fprofile-instr-generate -fcoverage-mapping")
+endif()
+
+if(ENABLE_SANITIZERS)
+    string(APPEND CMAKE_C_FLAGS " -fsanitize=address,undefined -fsanitize-recover=address,undefined")
+    string(APPEND CMAKE_CXX_FLAGS " -fsanitize=address,undefined -fsanitize-recover=address,undefined")
+    string(APPEND CMAKE_LINKER_FLAGS " -fsanitize=address,undefined -fsanitize-recover=address,undefined")
+endif()
 
 ##############################################################
 ##############################################################
@@ -87,3 +111,23 @@ target_link_libraries(unittests PRIVATE
 
 add_test(unittests ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/unittests)
 set_tests_properties(unittests PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+
+##############################################################
+##############################################################
+#  Fuzz Targets
+if(ENABLE_FUZZING)
+    set(FUZZ_TARGETS
+        base32_encode_decode
+        crypto_sign
+        decompressLEB128
+        formatProtocol
+        parseHexString
+        parser_parse
+        )
+
+    foreach(target ${FUZZ_TARGETS})
+        add_executable(fuzz-${target} ${CMAKE_CURRENT_SOURCE_DIR}/fuzz/${target}.cpp)
+        target_link_libraries(fuzz-${target} PRIVATE app_lib)
+        target_link_options(fuzz-${target} PRIVATE "-fsanitize=fuzzer")
+    endforeach()
+endif()

@@ -104,7 +104,7 @@ TEST(CRYPTO, extractBitsFromLEB128_small) {
     uint8_t input[] = {0x81, 0x01};
     uint64_t output;
 
-    auto ret = decompressLEB128(input, &output);
+    auto ret = decompressLEB128(input, sizeof(input), &output);
 
     EXPECT_THAT(ret, ::testing::Eq(1));
     EXPECT_THAT(output, ::testing::Eq(0x81));
@@ -120,7 +120,7 @@ TEST(CRYPTO, extractBitsFromLEB128_1byte) {
     uint8_t input[] = {0xc1, 0x0d};
     uint64_t output;
 
-    auto ret = decompressLEB128(input, &output);
+    auto ret = decompressLEB128(input, sizeof(input), &output);
 
     EXPECT_THAT(ret, ::testing::Eq(1));
     EXPECT_THAT(output, ::testing::Eq(1729));
@@ -136,7 +136,7 @@ TEST(CRYPTO, extractBitsFromLEB128_big) {
     uint8_t input[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01};
     uint64_t output;
 
-    auto ret = decompressLEB128(input, &output);
+    auto ret = decompressLEB128(input, sizeof(input), &output);
 
     EXPECT_THAT(ret, ::testing::Eq(1));
     EXPECT_THAT(output, ::testing::Eq(18446744073709551615u));
@@ -152,7 +152,7 @@ TEST(CRYPTO, extractBitsFromLEB128_tooBig) {
     uint8_t input[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x02};
     uint64_t output;
 
-    auto ret = decompressLEB128(input, &output);
+    auto ret = decompressLEB128(input, sizeof(input), &output);
 
     EXPECT_THAT(ret, ::testing::Eq(0));
     EXPECT_THAT(output, ::testing::Eq(0));

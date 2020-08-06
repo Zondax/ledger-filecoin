@@ -104,8 +104,8 @@ __Z_INLINE parser_error_t parser_printAddress(const address_t *a,
 
     // the format :
     // network (1 byte) + protocol (1 byte) + base 32 [ payload (20 bytes or 48 bytes) + checksum (optional - 4bytes)]
-    // Max we need 84 bytes to support BLS + 2 bytes
-    char outBuffer[84 + 2];
+    // Max we need 84 bytes to support BLS + 16 bytes padding
+    char outBuffer[84 + 16];
     MEMZERO(outBuffer, sizeof(outBuffer));
 
     if (formatProtocol(a->buffer, a->len, (uint8_t *) outBuffer, sizeof(outBuffer)) == 0) {
