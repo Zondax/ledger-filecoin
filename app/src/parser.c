@@ -162,11 +162,6 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
     }
 
     if (displayIdx == 4) {
-        snprintf(outKey, outKeyLen, "Gas Price");
-        return parser_printBigIntFixedPoint(&parser_tx_obj.gasprice, outVal, outValLen, pageIdx, pageCount);
-    }
-
-    if (displayIdx == 5) {
         snprintf(outKey, outKeyLen, "Gas Limit");
         if (int64_to_str(outVal, outValLen, parser_tx_obj.gaslimit) != NULL) {
             return parser_unexepected_error;
@@ -175,7 +170,17 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
         return parser_ok;
     }
 
+    if (displayIdx == 5) {
+        snprintf(outKey, outKeyLen, "Gas Premium");
+        return parser_printBigIntFixedPoint(&parser_tx_obj.gaspremium, outVal, outValLen, pageIdx, pageCount);
+    }
+
     if (displayIdx == 6) {
+        snprintf(outKey, outKeyLen, "Gas Fee Cap");
+        return parser_printBigIntFixedPoint(&parser_tx_obj.gasfeecap, outVal, outValLen, pageIdx, pageCount);
+    }
+
+    if (displayIdx == 7) {
         snprintf(outKey, outKeyLen, "Method");
         *pageCount = 1;
         switch(parser_tx_obj.method) {
@@ -207,7 +212,7 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
         return parser_unexpected_method;
     }
 
-    if (displayIdx == 7) {
+    if (displayIdx == 8) {
         *pageCount = 1;
         snprintf(outKey, outKeyLen, "Params");
         snprintf(outVal, outValLen, "Not Available");

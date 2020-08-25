@@ -249,7 +249,7 @@ parser_error_t _read(const parser_context_t *c, parser_tx_t *v) {
     CHECK_CBOR_MAP_ERR(cbor_value_get_array_length(&it, &arraySize))
 
     // Depends if we have params or not
-    PARSER_ASSERT_OR_ERROR(arraySize == 9 || arraySize == 8, parser_unexpected_number_items);
+    PARSER_ASSERT_OR_ERROR(arraySize == 10 || arraySize == 9, parser_unexpected_number_items);
 
     CborValue arrayContainer;
     PARSER_ASSERT_OR_ERROR(cbor_value_is_container(&it), parser_unexpected_type)
@@ -286,14 +286,19 @@ parser_error_t _read(const parser_context_t *c, parser_tx_t *v) {
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
-    // "gasPrice" field
-    CHECK_PARSER_ERR(_readBigInt(&v->gasprice, &arrayContainer))
-    PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
-    CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
-
     // "gasLimit" field
     PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(&arrayContainer), parser_unexpected_type)
     CHECK_PARSER_ERR(cbor_value_get_int64(&arrayContainer, &v->gaslimit))
+    PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
+    CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
+
+    // "gasPremium" field
+    CHECK_PARSER_ERR(_readBigInt(&v->gaspremium, &arrayContainer))
+    PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
+    CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
+
+    // "gasFeeCap" field
+    CHECK_PARSER_ERR(_readBigInt(&v->gasfeecap, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
@@ -321,11 +326,11 @@ parser_error_t _validateTx(const parser_context_t *c, const parser_tx_t *v) {
 }
 
 uint8_t _getNumItems(const parser_context_t *c, const parser_tx_t *v) {
-    uint8_t itemCount = 8;
+    uint8_t itemCount = 9;
 
     switch (v->method) {
         case method0:
-            itemCount = 6;
+            itemCount = 7;
             break;
         case method1:
         case method2:
@@ -334,7 +339,7 @@ uint8_t _getNumItems(const parser_context_t *c, const parser_tx_t *v) {
         case method5:
         case method6:
         case method7:
-            itemCount = 8;
+            break;
     }
 
     return itemCount;

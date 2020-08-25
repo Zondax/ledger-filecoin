@@ -21,8 +21,9 @@ typedef struct {
     std::string from;
     uint64_t nonce;
     std::string value;
-    std::string gasprice;
     std::string gaslimit;
+    std::string gaspremium;
+    std::string gasfeecap;
     uint64_t method;
 
     std::string encoded_tx;
