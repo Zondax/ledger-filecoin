@@ -230,7 +230,7 @@ describe('Basic checks', function () {
 
             const path = "m/44'/461'/0'/0/1";
             const txBlob = Buffer.from(
-                "89004300ed075501dfe49184d46adc8f89d44638beb45f78fcad259010404200011903e8025823845501dfe49184d46adc8f89d44638beb45f78fcad259049000de0b6b3a76400000040",
+                "8a004300ec075501dfe49184d46adc8f89d44638beb45f78fcad259001401a000f4240430009c4430009c402581d845501dfe49184d46adc8f89d44638beb45f78fcad2590430003e80040",
                 "hex",
             );
 
@@ -244,7 +244,7 @@ describe('Basic checks', function () {
             // Wait until we are not in the main menu
             await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
-            await sim.compareSnapshotsAndAccept(".", "sign_proposal", 9);
+            await sim.compareSnapshotsAndAccept(".", "sign_proposal", 11);
 
             let resp = await signatureRequest;
             console.log(resp);

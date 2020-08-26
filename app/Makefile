@@ -48,7 +48,7 @@ endif
 
 APPVERSION_M=0
 APPVERSION_N=18
-APPVERSION_P=0
+APPVERSION_P=1
 
 $(info COIN  = [$(COIN)])
 ifeq ($(COIN),FIL)
@@ -123,7 +123,7 @@ SDK_SOURCE_PATH  += lib_blewbxx lib_blewbxx_impl
 else
 # Assume Nano S
 DEFINES       += IO_SEPROXYHAL_BUFFER_SIZE_B=128
-DEFINES       += HAVE_BOLOS_UX COMPLIANCE_UX_160 HAVE_UX_LEGACY
+DEFINES       += COMPLIANCE_UX_160 HAVE_UX_LEGACY
 endif
 
 # X specific
