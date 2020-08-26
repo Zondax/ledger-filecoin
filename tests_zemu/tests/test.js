@@ -33,14 +33,6 @@ const sim_options = {
 
 jest.setTimeout(25000)
 
-function compareSnapshots(snapshotPrefixTmp, snapshotPrefixGolden, snapshotCount) {
-    for (let i = 0; i < snapshotCount; i++) {
-        const img1 = Zemu.LoadPng2RGB(`${snapshotPrefixTmp}${i}.png`);
-        const img2 = Zemu.LoadPng2RGB(`${snapshotPrefixGolden}${i}.png`);
-        expect(img1).toEqual(img2);
-    }
-}
-
 describe('Basic checks', function () {
     it('can start and stop container', async function () {
         const sim = new Zemu(APP_PATH);
@@ -133,15 +125,10 @@ describe('Basic checks', function () {
             await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
             // Now navigate the address / path
-            await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            await sim.clickBoth(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            await sim.compareSnapshotsAndAccept(".", "show_address", 3);
 
             const resp = await respRequest;
             console.log(resp);
-
-            compareSnapshots(snapshotPrefixTmp, snapshotPrefixGolden, snapshotCount);
 
             expect(resp.return_code).toEqual(0x9000);
             expect(resp.error_message).toEqual("No errors");
@@ -157,10 +144,6 @@ describe('Basic checks', function () {
     });
 
     it('sign basic & verify', async function () {
-        const snapshotPrefixGolden = "snapshots/sign-basic/";
-        const snapshotPrefixTmp = "snapshots-tmp/sign-basic/";
-        let snapshotCount = 0;
-
         const sim = new Zemu(APP_PATH);
         try {
             await sim.start(sim_options);
@@ -168,7 +151,7 @@ describe('Basic checks', function () {
 
             const path = "m/44'/461'/0'/0/1";
             const txBlob = Buffer.from(
-                "890055026d21137eb4c4814269e894d296cf6500e43cd7145502e0c7c75f82d55e5ed55db28033630df4274a984f0144000186a0430009c41961a80040",
+                "8a0058310396a1a3e4ea7a14d49985e661b22401d44fed402d1d0925b243c923589c0fbc7e32cd04e29ed78d15d37d3aaa3fe6da3358310386b454258c589475f7d16f5aac018a79f6c1169d20fc33921dd8b5ce1cac6c348f90a3603624f6aeb91b64518c2e80950144000186a01961a8430009c44200000040",
                 "hex",
             );
 
@@ -182,17 +165,10 @@ describe('Basic checks', function () {
             // Wait until we are not in the main menu
             await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
-            // Reference window
-            await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            for (let i = 0; i < 8; i++) {
-                await sim.clickRight(Resolve(`${snapshotPrefixTmp}${snapshotCount++}.png`));
-            }
-            await sim.clickBoth();
+            await sim.compareSnapshotsAndAccept(".", "sign_basic", 12);
 
             let resp = await signatureRequest;
             console.log(resp);
-
-            compareSnapshots(snapshotPrefixTmp, snapshotPrefixGolden, snapshotCount);
 
             expect(resp.return_code).toEqual(0x9000);
             expect(resp.error_message).toEqual("No errors");
@@ -268,17 +244,10 @@ describe('Basic checks', function () {
             // Wait until we are not in the main menu
             await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
-            // Reference window
-            await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            for (let i = 0; i < 9; i++) {
-                await sim.clickRight(Resolve(`${snapshotPrefixTmp}${snapshotCount++}.png`));
-            }
-            await sim.clickBoth();
+            await sim.compareSnapshotsAndAccept(".", "sign_proposal", 9);
 
             let resp = await signatureRequest;
             console.log(resp);
-
-            compareSnapshots(snapshotPrefixTmp, snapshotPrefixGolden, snapshotCount);
 
             expect(resp.return_code).toEqual(0x9000);
             expect(resp.error_message).toEqual("No errors");
