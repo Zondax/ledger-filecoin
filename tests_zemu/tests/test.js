@@ -165,7 +165,7 @@ describe('Basic checks', function () {
             // Wait until we are not in the main menu
             await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
-            await sim.compareSnapshotsAndAccept(".", "sign_basic", 12);
+            await sim.compareSnapshotsAndAccept(".", "sign_basic", 13);
 
             let resp = await signatureRequest;
             console.log(resp);
@@ -239,12 +239,13 @@ describe('Basic checks', function () {
             expect(pkResponse.return_code).toEqual(0x9000);
             expect(pkResponse.error_message).toEqual("No errors");
 
-            // do not wait here..
+            // do not wait here so we can get snapshots and interact with the app
             const signatureRequest = app.sign(path, txBlob);
+
             // Wait until we are not in the main menu
             await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
-            await sim.compareSnapshotsAndAccept(".", "sign_proposal", 11);
+            await sim.compareSnapshotsAndAccept(".", "sign_proposal", 15);
 
             let resp = await signatureRequest;
             console.log(resp);

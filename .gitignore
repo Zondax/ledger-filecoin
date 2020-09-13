@@ -85,3 +85,5 @@ cmake-build-fuzz/
 !\deps/tinycbor
 !\deps/tinycbor-ledger
 !\deps/BLAKE
+
+.DS_Store
