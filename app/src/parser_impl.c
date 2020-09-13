@@ -191,11 +191,71 @@ __Z_INLINE parser_error_t _readBigInt(bigint_t *bigint, CborValue *value) {
     return parser_ok;
 }
 
+parser_error_t _printParam(const parser_tx_t *tx, uint8_t paramIdx,
+                           char *outVal, uint16_t outValLen,
+                           uint8_t pageIdx, uint8_t *pageCount) {
+    if (paramIdx >= tx->numparams) {
+        return parser_value_out_of_range;
+    }
+
+    CborParser parser;
+    CborValue params;
+    CHECK_CBOR_MAP_ERR(cbor_parser_init(tx->params, sizeof(tx->params), 0, &parser, &params));
+
+    CborValue container;
+    CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&params, &container));
+
+    for (uint8_t i=0 ; i<paramIdx ; ++i) {
+        CHECK_CBOR_MAP_ERR(cbor_value_advance(&container));
+    }
+
+    switch (container.type) {
+    case CborByteStringType: {
+        uint8_t buff[200];
+        size_t len = sizeof(buff);
+        CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(&container, buff, &len, NULL /* next */));
+
+        if (len == 0) {
+        snprintf(outVal, outValLen, "-");
+            break;
+        }
+
+        // 0x + val + \0
+        size_t hexStrLen = 2 + len*2 + 1;
+        char hexStr[hexStrLen];
+        MEMZERO(hexStr, hexStrLen);
+        hexStr[0] = '0';
+        hexStr[1] = 'x';
+
+        size_t count = array_to_hexstr(hexStr + 2, len * 2 + 1, buff, len);
+        PARSER_ASSERT_OR_ERROR(count == len * 2, parser_value_out_of_range);
+
+        pageString(outVal, outValLen, hexStr, pageIdx, pageCount);
+        break;
+    }
+    case CborIntegerType: {
+        int paramValue = 0;
+        CHECK_CBOR_MAP_ERR(cbor_value_get_int(&container, &paramValue));
+        snprintf(outVal, outValLen, "%d", paramValue);
+        break;
+    }
+    default:
+        snprintf(outVal, outValLen, "Type: %d", container.type);
+    }
+
+    CHECK_CBOR_MAP_ERR(cbor_value_leave_container(&params, &container));
+    return parser_ok;
+}
+
+
 __Z_INLINE parser_error_t _readMethod(parser_tx_t *tx, CborValue *value) {
 
     uint64_t methodValue;
     PARSER_ASSERT_OR_ERROR(cbor_value_is_unsigned_integer(value), parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_get_uint64(value, &methodValue))
+
+    tx->numparams = 0;
+    MEMZERO(tx->params, sizeof(tx->params));
 
     switch (methodValue) {
         case method0: {
@@ -217,18 +277,47 @@ __Z_INLINE parser_error_t _readMethod(parser_tx_t *tx, CborValue *value) {
         case method4:
         case method5:
         case method6:
-        case method7:
+        case method7: {
             if (!app_mode_expert()) {
                 return parser_unexpected_method;
             }
-            PARSER_ASSERT_OR_ERROR(value->type != CborInvalidType, parser_unexpected_type)
-            CHECK_CBOR_MAP_ERR(cbor_value_advance(value))
-            CHECK_CBOR_TYPE(value->type, CborByteStringType)
 
-            size_t arraySize;
-            PARSER_ASSERT_OR_ERROR(cbor_value_is_byte_string(value) || cbor_value_is_text_string(value), parser_unexpected_type)
-            CHECK_CBOR_MAP_ERR(cbor_value_get_string_length(value, &arraySize))
+            // This area reads the entire params byte string (if present) into the txn->params
+            // and sets txn->numparams to the number of params within cbor container
+            // Parsing of the individual params is deferred until the display stage
+
+            PARSER_ASSERT_OR_ERROR(value->type != CborInvalidType, parser_unexpected_type);
+            CHECK_CBOR_MAP_ERR(cbor_value_advance(value));
+            CHECK_CBOR_TYPE(value->type, CborByteStringType);
+
+            PARSER_ASSERT_OR_ERROR(cbor_value_is_byte_string(value), parser_unexpected_type);
+
+            size_t paramsBufferSize = 0;
+            CHECK_CBOR_MAP_ERR(cbor_value_get_string_length(value, &paramsBufferSize));
+            PARSER_ASSERT_OR_ERROR(paramsBufferSize <= sizeof(tx->params), parser_unexpected_number_items);
+
+            // short-ciruit if there are no params
+            if (paramsBufferSize == 0) {
+                break;
+            }
+
+            size_t len = sizeof(tx->params);
+            CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(value, tx->params, &len, NULL /* next */));
+            PARSER_ASSERT_OR_ERROR(len <= sizeof(tx->params), parser_unexpected_value);
+
+            CborParser parser;
+            CborValue params;
+            CHECK_CBOR_MAP_ERR(cbor_parser_init(tx->params, sizeof(tx->params), 0, &parser, &params));
+
+            PARSER_ASSERT_OR_ERROR(cbor_value_is_array(&params), parser_unexpected_type);
+
+            size_t arrayLength = 0;
+            CHECK_CBOR_MAP_ERR(cbor_value_get_array_length(&params, &arrayLength));
+            PARSER_ASSERT_OR_ERROR(arrayLength < UINT8_MAX, parser_value_out_of_range);
+            tx->numparams = arrayLength;
+
             break;
+        }
         default:
             return parser_unexpected_method;
     }
@@ -326,21 +415,7 @@ parser_error_t _validateTx(const parser_context_t *c, const parser_tx_t *v) {
 }
 
 uint8_t _getNumItems(const parser_context_t *c, const parser_tx_t *v) {
-    uint8_t itemCount = 9;
+    uint8_t itemCount = 8;
 
-    switch (v->method) {
-        case method0:
-            itemCount = 7;
-            break;
-        case method1:
-        case method2:
-        case method3:
-        case method4:
-        case method5:
-        case method6:
-        case method7:
-            break;
-    }
-
-    return itemCount;
+    return itemCount + v->numparams;
 }

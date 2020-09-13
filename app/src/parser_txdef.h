@@ -64,8 +64,9 @@ typedef struct {
     bigint_t gaspremium;
     bigint_t gasfeecap;
     uint64_t method;
-    // params are not supported at this moment
-    // char *params
+
+    uint8_t numparams;
+    uint8_t params[200];
 } parser_tx_t;
 
 #ifdef __cplusplus

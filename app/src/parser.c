@@ -73,6 +73,11 @@ __Z_INLINE bool format_quantity(const bigint_t *b,
     return bignumBigEndian_bcdprint(bignum, bignumSize, bcd, bcdSize);
 }
 
+parser_error_t parser_printParam(const parser_tx_t *tx, uint8_t paramIdx, char *outVal, uint16_t outValLen,
+                                 uint8_t pageIdx, uint8_t *pageCount) {
+    return _printParam(tx, paramIdx, outVal, outValLen, pageIdx, pageCount);
+}
+
 __Z_INLINE parser_error_t parser_printBigIntFixedPoint(const bigint_t *b,
                                                        char *outVal, uint16_t outValLen,
                                                        uint8_t pageIdx, uint8_t *pageCount) {
@@ -188,36 +193,46 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
                 snprintf(outVal, outValLen, "Transfer");
                 return parser_ok;
             case method1:
-                snprintf(outVal, outValLen, "Method1");
+                snprintf(outVal, outValLen, "1");
                 return parser_ok;
             case method2:
-                snprintf(outVal, outValLen, "Method2");
+                snprintf(outVal, outValLen, "2");
                 return parser_ok;
             case method3:
-                snprintf(outVal, outValLen, "Method3");
+                snprintf(outVal, outValLen, "3");
                 return parser_ok;
             case method4:
-                snprintf(outVal, outValLen, "Method4");
+                snprintf(outVal, outValLen, "4");
                 return parser_ok;
             case method5:
-                snprintf(outVal, outValLen, "Method5");
+                snprintf(outVal, outValLen, "5");
                 return parser_ok;
             case method6:
-                snprintf(outVal, outValLen, "Method6");
+                snprintf(outVal, outValLen, "6");
                 return parser_ok;
             case method7:
-                snprintf(outVal, outValLen, "Method7");
+                snprintf(outVal, outValLen, "7");
                 return parser_ok;
         }
         return parser_unexpected_method;
     }
 
-    if (displayIdx == 8) {
-        *pageCount = 1;
+    if (parser_tx_obj.numparams == 0) {
         snprintf(outKey, outKeyLen, "Params");
-        snprintf(outVal, outValLen, "Not Available");
+        snprintf(outVal, outValLen, "-");
         return parser_ok;
     }
 
-    return parser_ok;
+    // remaining display pages show the params
+    int32_t paramIdxSigned = displayIdx - 8;
+
+    // end of params
+    if (paramIdxSigned < 0 || paramIdxSigned >= parser_tx_obj.numparams) {
+        return parser_ok;
+    }
+
+    uint8_t paramIdx = (uint8_t)paramIdxSigned;
+    *pageCount = 1;
+    snprintf(outKey, outKeyLen, "Params - %d", paramIdx + 1);
+    return parser_printParam(&parser_tx_obj, paramIdx, outVal, outValLen, pageIdx, pageCount);
 }
