@@ -44,12 +44,16 @@ function toCBOR(tc) {
     let buf = bigintToArray(tc.message.value);
     answer.push(buf);
 
-    // "gasprice"
-    buf = bigintToArray(tc.message.gasprice);
-    answer.push(buf);
-
     // "gaslimit"
     answer.push( parseInt(tc.message.gaslimit, 10));
+
+    // "gaspremium"
+    buf = bigintToArray(tc.message.gaspremium);
+    answer.push(buf);
+
+    // "gasfeecap"
+    buf = bigintToArray(tc.message.gasfeecap);
+    answer.push(buf);
 
     // "method"
     answer.push(tc.message.method);

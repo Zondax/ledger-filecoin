@@ -77,17 +77,19 @@ std::vector<std::string> GenerateExpectedUIOutput(const testcaseData_t &tcd) {
 
     addTo(answer, "3 | Value : {}", FormatAmount(tcd.value));
 
-    addTo(answer, "4 | Gas Price : {}", FormatAmount(tcd.gasprice));
+    addTo(answer, "4 | Gas Limit : {}", tcd.gaslimit);
 
-    addTo(answer, "5 | Gas Limit : {}", tcd.gaslimit);
+    addTo(answer, "5 | Gas Premium : {}", FormatAmount(tcd.gaspremium));
+
+    addTo(answer, "6 | Gas Fee Cap : {}", FormatAmount(tcd.gasfeecap));
 
     if (tcd.method != 0) {
-        addTo(answer, "6 | Method : Method{}", tcd.method);
+        addTo(answer, "7 | Method : Method{}", tcd.method);
     }
 
     // If 0 we have a no parameters
     if (tcd.method != 0) {
-        addTo(answer, "7 | Params : Not Available");
+        addTo(answer, "8 | Params : Not Available");
     }
 
     return answer;
