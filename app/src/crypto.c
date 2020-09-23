@@ -125,7 +125,7 @@ uint16_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *m
             // Sign
             signatureLength = cx_ecdsa_sign(&cx_privateKey,
                                             CX_RND_RFC6979 | CX_LAST,
-                                            CX_BLAKE2B,
+                                            CX_SHA256,
                                             message_digest,
                                             BLAKE2B_256_SIZE,
                                             signature->der_signature,
