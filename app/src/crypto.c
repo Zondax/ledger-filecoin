@@ -30,13 +30,13 @@ bool isTestnet() {
 #if defined(TARGET_NANOS) || defined(TARGET_NANOX)
 #include "cx.h"
 
-void crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *pubKey, uint16_t pubKeyLen) {
+zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *pubKey, uint16_t pubKeyLen) {
     cx_ecfp_public_key_t cx_publicKey;
     cx_ecfp_private_key_t cx_privateKey;
     uint8_t privateKeyData[32];
 
     if (pubKeyLen < SECP256K1_PK_LEN) {
-        return;
+        return zxerr_invalid_crypto_settings;
     }
 
     BEGIN_TRY
@@ -51,6 +51,9 @@ void crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *p
             cx_ecfp_init_public_key(CX_CURVE_256K1, NULL, 0, &cx_publicKey);
             cx_ecfp_generate_pair(CX_CURVE_256K1, &cx_publicKey, &cx_privateKey, 1);
         }
+        CATCH_OTHER(e) {
+            return zxerr_ledger_api_error;
+        }
         FINALLY {
             MEMZERO(&cx_privateKey, sizeof(cx_privateKey));
             MEMZERO(privateKeyData, 32);
@@ -59,6 +62,7 @@ void crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *p
     END_TRY;
 
     memcpy(pubKey, cx_publicKey.W, SECP256K1_PK_LEN);
+    return zxerr_ok;
 }
 
 __Z_INLINE int blake_hash(const unsigned char *in, unsigned int inLen,
@@ -96,7 +100,7 @@ typedef struct {
 } __attribute__((packed)) signature_t;
 
 
-uint16_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen) {
+zxerr_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen, uint16_t *sigSize) {
     uint8_t tmp[BLAKE2B_256_SIZE];
     uint8_t message_digest[BLAKE2B_256_SIZE];
 
@@ -105,7 +109,7 @@ uint16_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *m
 
     cx_ecfp_private_key_t cx_privateKey;
     uint8_t privateKeyData[32];
-    int signatureLength;
+    int signatureLength = 0;
     unsigned int info = 0;
 
     signature_t *const signature = (signature_t *) buffer;
@@ -116,9 +120,9 @@ uint16_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *m
         {
             // Generate keys
             os_perso_derive_node_bip32(CX_CURVE_256K1,
-                                                      hdPath,
-                                                      HDPATH_LEN_DEFAULT,
-                                                      privateKeyData, NULL);
+                                       hdPath,
+                                       HDPATH_LEN_DEFAULT,
+                                       privateKeyData, NULL);
 
             cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey);
 
@@ -132,6 +136,9 @@ uint16_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *m
                                             sizeof_field(signature_t, der_signature),
                                             &info);
         }
+        CATCH_OTHER(e) {
+            return zxerr_ledger_api_error;
+        }
         FINALLY {
             MEMZERO(&cx_privateKey, sizeof(cx_privateKey));
             MEMZERO(privateKeyData, 32);
@@ -142,11 +149,12 @@ uint16_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *m
     err_convert_e err = convertDERtoRSV(signature->der_signature, info,  signature->r, signature->s, &signature->v);
     if (err != no_error) {
         // Error while converting so return length 0
-        return 0;
+        return zxerr_invalid_crypto_settings;
     }
 
     // return actual size using value from signatureLength
-    return sizeof_field(signature_t, r) + sizeof_field(signature_t, s) + sizeof_field(signature_t, v) + signatureLength;
+    *sigSize =  sizeof_field(signature_t, r) + sizeof_field(signature_t, s) + sizeof_field(signature_t, v) + signatureLength;
+    return zxerr_ok;
 }
 
 #else
@@ -156,7 +164,7 @@ uint16_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *m
 
 char *crypto_testPubKey;
 
-void crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *pubKey, uint16_t pubKeyLen) {
+zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *pubKey, uint16_t pubKeyLen) {
     ///////////////////////////////////////
     // THIS IS ONLY USED FOR TEST PURPOSES
     ///////////////////////////////////////
@@ -206,10 +214,9 @@ int prepareDigestToSign(const unsigned char *in, unsigned int inLen,
     return 0;
 }
 
-uint16_t crypto_sign(uint8_t *signature,
-                     uint16_t signatureMaxlen,
-                     const uint8_t *message,
-                     uint16_t messageLen) {
+zxerr_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen,
+                    const uint8_t *message, uint16_t messageLen,
+                    uint16_t *sigSize) {
     // Empty version for non-Ledger devices
     uint8_t tmp[BLAKE2B_256_SIZE];
     uint8_t message_digest[BLAKE2B_256_SIZE];
@@ -217,7 +224,7 @@ uint16_t crypto_sign(uint8_t *signature,
     blake_hash(message, messageLen, tmp, BLAKE2B_256_SIZE);
     blake_hash_cid(tmp, BLAKE2B_256_SIZE, message_digest, BLAKE2B_256_SIZE);
 
-    return 0;
+    return zxerr_ok;
 }
 
 #endif
@@ -340,14 +347,14 @@ typedef struct {
 
 } __attribute__((packed)) answer_t;
 
-uint16_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len) {
+zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrLen) {
     if (buffer_len < sizeof(answer_t)) {
         return 0;
     }
     MEMZERO(buffer, buffer_len);
     answer_t *const answer = (answer_t *) buffer;
 
-    crypto_extractPublicKey(hdPath, answer->publicKey, sizeof_field(answer_t, publicKey));
+    CHECK_ZXERR(crypto_extractPublicKey(hdPath, answer->publicKey, sizeof_field(answer_t, publicKey)))
 
     // addr bytes
     answer->addrBytesLen = sizeof_field(answer_t, addrBytes);
@@ -356,12 +363,12 @@ uint16_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len) {
 
     // addr str
     answer->addrStrLen = sizeof_field(answer_t, addrStr);
-    const uint8_t addrLen = formatProtocol(answer->addrBytes, answer->addrBytesLen, answer->addrStr,
-                                           answer->addrStrLen);
+    *addrLen = formatProtocol(answer->addrBytes, answer->addrBytesLen, answer->addrStr, answer->addrStrLen);
 
-    if (addrLen != answer->addrStrLen) {
-        return 0;
+    if (*addrLen != answer->addrStrLen) {
+        return zxerr_encoding_failed;
     }
 
-    return sizeof(answer_t);
+    *addrLen = sizeof(answer_t);
+    return zxerr_ok;
 }
