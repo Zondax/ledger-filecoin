@@ -39,8 +39,8 @@ TEST(CRYPTO, fillAddress) {
 
     crypto_testPubKey = "0466f2bdb19e90fd7c29e4bf63612eb98515e5163c97888042364ba777d818e88b765c649056ba4a62292ae4e2ccdabd71b845d8fa0991c140f664d2978ac0972a";
 
-    uint16_t addrLen = crypto_fillAddress(buffer, sizeof(buffer));
-
+    uint16_t addrLen;
+    ASSERT_THAT(crypto_fillAddress(buffer, sizeof(buffer), &addrLen), zxerr_ok);
     ASSERT_THAT(addrLen, ::testing::Eq(129));
 
     std::cout << std::endl;
@@ -73,8 +73,8 @@ TEST(CRYPTO, fillAddressTestMnemonic) {
 
     crypto_testPubKey = nullptr;   // Use default test mnemonic
 
-    uint16_t addrLen = crypto_fillAddress(buffer, sizeof(buffer));
-
+    uint16_t addrLen;
+    ASSERT_THAT(crypto_fillAddress(buffer, sizeof(buffer), &addrLen), zxerr_ok);
     ASSERT_THAT(addrLen, ::testing::Eq(129));
 
     std::cout << std::endl;

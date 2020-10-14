@@ -178,6 +178,8 @@ zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t
         const char *str = "0466f2bdb19e90fd7c29e4bf63612eb98515e5163c97888042364ba777d818e88b765c649056ba4a62292ae4e2ccdabd71b845d8fa0991c140f664d2978ac0972a";
         parseHexString(pubKey, pubKeyLen, str);
     }
+
+    return zxerr_ok;
 }
 
 __Z_INLINE int blake_hash(const unsigned char *in, unsigned int inLen,
