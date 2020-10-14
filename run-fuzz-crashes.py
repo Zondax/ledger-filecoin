@@ -12,7 +12,6 @@ MUTATE_DEPTH = random.randint(1, 20)
 CONFIGS = [
     ('decompressLEB128', 100, 1),
     ('base32_encode_decode', 1100, 2),
-    ('crypto_sign', 1100, 1),
     ('formatProtocol', 1100, 1),
     ('parseHexString', 1024, 1),
     ('parser_parse', 17000, 4),

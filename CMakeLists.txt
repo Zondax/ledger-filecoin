@@ -69,6 +69,9 @@ endif()
 include(cmake/conan/CMakeLists.txt)
 add_subdirectory(cmake/gtest)
 
+string(APPEND CMAKE_CXX_FLAGS " -fsanitize=address -fno-omit-frame-pointer")
+string(APPEND CMAKE_LINKER_FLAGS " -fsanitize=address -fno-omit-frame-pointer")
+
 ##############################################################
 ##############################################################
 #  static libs
