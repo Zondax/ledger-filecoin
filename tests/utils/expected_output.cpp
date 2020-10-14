@@ -18,7 +18,7 @@
 #include "testcases.h"
 #include "zxmacros.h"
 
-bool TestcaseIsValid(const Json::Value &tc) {
+bool TestcaseIsValid(const Json::Value &_) {
     return true;
 }
 
