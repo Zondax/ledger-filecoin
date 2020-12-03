@@ -36,6 +36,22 @@ typedef enum {
     method5 = 5,
     method6 = 6,
     method7 = 7,
+    method8 = 8,
+    method9 = 9,
+    method10 = 10,
+    method11 = 11,
+    method12 = 12,
+    method13 = 13,
+    method14 = 14,
+    method15 = 15,
+    method16 = 16,
+    method17 = 17,
+    method18 = 18,
+    method19 = 19,
+    method20 = 20,
+    method21 = 21,
+    method22 = 22,
+    method23 = 23
 } method_e;
 
 // https://github.com/filecoin-project/lotus/blob/65c669b0f2dfd8c28b96755e198b9cdaf0880df8/chain/address/address.go#L36
