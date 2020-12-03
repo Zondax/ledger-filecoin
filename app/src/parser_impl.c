@@ -191,6 +191,58 @@ __Z_INLINE parser_error_t _readBigInt(bigint_t *bigint, CborValue *value) {
     return parser_ok;
 }
 
+parser_error_t _printValue(const struct CborValue *value,
+                 char *outVal, uint16_t outValLen,
+                 uint8_t pageIdx, uint8_t *pageCount) {
+    switch (value->type) {
+        case CborByteStringType: {
+            uint8_t buff[200];
+            size_t len = sizeof(buff);
+            CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(value, buff, &len, NULL /* next */));
+
+            if (len == 0) {
+                snprintf(outVal, outValLen, "-");
+                break;
+            }
+
+            // 0x + val + \0
+            size_t hexStrLen = 2 + len*2 + 1;
+            char hexStr[hexStrLen];
+            MEMZERO(hexStr, hexStrLen);
+            hexStr[0] = '0';
+            hexStr[1] = 'x';
+
+            size_t count = array_to_hexstr(hexStr + 2, len * 2 + 1, buff, len);
+            PARSER_ASSERT_OR_ERROR(count == len * 2, parser_value_out_of_range);
+
+            pageString(outVal, outValLen, hexStr, pageIdx, pageCount);
+            break;
+        }
+        case CborTextStringType: {
+            char buff[200];
+            size_t len = sizeof(buff);
+            CHECK_CBOR_MAP_ERR(cbor_value_copy_text_string(value, buff, &len, NULL /* next */));
+
+            if (len == 0) {
+                snprintf(outVal, outValLen, "-");
+                break;
+            }
+
+            pageString(outVal, outValLen, buff, pageIdx, pageCount);
+            break;
+        }
+        case CborIntegerType: {
+            int paramValue = 0;
+            CHECK_CBOR_MAP_ERR(cbor_value_get_int(value, &paramValue));
+            snprintf(outVal, outValLen, "%d", paramValue);
+            break;
+        }
+        default:
+            snprintf(outVal, outValLen, "Type: %d", value->type);
+    }
+    return parser_ok;
+}
+
 parser_error_t _printParam(const parser_tx_t *tx, uint8_t paramIdx,
                            char *outVal, uint16_t outValLen,
                            uint8_t pageIdx, uint8_t *pageCount) {
@@ -202,48 +254,24 @@ parser_error_t _printParam(const parser_tx_t *tx, uint8_t paramIdx,
     CborValue params;
     CHECK_CBOR_MAP_ERR(cbor_parser_init(tx->params, sizeof(tx->params), 0, &parser, &params));
 
-    CborValue container;
-    CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&params, &container));
+    switch (params.type) {
+        case CborMapType:
+        case CborArrayType: {
+            CborValue container;
+            CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&params, &container));
 
-    for (uint8_t i=0 ; i<paramIdx ; ++i) {
-        CHECK_CBOR_MAP_ERR(cbor_value_advance(&container));
-    }
+            for (uint8_t i = 0; i < paramIdx; ++i) {
+                CHECK_CBOR_MAP_ERR(cbor_value_advance(&container));
+            }
 
-    switch (container.type) {
-    case CborByteStringType: {
-        uint8_t buff[200];
-        size_t len = sizeof(buff);
-        CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(&container, buff, &len, NULL /* next */));
+            CHECK_CBOR_MAP_ERR(_printValue(&container, outVal, outValLen, pageIdx, pageCount));
 
-        if (len == 0) {
-        snprintf(outVal, outValLen, "-");
+            CHECK_CBOR_MAP_ERR(cbor_value_leave_container(&params, &container));
             break;
         }
-
-        // 0x + val + \0
-        size_t hexStrLen = 2 + len*2 + 1;
-        char hexStr[hexStrLen];
-        MEMZERO(hexStr, hexStrLen);
-        hexStr[0] = '0';
-        hexStr[1] = 'x';
-
-        size_t count = array_to_hexstr(hexStr + 2, len * 2 + 1, buff, len);
-        PARSER_ASSERT_OR_ERROR(count == len * 2, parser_value_out_of_range);
-
-        pageString(outVal, outValLen, hexStr, pageIdx, pageCount);
-        break;
+        default:
+            CHECK_CBOR_MAP_ERR(_printValue(&params, outVal, outValLen, pageIdx, pageCount));
     }
-    case CborIntegerType: {
-        int paramValue = 0;
-        CHECK_CBOR_MAP_ERR(cbor_value_get_int(&container, &paramValue));
-        snprintf(outVal, outValLen, "%d", paramValue);
-        break;
-    }
-    default:
-        snprintf(outVal, outValLen, "Type: %d", container.type);
-    }
-
-    CHECK_CBOR_MAP_ERR(cbor_value_leave_container(&params, &container));
     return parser_ok;
 }
 
@@ -277,7 +305,23 @@ __Z_INLINE parser_error_t _readMethod(parser_tx_t *tx, CborValue *value) {
         case method4:
         case method5:
         case method6:
-        case method7: {
+        case method7:
+        case method8:
+        case method9:
+        case method10:
+        case method11:
+        case method12:
+        case method13:
+        case method14:
+        case method15:
+        case method16:
+        case method17:
+        case method18:
+        case method19:
+        case method20:
+        case method21:
+        case method22:
+        case method23: {
             if (!app_mode_expert()) {
                 return parser_unexpected_method;
             }
@@ -309,13 +353,27 @@ __Z_INLINE parser_error_t _readMethod(parser_tx_t *tx, CborValue *value) {
             CborValue params;
             CHECK_CBOR_MAP_ERR(cbor_parser_init(tx->params, sizeof(tx->params), 0, &parser, &params));
 
-            PARSER_ASSERT_OR_ERROR(cbor_value_is_array(&params), parser_unexpected_type);
-
-            size_t arrayLength = 0;
-            CHECK_CBOR_MAP_ERR(cbor_value_get_array_length(&params, &arrayLength));
-            PARSER_ASSERT_OR_ERROR(arrayLength < UINT8_MAX, parser_value_out_of_range);
-            tx->numparams = arrayLength;
-
+            switch (params.type) {
+                case CborArrayType: {
+                    size_t arrayLength = 0;
+                    CHECK_CBOR_MAP_ERR(cbor_value_get_array_length(&params, &arrayLength));
+                    PARSER_ASSERT_OR_ERROR(arrayLength < UINT8_MAX, parser_value_out_of_range);
+                    tx->numparams = arrayLength;
+                    break;
+                }
+                case CborMapType: {
+                    size_t mapLength = 0;
+                    CHECK_CBOR_MAP_ERR(cbor_value_get_map_length(&params, &mapLength));
+                    PARSER_ASSERT_OR_ERROR(mapLength < UINT8_MAX, parser_value_out_of_range);
+                    tx->numparams = mapLength;
+                    break;
+                }
+                case CborInvalidType:
+                    tx->numparams = 0;
+                    break;
+                default:
+                    tx->numparams = 1;
+            }
             break;
         }
         default:
