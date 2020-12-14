@@ -47,12 +47,12 @@ function toCBOR(tc) {
     // "gaslimit"
     answer.push( parseInt(tc.message.gaslimit, 10));
 
-    // "gaspremium"
-    buf = bigintToArray(tc.message.gaspremium);
-    answer.push(buf);
-
     // "gasfeecap"
     buf = bigintToArray(tc.message.gasfeecap);
+    answer.push(buf);
+    
+    // "gaspremium"
+    buf = bigintToArray(tc.message.gaspremium);
     answer.push(buf);
 
     // "method"
