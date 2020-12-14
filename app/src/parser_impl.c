@@ -381,13 +381,13 @@ parser_error_t _read(const parser_context_t *c, parser_tx_t *v) {
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
-    // "gasPremium" field
-    CHECK_PARSER_ERR(_readBigInt(&v->gaspremium, &arrayContainer))
-    PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
-    CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
-
     // "gasFeeCap" field
     CHECK_PARSER_ERR(_readBigInt(&v->gasfeecap, &arrayContainer))
+    PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
+    CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
+    
+    // "gasPremium" field
+    CHECK_PARSER_ERR(_readBigInt(&v->gaspremium, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
