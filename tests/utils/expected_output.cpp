@@ -84,7 +84,9 @@ std::vector<std::string> GenerateExpectedUIOutput(const testcaseData_t &tcd) {
     addTo(answer, "6 | Gas Fee Cap : {}", FormatAmount(tcd.gasfeecap));
 
     if (tcd.method != 0) {
-        addTo(answer, "7 | Method : Method{}", tcd.method);
+      addTo(answer, "7 | Method : Method{}", tcd.method);
+    } else {
+      addTo(answer, "7 | Method : Transfer", tcd.method);
     }
 
     // If 0 we have a no parameters
