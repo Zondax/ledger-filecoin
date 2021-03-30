@@ -34,7 +34,8 @@ jobs:
     steps:
       - checkout
       - run: git submodule update --init --recursive
-      - run: sudo apt update && sudo apt -y install clang-10
+      - run: sudo apt update && sudo apt -y install clang-10 clang-tidy
+      - run: clang-tidy --version
       - run:
           name: Build
           command: |

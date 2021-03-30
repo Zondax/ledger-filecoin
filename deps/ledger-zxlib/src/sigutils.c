@@ -17,6 +17,10 @@
 #include <sigutils.h>
 #include <zxmacros.h>
 
+#define MINPAYLOADLEN 1
+#define PAYLOADLEN 32
+#define MAXPAYLOADLEN 33
+
 err_convert_e convertDERtoRSV(const uint8_t *inSignatureDER,
                               unsigned int inInfo,
                               uint8_t *outR,

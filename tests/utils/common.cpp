@@ -23,6 +23,9 @@ std::vector<std::string> dumpUI(parser_context_t *ctx,
                                 uint16_t maxValueLen) {
     uint8_t numItems;
     parser_error_t err = parser_getNumItems(ctx, &numItems);
+    if (err != parser_ok) {
+        return std::vector<std::string>({"ERROR Dumping UI"});
+    }
 
     auto answer = std::vector<std::string>();
 

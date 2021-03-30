@@ -24,6 +24,7 @@ extern "C" {
 #include "coin.h"
 #include <stdbool.h>
 #include <sigutils.h>
+#include <zxerror.h>
 
 #define CHECKSUM_LENGTH             4
 
@@ -56,14 +57,12 @@ bool isTestnet();
 int prepareDigestToSign(const unsigned char *in, unsigned int inLen,
                         unsigned char *out, unsigned int outLen);
 
-void crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *pubKey, uint16_t pubKeyLen);
+zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *pubKey, uint16_t pubKeyLen);
 
-uint16_t crypto_fillAddress(uint8_t *buffer, uint16_t bufferLen);
+zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t bufferLen, uint16_t *addrLen);
 
-uint16_t crypto_sign(uint8_t *signature,
-                     uint16_t signatureMaxlen,
-                     const uint8_t *message,
-                     uint16_t messageLen);
+zxerr_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen,
+                    uint16_t *sigSize);
 
 #ifdef __cplusplus
 }
