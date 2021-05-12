@@ -1,5 +1,5 @@
 [requires]
-jsoncpp/1.9.3
+jsoncpp/1.9.4
 fmt/7.0.2
 
 [generators]
