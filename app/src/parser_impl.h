@@ -36,6 +36,8 @@ parser_error_t _printParam(const parser_tx_t *tx, uint8_t paramIdx,
 
 uint8_t _getNumItems(const parser_context_t *c, const parser_tx_t *v);
 
+parser_error_t checkMethod(uint64_t methodValue);
+
 #ifdef __cplusplus
 }
 #endif

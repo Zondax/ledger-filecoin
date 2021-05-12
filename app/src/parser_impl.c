@@ -192,8 +192,8 @@ __Z_INLINE parser_error_t _readBigInt(bigint_t *bigint, CborValue *value) {
 }
 
 parser_error_t _printValue(const struct CborValue *value,
-                 char *outVal, uint16_t outValLen,
-                 uint8_t pageIdx, uint8_t *pageCount) {
+                           char *outVal, uint16_t outValLen,
+                           uint8_t pageIdx, uint8_t *pageCount) {
     switch (value->type) {
         case CborByteStringType: {
             uint8_t buff[200];
@@ -206,7 +206,7 @@ parser_error_t _printValue(const struct CborValue *value,
             }
 
             // 0x + val + \0
-            size_t hexStrLen = 2 + len*2 + 1;
+            size_t hexStrLen = 2 + len * 2 + 1;
             char hexStr[hexStrLen];
             MEMZERO(hexStr, hexStrLen);
             hexStr[0] = '0';
@@ -269,12 +269,18 @@ parser_error_t _printParam(const parser_tx_t *tx, uint8_t paramIdx,
             CHECK_CBOR_MAP_ERR(cbor_value_leave_container(&params, &container));
             break;
         }
-        default:
-            CHECK_CBOR_MAP_ERR(_printValue(&params, outVal, outValLen, pageIdx, pageCount));
+        default: CHECK_CBOR_MAP_ERR(_printValue(&params, outVal, outValLen, pageIdx, pageCount));
     }
     return parser_ok;
 }
 
+parser_error_t checkMethod(uint64_t methodValue) {
+    if (methodValue <= MAX_SUPPORT_METHOD) {
+        return parser_ok;
+    } else {
+        return parser_value_out_of_range;
+    }
+}
 
 __Z_INLINE parser_error_t _readMethod(parser_tx_t *tx, CborValue *value) {
 
@@ -285,66 +291,41 @@ __Z_INLINE parser_error_t _readMethod(parser_tx_t *tx, CborValue *value) {
     tx->numparams = 0;
     MEMZERO(tx->params, sizeof(tx->params));
 
-    switch (methodValue) {
-        case method0: {
-            PARSER_ASSERT_OR_ERROR(value->type != CborInvalidType, parser_unexpected_type)
-            CHECK_CBOR_MAP_ERR(cbor_value_advance(value))
-            CHECK_CBOR_TYPE(value->type, CborByteStringType)
+    CHECK_PARSER_ERR(checkMethod(methodValue));
 
-            size_t arraySize;
-            PARSER_ASSERT_OR_ERROR(cbor_value_is_byte_string(value) || cbor_value_is_text_string(value), parser_unexpected_type)
-            CHECK_CBOR_MAP_ERR(cbor_value_get_string_length(value, &arraySize))
+    if (methodValue == 0) {
+        PARSER_ASSERT_OR_ERROR(value->type != CborInvalidType, parser_unexpected_type)
+        CHECK_CBOR_MAP_ERR(cbor_value_advance(value))
+        CHECK_CBOR_TYPE(value->type, CborByteStringType)
 
-            // method0 should have zero arguments
-            PARSER_ASSERT_OR_ERROR(arraySize == 0, parser_unexpected_number_items)
-            break;
+        size_t arraySize;
+        PARSER_ASSERT_OR_ERROR(cbor_value_is_byte_string(value) || cbor_value_is_text_string(value),
+                               parser_unexpected_type)
+        CHECK_CBOR_MAP_ERR(cbor_value_get_string_length(value, &arraySize))
+
+        // method0 should have zero arguments
+        PARSER_ASSERT_OR_ERROR(arraySize == 0, parser_unexpected_number_items)
+    } else {
+        if (!app_mode_expert()) {
+            return parser_unexpected_method;
         }
-        case method1:
-        case method2:
-        case method3:
-        case method4:
-        case method5:
-        case method6:
-        case method7:
-        case method8:
-        case method9:
-        case method10:
-        case method11:
-        case method12:
-        case method13:
-        case method14:
-        case method15:
-        case method16:
-        case method17:
-        case method18:
-        case method19:
-        case method20:
-        case method21:
-        case method22:
-        case method23: {
-            if (!app_mode_expert()) {
-                return parser_unexpected_method;
-            }
 
-            // This area reads the entire params byte string (if present) into the txn->params
-            // and sets txn->numparams to the number of params within cbor container
-            // Parsing of the individual params is deferred until the display stage
+        // This area reads the entire params byte string (if present) into the txn->params
+        // and sets txn->numparams to the number of params within cbor container
+        // Parsing of the individual params is deferred until the display stage
 
-            PARSER_ASSERT_OR_ERROR(value->type != CborInvalidType, parser_unexpected_type);
-            CHECK_CBOR_MAP_ERR(cbor_value_advance(value));
-            CHECK_CBOR_TYPE(value->type, CborByteStringType);
+        PARSER_ASSERT_OR_ERROR(value->type != CborInvalidType, parser_unexpected_type);
+        CHECK_CBOR_MAP_ERR(cbor_value_advance(value));
+        CHECK_CBOR_TYPE(value->type, CborByteStringType);
 
-            PARSER_ASSERT_OR_ERROR(cbor_value_is_byte_string(value), parser_unexpected_type);
+        PARSER_ASSERT_OR_ERROR(cbor_value_is_byte_string(value), parser_unexpected_type);
 
-            size_t paramsBufferSize = 0;
-            CHECK_CBOR_MAP_ERR(cbor_value_get_string_length(value, &paramsBufferSize));
-            PARSER_ASSERT_OR_ERROR(paramsBufferSize <= sizeof(tx->params), parser_unexpected_number_items);
+        size_t paramsBufferSize = 0;
+        CHECK_CBOR_MAP_ERR(cbor_value_get_string_length(value, &paramsBufferSize));
+        PARSER_ASSERT_OR_ERROR(paramsBufferSize <= sizeof(tx->params), parser_unexpected_number_items);
 
-            // short-ciruit if there are no params
-            if (paramsBufferSize == 0) {
-                break;
-            }
-
+        // short-ciruit if there are no params
+        if (paramsBufferSize != 0) {
             size_t len = sizeof(tx->params);
             CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(value, tx->params, &len, NULL /* next */));
             PARSER_ASSERT_OR_ERROR(len <= sizeof(tx->params), parser_unexpected_value);
@@ -374,12 +355,8 @@ __Z_INLINE parser_error_t _readMethod(parser_tx_t *tx, CborValue *value) {
                 default:
                     tx->numparams = 1;
             }
-            break;
         }
-        default:
-            return parser_unexpected_method;
     }
-
     tx->method = methodValue;
 
     return parser_ok;
@@ -443,7 +420,7 @@ parser_error_t _read(const parser_context_t *c, parser_tx_t *v) {
     CHECK_PARSER_ERR(_readBigInt(&v->gasfeecap, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
-    
+
     // "gasPremium" field
     CHECK_PARSER_ERR(_readBigInt(&v->gaspremium, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)

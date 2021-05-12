@@ -188,81 +188,18 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
     if (displayIdx == 7) {
         snprintf(outKey, outKeyLen, "Method");
         *pageCount = 1;
-        switch(parser_tx_obj.method) {
-            case method0:
-                snprintf(outVal, outValLen, "Transfer");
-                return parser_ok;
-            case method1:
-                snprintf(outVal, outValLen, "1");
-                return parser_ok;
-            case method2:
-                snprintf(outVal, outValLen, "2");
-                return parser_ok;
-            case method3:
-                snprintf(outVal, outValLen, "3");
-                return parser_ok;
-            case method4:
-                snprintf(outVal, outValLen, "4");
-                return parser_ok;
-            case method5:
-                snprintf(outVal, outValLen, "5");
-                return parser_ok;
-            case method6:
-                snprintf(outVal, outValLen, "6");
-                return parser_ok;
-            case method7:
-                snprintf(outVal, outValLen, "7");
-                return parser_ok;
-            case method8:
-                snprintf(outVal, outValLen, "8");
-                return parser_ok;
-            case method9:
-                snprintf(outVal, outValLen, "9");
-                return parser_ok;
-            case method10:
-                snprintf(outVal, outValLen, "10");
-                return parser_ok;
-            case method11:
-                snprintf(outVal, outValLen, "11");
-                return parser_ok;
-            case method12:
-                snprintf(outVal, outValLen, "12");
-                return parser_ok;
-            case method13:
-                snprintf(outVal, outValLen, "13");
-                return parser_ok;
-            case method14:
-                snprintf(outVal, outValLen, "14");
-                return parser_ok;
-            case method15:
-                snprintf(outVal, outValLen, "15");
-                return parser_ok;
-            case method16:
-                snprintf(outVal, outValLen, "16");
-                return parser_ok;
-            case method17:
-                snprintf(outVal, outValLen, "17");
-                return parser_ok;
-            case method18:
-                snprintf(outVal, outValLen, "18");
-                return parser_ok;
-            case method19:
-                snprintf(outVal, outValLen, "19");
-                return parser_ok;
-            case method20:
-                snprintf(outVal, outValLen, "20");
-                return parser_ok;
-            case method21:
-                snprintf(outVal, outValLen, "21");
-                return parser_ok;
-            case method22:
-                snprintf(outVal, outValLen, "22");
-                return parser_ok;
-            case method23:
-                snprintf(outVal, outValLen, "23");
-                return parser_ok;
+
+        CHECK_PARSER_ERR(checkMethod(parser_tx_obj.method));
+        if (parser_tx_obj.method == 0) {
+            snprintf(outVal, outValLen, "Transfer");
+            return parser_ok;
+        } else {
+            char buffer[100];
+            MEMZERO(buffer, sizeof(buffer));
+            fpuint64_to_str(buffer, sizeof(buffer), parser_tx_obj.method, 0);
+            pageString(outVal, outValLen, buffer, pageIdx, pageCount);
+            return parser_ok;
         }
-        return parser_unexpected_method;
     }
 
     if (parser_tx_obj.numparams == 0) {
@@ -279,7 +216,7 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
         return parser_ok;
     }
 
-    uint8_t paramIdx = (uint8_t)paramIdxSigned;
+    uint8_t paramIdx = (uint8_t) paramIdxSigned;
     *pageCount = 1;
     snprintf(outKey, outKeyLen, "Params - %d", paramIdx + 1);
     return parser_printParam(&parser_tx_obj, paramIdx, outVal, outValLen, pageIdx, pageCount);
