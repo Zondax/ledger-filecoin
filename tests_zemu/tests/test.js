@@ -256,4 +256,38 @@ describe('Basic checks', function () {
             await sim.close();
         }
     });
+
+    it('sign proposal -- unsupported method', async function () {
+        const sim = new Zemu(APP_PATH);
+        try {
+            await sim.start(sim_options);
+            const app = new FilecoinApp(sim.getTransport());
+
+            // Put the app in expert mode
+            await sim.clickRight();
+            await sim.clickBoth();
+            await sim.clickLeft();
+
+            const path = "m/44'/461'/0'/0/1";
+            const invalidMessage = Buffer.from(
+                "8a004300ec075501dfe49184d46adc8f89d44638beb45f78fcad259001401a000f4240430009c4430009c432581d845501dfe49184d46adc8f89d44638beb45f78fcad2590430003e80040",
+                "hex",
+            );
+
+            const pkResponse = await app.getAddressAndPubKey(path);
+            console.log(pkResponse);
+            expect(pkResponse.return_code).toEqual(0x9000);
+            expect(pkResponse.error_message).toEqual("No errors");
+
+            // do not wait here..
+            const signatureResponse = await app.sign(path, invalidMessage);
+            console.log(signatureResponse);
+
+            expect(signatureResponse.return_code).toEqual(0x6984);
+            expect(signatureResponse.error_message).toEqual("Data is invalid : Unexpected data type");
+
+        } finally {
+            await sim.close();
+        }
+    });
 });
