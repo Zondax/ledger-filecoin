@@ -278,7 +278,7 @@ parser_error_t checkMethod(uint64_t methodValue) {
     if (methodValue <= MAX_SUPPORT_METHOD) {
         return parser_ok;
     } else {
-        return parser_value_out_of_range;
+        return parser_unexpected_method;
     }
 }
 

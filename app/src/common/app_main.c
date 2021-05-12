@@ -203,7 +203,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                         THROW(APDU_CODE_OK);
 
                     CHECK_APP_CANARY()
-
+                    *tx = 0;
                     const char *error_msg = tx_parse();
                     CHECK_APP_CANARY()
 

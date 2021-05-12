@@ -33,6 +33,7 @@ __Z_INLINE void app_sign() {
     zxerr_t err = crypto_sign(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE - 3, message, messageLength, &replyLen);
 
     if (err != zxerr_ok || replyLen == 0) {
+        MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
         set_code(G_io_apdu_buffer, 0, APDU_CODE_SIGN_VERIFY_ERROR);
         io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
     } else {
@@ -42,6 +43,7 @@ __Z_INLINE void app_sign() {
 }
 
 __Z_INLINE void app_reject() {
+    MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
     set_code(G_io_apdu_buffer, 0, APDU_CODE_COMMAND_NOT_ALLOWED);
     io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
 }
@@ -54,6 +56,7 @@ __Z_INLINE uint8_t app_fill_address() {
     zxerr_t err = crypto_fillAddress(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE - 2, &action_addr_len);
 
     if (err != zxerr_ok || action_addr_len == 0) {
+        MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
         THROW(APDU_CODE_EXECUTION_ERROR);
     }
 
@@ -66,6 +69,7 @@ __Z_INLINE void app_reply_address() {
 }
 
 __Z_INLINE void app_reply_error() {
+    MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
     set_code(G_io_apdu_buffer, 0, APDU_CODE_DATA_INVALID);
     io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
 }
