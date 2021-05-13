@@ -52,7 +52,7 @@ void check_app_canary() {
 #endif
 }
 
-void zemu_log_stack(char *ctx) {
+void zemu_log_stack(const char *ctx) {
 #if defined(ZEMU_LOGGING)
 #if defined (TARGET_NANOS) || defined(TARGET_NANOX)
 #define STACK_SHIFT 20

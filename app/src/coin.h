@@ -1,5 +1,5 @@
 /*******************************************************************************
-*  (c) 2019 Zondax GmbH
+*  (c) 2018-2021 Zondax GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -49,6 +49,7 @@ typedef enum {
 
 #define MENU_MAIN_APP_LINE1 "Filecoin"
 #define MENU_MAIN_APP_LINE2 "Ready"
+#define MENU_MAIN_APP_LINE2_SECRET          "???"
 #define APPVERSION_LINE1 "Version"
 #define APPVERSION_LINE2 "v" APPVERSION
 

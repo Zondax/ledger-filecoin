@@ -25,7 +25,7 @@
 #define RAM_BUFFER_SIZE 8192
 #define FLASH_BUFFER_SIZE 16384
 #elif defined(TARGET_NANOS)
- #define RAM_BUFFER_SIZE 384
+#define RAM_BUFFER_SIZE 384
 #define FLASH_BUFFER_SIZE 8192
 #endif
 
@@ -37,13 +37,9 @@ typedef struct {
     uint8_t buffer[FLASH_BUFFER_SIZE];
 } storage_t;
 
-#if defined(TARGET_NANOS)
-storage_t N_appdata_impl __attribute__ ((aligned(64)));
-#define N_appdata (*(storage_t *)PIC(&N_appdata_impl))
-
-#elif defined(TARGET_NANOX)
-storage_t const N_appdata_impl __attribute__ ((aligned(64)));
-#define N_appdata (*(volatile storage_t *)PIC(&N_appdata_impl))
+#if defined(TARGET_NANOS) || defined(TARGET_NANOX)
+storage_t NV_CONST N_appdata_impl __attribute__ ((aligned(64)));
+#define N_appdata (*(NV_VOLATILE storage_t *)PIC(&N_appdata_impl))
 #endif
 
 parser_context_t ctx_parsed_tx;
@@ -52,7 +48,7 @@ void tx_initialize() {
     buffering_init(
             ram_buffer,
             sizeof(ram_buffer),
-            N_appdata.buffer,
+            (uint8_t *) N_appdata.buffer,
             sizeof(N_appdata.buffer)
     );
 }
@@ -75,9 +71,9 @@ uint8_t *tx_get_buffer() {
 
 const char *tx_parse() {
     uint8_t err = parser_parse(
-        &ctx_parsed_tx,
-        tx_get_buffer(),
-        tx_get_buffer_length());
+            &ctx_parsed_tx,
+            tx_get_buffer(),
+            tx_get_buffer_length());
 
     if (err != parser_ok) {
         return parser_getErrorDescription(err);
@@ -104,9 +100,9 @@ zxerr_t tx_getNumItems(uint8_t *num_items) {
 }
 
 zxerr_t tx_getItem(int8_t displayIdx,
-                      char *outKey, uint16_t outKeyLen,
-                      char *outVal, uint16_t outValLen,
-                      uint8_t pageIdx, uint8_t *pageCount) {
+                   char *outKey, uint16_t outKeyLen,
+                   char *outVal, uint16_t outValLen,
+                   uint8_t pageIdx, uint8_t *pageCount) {
     uint8_t numItems = 0;
 
     CHECK_ZXERR(tx_getNumItems(&numItems))

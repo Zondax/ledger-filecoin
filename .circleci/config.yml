@@ -40,8 +40,8 @@ jobs:
           name: Build
           command: |
             cmake -B build \
-                    -DCMAKE_C_COMPILER=clang-10 \
-                    -DCMAKE_CXX_COMPILER=clang++-10 \
+                    -DCMAKE_C_COMPILER=clang-11 \
+                    -DCMAKE_CXX_COMPILER=clang++-11 \
                     -DCMAKE_BUILD_TYPE=Debug \
                     -DENABLE_FUZZING=1 \
                     -DENABLE_SANITIZERS=1 \

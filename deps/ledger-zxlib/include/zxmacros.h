@@ -129,9 +129,17 @@ __Z_INLINE void strncpy_s(char *dst, const char *src, size_t dstSize) {
     strncpy(dst, src, dstSize - 1);
 }
 
-void zemu_log_stack(char *ctx);
+#define ZEMU_TRACE_EX(FORMAT, ...) { \
+    char trace_buffer[50];              \
+    snprintf(trace_buffer, sizeof(trace_buffer), FORMAT, __VA_ARGS__); \
+    zemu_log_stack(trace_buffer);                          \
+}
 
-__Z_INLINE void zemu_log(char *buf)
+#define ZEMU_TRACE() /*ZEMU_TRACE_EX("%s [%d]\n", __FILE__,  __LINE__)*/
+
+void zemu_log_stack(const char *ctx);
+
+__Z_INLINE void zemu_log(const char *buf)
 {
 #if defined(ZEMU_LOGGING)
     #if defined (TARGET_NANOS) || defined(TARGET_NANOX)

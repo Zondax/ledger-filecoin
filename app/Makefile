@@ -135,7 +135,7 @@ SDK_SOURCE_PATH  += lib_blewbxx lib_blewbxx_impl
 else
 # Assume Nano S
 DEFINES       += IO_SEPROXYHAL_BUFFER_SIZE_B=128
-DEFINES       += COMPLIANCE_UX_160 HAVE_UX_LEGACY
+DEFINES       += HAVE_UX_LEGACY
 endif
 
 # X specific
@@ -149,8 +149,8 @@ DEFINES   += LEDGER_SPECIFIC
 
 ifneq ($(BOLOS_ENV),)
 $(info BOLOS_ENV is $(BOLOS_ENV))
-CLANGPATH := $(BOLOS_ENV)/clang-arm-fropi/bin/
-GCCPATH := $(BOLOS_ENV)/gcc-arm-none-eabi-5_3-2016q1/bin/
+CLANGPATH := /usr/bin/
+GCCPATH := /usr/bin/
 else
 $(info BOLOS_ENV is not set: falling back to CLANGPATH and GCCPATH)
 endif

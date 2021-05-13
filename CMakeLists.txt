@@ -137,6 +137,7 @@ target_link_libraries(unittests PRIVATE
         CONAN_PKG::fmt
         CONAN_PKG::jsoncpp)
 
+add_compile_definitions(TESTVECTORS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/")
 add_test(unittests ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/unittests)
 set_tests_properties(unittests PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 

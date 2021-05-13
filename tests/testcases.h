@@ -16,7 +16,32 @@
 #pragma once
 #include <json/json.h>
 #include <fstream>
-#include "types.h"
+
+typedef struct {
+    std::string description;
+    std::string to;
+    std::string from;
+    uint64_t nonce;
+    std::string value;
+    std::string gaslimit;
+    std::string gaspremium;
+    std::string gasfeecap;
+    uint64_t method;
+
+    std::string encoded_tx;
+    bool valid;
+    bool testnet;
+    bool expert;
+
+    std::vector<uint8_t> blob;
+    std::vector<std::string> expected_ui_output;
+} testcaseData_t;
+
+typedef struct {
+    std::shared_ptr<Json::Value> testcases;
+    int64_t index;
+    std::string description;
+} testcase_t;
 
 testcaseData_t ReadTestCaseData(const std::shared_ptr<Json::Value>& jsonSource, int index);
 

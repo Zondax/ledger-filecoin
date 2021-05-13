@@ -1,5 +1,3 @@
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "cert-err58-cpp"
 /*******************************************************************************
 *   (c) 2019 Zondax GmbH
 *
@@ -16,14 +14,17 @@
 *  limitations under the License.
 ********************************************************************************/
 
-#include <gmock/gmock.h>
-#include "utils/testcases.h"
+#include "gmock/gmock.h"
 
 #include <iostream>
-#include <memory>
+#include <fstream>
+#include <json/json.h>
+#include <hexutils.h>
 #include <app_mode.h>
 #include "parser.h"
-#include "utils/common.h"
+#include "common.h"
+#include <memory>
+#include "testcases.h"
 
 using ::testing::TestWithParam;
 using ::testing::Values;

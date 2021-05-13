@@ -16,18 +16,19 @@
 #include <parser.h>
 #include <sstream>
 #include <string>
+#include <fmt/core.h>
 #include "common.h"
 
 std::vector<std::string> dumpUI(parser_context_t *ctx,
                                 uint16_t maxKeyLen,
                                 uint16_t maxValueLen) {
+    auto answer = std::vector<std::string>();
+
     uint8_t numItems;
     parser_error_t err = parser_getNumItems(ctx, &numItems);
     if (err != parser_ok) {
-        return std::vector<std::string>({"ERROR Dumping UI"});
+        return answer;
     }
-
-    auto answer = std::vector<std::string>();
 
     for (uint16_t idx = 0; idx < numItems; idx++) {
         char keyBuffer[1000];
@@ -38,16 +39,21 @@ std::vector<std::string> dumpUI(parser_context_t *ctx,
         while (pageIdx < pageCount) {
             std::stringstream ss;
 
-            auto err = parser_getItem(ctx,
-                                      idx,
-                                      keyBuffer, maxKeyLen,
-                                      valueBuffer, maxValueLen,
-                                      pageIdx, &pageCount);
+            err = parser_getItem(ctx,
+                                 (uint8_t) idx,
+                                 keyBuffer, maxKeyLen,
+                                 valueBuffer, maxValueLen,
+                                 pageIdx, &pageCount);
 
-            ss << idx << " | " << keyBuffer << " : ";
+            ss << fmt::format("{} | {}", idx, keyBuffer);
+            if (pageCount > 1) {
+                ss << fmt::format("[{}/{}]", pageIdx + 1, pageCount);
+            }
+            ss << " : ";
 
             if (err == parser_ok) {
-                ss << valueBuffer;
+                // Model multiple lines
+                ss << fmt::format("{}", valueBuffer);
             } else {
                 ss << parser_getErrorDescription(err);
             }

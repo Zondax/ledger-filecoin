@@ -15,28 +15,11 @@
 ********************************************************************************/
 #pragma once
 
-typedef struct {
-    std::string description;
-    std::string to;
-    std::string from;
-    uint64_t nonce;
-    std::string value;
-    std::string gaslimit;
-    std::string gaspremium;
-    std::string gasfeecap;
-    uint64_t method;
+#include <vector>
+#include <parser.h>
 
-    std::string encoded_tx;
-    bool valid;
-    bool testnet;
-    bool expert;
+#define EXPECT_EQ_STR(_STR1, _STR2, _errorMessage) { if (_STR1 != nullptr & _STR2 != nullptr) \
+EXPECT_TRUE(!strcmp(_STR1, _STR2)) << _errorMessage << ", expected: " << _STR2 << ", received: " << _STR1; \
+else FAIL() << "One of the strings is null"; }
 
-    std::vector<uint8_t> blob;
-    std::vector<std::string> expected_ui_output;
-} testcaseData_t;
-
-typedef struct {
-    std::shared_ptr<Json::Value> testcases;
-    int64_t index;
-    std::string description;
-} testcase_t;
+std::vector<std::string> dumpUI(parser_context_t *ctx, uint16_t maxKeyLen, uint16_t maxValueLen);
