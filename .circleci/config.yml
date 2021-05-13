@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: zondax/circleci@sha256:37f78ab294b35a055768c2305b3f13813e55fb9db4e65f72745ede61dd842c08
+      - image: zondax/circleci:latest
     steps:
       - checkout
       - run: git submodule update --init --recursive
@@ -13,10 +13,11 @@ jobs:
 
   build_ledger:
     docker:
-      - image: zondax/builder-bolos@sha256:5af9542b68b92c12c5c6ae5bd862ff9dbcce063b38755fe9d8153175f6a53338
+      - image: zondax/builder-bolos:latest
+    working_directory: ~/project
     environment:
-      - BOLOS_SDK=/home/zondax/project/deps/nanos-secure-sdk
-      - BOLOS_ENV=/opt/bolos
+      BOLOS_SDK: /home/zondax/project/deps/nanos-secure-sdk
+      BOLOS_ENV: /opt/bolos
     steps:
       - checkout
       # Docker entrypoint is not considered
@@ -25,7 +26,6 @@ jobs:
           name: Build
           command: |
             source /home/zondax/.cargo/env
-            cd /home/zondax/project
             make
 
   test_fuzz_crash_fixes:
@@ -51,7 +51,7 @@ jobs:
 
   test_zemu:
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:202101-01
     resource_class: large
     working_directory: ~/repo
     environment:
@@ -83,10 +83,10 @@ jobs:
 
   build_package:
     docker:
-      - image: zondax/builder-bolos@sha256:5af9542b68b92c12c5c6ae5bd862ff9dbcce063b38755fe9d8153175f6a53338
+      - image: zondax/builder-bolos:latest
     environment:
-      - BOLOS_SDK=/home/zondax/project/deps/nanos-secure-sdk
-      - BOLOS_ENV=/opt/bolos
+      BOLOS_SDK: /home/zondax/project/deps/nanos-secure-sdk
+      BOLOS_ENV: /opt/bolos
     steps:
       - checkout
       - run: git submodule update --init --recursive
