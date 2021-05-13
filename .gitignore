@@ -80,10 +80,11 @@ cmake-build-fuzz/
 
 \deps/*
 !\deps/nanos-secure-sdk
-\deps/nano2-sdk
+!\deps/nanox-secure-sdk
 !\deps/ledger-zxlib
 !\deps/tinycbor
 !\deps/tinycbor-ledger
-!\deps/BLAKE
+\fuzz-*.log
+\fuzz/corpora/*
 
-.DS_Store
+node_modules/.yarn-integrity

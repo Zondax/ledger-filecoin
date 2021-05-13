@@ -23,7 +23,7 @@ jobs:
       # Docker entrypoint is not considered
       - run: git submodule update --init --recursive
       - run:
-          name: Build
+          name: Build Standard app
           command: |
             source /home/zondax/.cargo/env
             make
@@ -61,9 +61,12 @@ jobs:
       - run: git submodule update --init --recursive
       - run: sudo apt-get update -y && sudo apt-get install -y libusb-1.0.0 libudev-dev
       - run:
-          name: Build Ledger app
+          name: Install rust
           command: |
-            make
+            sudo apt-get update
+            sudo apt-get install -y cmake binutils-dev libiberty-dev libelf-dev libdw-dev
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --no-modify-path --default-toolchain none -y;
+          no_output_timeout: 1800s
       - run:
           name: Install node + yarn
           command: |
@@ -71,14 +74,22 @@ jobs:
             nvm use 14.4.0
             npm install -g yarn
       - run:
+          name: Build Ledger app
+          command: |
+            make buildS
+            make clean
+            make buildX
+      - run:
           name: Build/Install build js deps
           command: |
             nvm use 14.4.0
+            export PATH=~/.cargo/bin:$PATH
             make zemu_install
       - run:
           name: Run zemu tests
           command: |
             nvm use 14.4.0
+            export PATH=~/.cargo/bin:$PATH
             make zemu_test
 
   build_package:
@@ -96,7 +107,7 @@ jobs:
             source /home/zondax/.cargo/env
             cd /home/zondax/project
             make
-      - run: /home/zondax/go/bin/ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete $(/home/zondax/project/app/pkg/zxtool.sh version) /home/zondax/project/app/pkg/zxtool.sh
+      - run: /home/zondax/go/bin/ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete $(/home/zondax/project/app/pkg/installer_s.sh version) /home/zondax/project/app/pkg/installer_s.sh
 
 workflows:
   version: 2

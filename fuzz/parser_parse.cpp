@@ -51,6 +51,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
                                 PARSER_KEY, sizeof(PARSER_KEY),
                                 PARSER_VALUE, sizeof(PARSER_VALUE),
                                 page_idx, &page_count);
+
             if (rc != parser_ok) {
                 fprintf(stderr,
                         "error getting item %u at page index %u: %s\n",
@@ -59,6 +60,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
                         parser_getErrorDescription(rc));
                 assert(false);
             }
+
             page_idx += 1;
         }
     }
