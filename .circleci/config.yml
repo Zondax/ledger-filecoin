@@ -30,7 +30,7 @@ jobs:
 
   test_fuzz_crash_fixes:
     docker:
-      - image: zondax/circleci@sha256:37f78ab294b35a055768c2305b3f13813e55fb9db4e65f72745ede61dd842c08
+      - image: zondax/circleci:latest
     steps:
       - checkout
       - run: git submodule update --init --recursive
