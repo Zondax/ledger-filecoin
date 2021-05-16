@@ -18,6 +18,8 @@
 #include <fstream>
 
 typedef struct {
+    bool valid;
+
     std::string description;
     std::string to;
     std::string from;
@@ -27,22 +29,14 @@ typedef struct {
     std::string gaspremium;
     std::string gasfeecap;
     uint64_t method;
-
-    std::string encoded_tx;
-    bool valid;
-    bool testnet;
-    bool expert;
-
-    std::vector<uint8_t> blob;
-    std::vector<std::string> expected_ui_output;
-} testcaseData_t;
+} testcase_inputs_t;
 
 typedef struct {
-    std::shared_ptr<Json::Value> testcases;
-    int64_t index;
-    std::string description;
+    uint64_t index;
+    std::string name;
+    std::string blob;
+    bool valid;
+
+    std::vector<std::string> expected;
+    std::vector<std::string> expected_expert;
 } testcase_t;
-
-testcaseData_t ReadTestCaseData(const std::shared_ptr<Json::Value>& jsonSource, int index);
-
-std::vector<testcase_t> GetJsonTestCases(const std::string& filename);

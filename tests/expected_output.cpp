@@ -41,56 +41,65 @@ std::string FormatAmount(const std::string &amount) {
     return std::string(buffer);
 }
 
-std::vector<std::string> GenerateExpectedUIOutput(const testcaseData_t &tcd) {
+std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool expertMode) {
     auto answer = std::vector<std::string>();
 
-    if (!tcd.valid) {
+    bool valid = true;
+    if (json.isMember("value")) {
+        valid = json["valid"].asBool();
+    }
+
+    if (!valid) {
         answer.emplace_back("Test case is not valid!");
         return answer;
     }
 
+    ///
+
+    ///
+
     uint8_t dummy;
 
-    if (tcd.to.length() > 40) {
-        addTo(answer, "0 | To : {}", FormatAddress(tcd.to, 0, &dummy));
-        addTo(answer, "0 | To : {}", FormatAddress(tcd.to, 1, &dummy));
-        if (tcd.to.length() > 80) {
-            addTo(answer, "0 | To : {}", FormatAddress(tcd.to, 2, &dummy));
+    if (tc.to.length() > 40) {
+        addTo(answer, "0 | To : {}", FormatAddress(tc.to, 0, &dummy));
+        addTo(answer, "0 | To : {}", FormatAddress(tc.to, 1, &dummy));
+        if (tc.to.length() > 80) {
+            addTo(answer, "0 | To : {}", FormatAddress(tc.to, 2, &dummy));
         }
     } else {
         // To print protocol 0 addresses which seems to be always less than 20char
-        addTo(answer, "0 | To : {}", FormatAddress(tcd.to, 0, &dummy));
+        addTo(answer, "0 | To : {}", FormatAddress(tc.to, 0, &dummy));
     }
 
-    if (tcd.from.length() > 40) {
-        addTo(answer, "1 | From : {}", FormatAddress(tcd.from, 0, &dummy));
-        addTo(answer, "1 | From : {}", FormatAddress(tcd.from, 1, &dummy));
-        if (tcd.from.length() > 80) {
-            addTo(answer, "1 | From : {}", FormatAddress(tcd.from, 2, &dummy));
+    if (tc.from.length() > 40) {
+        addTo(answer, "1 | From : {}", FormatAddress(tc.from, 0, &dummy));
+        addTo(answer, "1 | From : {}", FormatAddress(tc.from, 1, &dummy));
+        if (tc.from.length() > 80) {
+            addTo(answer, "1 | From : {}", FormatAddress(tc.from, 2, &dummy));
         }
     } else {
         // To print protocol 0 addresses which seems to be always less than 20char
-        addTo(answer, "1 | From : {}", FormatAddress(tcd.from, 0, &dummy));
+        addTo(answer, "1 | From : {}", FormatAddress(tc.from, 0, &dummy));
     }
 
-    addTo(answer, "2 | Nonce : {}", tcd.nonce);
+    addTo(answer, "2 | Nonce : {}", tc.nonce);
 
-    addTo(answer, "3 | Value : {}", FormatAmount(tcd.value));
+    addTo(answer, "3 | Value : {}", FormatAmount(tc.value));
 
-    addTo(answer, "4 | Gas Limit : {}", tcd.gaslimit);
+    addTo(answer, "4 | Gas Limit : {}", tc.gaslimit);
 
-    addTo(answer, "5 | Gas Premium : {}", FormatAmount(tcd.gaspremium));
+    addTo(answer, "5 | Gas Premium : {}", FormatAmount(tc.gaspremium));
 
-    addTo(answer, "6 | Gas Fee Cap : {}", FormatAmount(tcd.gasfeecap));
+    addTo(answer, "6 | Gas Fee Cap : {}", FormatAmount(tc.gasfeecap));
 
-    if (tcd.method != 0) {
-      addTo(answer, "7 | Method : Method{}", tcd.method);
+    if (tc.method != 0) {
+        addTo(answer, "7 | Method : Method{}", tc.method);
     } else {
-      addTo(answer, "7 | Method : Transfer", tcd.method);
+        addTo(answer, "7 | Method : Transfer", tc.method);
     }
 
     // If 0 we have a no parameters
-    if (tcd.method != 0) {
+    if (tc.method != 0) {
         addTo(answer, "8 | Params : Not Available");
     }
 

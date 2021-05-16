@@ -25,27 +25,84 @@
 #include "common.h"
 #include <memory>
 #include "testcases.h"
+#include "expected_output.h"
 
 using ::testing::TestWithParam;
 using ::testing::Values;
 
-void check_testcase(const testcase_t &testcase) {
-    auto tc = ReadTestCaseData(testcase.testcases, testcase.index);
+class JsonTests : public ::testing::TestWithParam<testcase_t> {
+public:
+    struct PrintToStringParamName {
+        template<class ParamType>
+        std::string operator()(const testing::TestParamInfo<ParamType> &info) const {
+            auto p = static_cast<testcase_t>(info.param);
+            std::stringstream ss;
+            ss << p.index << "_" << p.name;
+            return ss.str();
+        }
+    };
+};
+
+std::string CleanTestname(std::string s) {
+    s.erase(remove_if(s.begin(), s.end(), [](char v) -> bool {
+        return v == ':' || v == ' ' || v == '/' || v == '-' || v == '.' || v == '_' || v == '#';
+    }), s.end());
+    return s;
+}
+
+std::vector<testcase_t> GetJsonTestCases(const std::string &jsonFile) {
+    auto answer = std::vector<testcase_t>();
+
+    Json::CharReaderBuilder builder;
+    Json::Value obj;
+
+    std::string fullPathJsonFile = std::string(TESTVECTORS_DIR) + jsonFile;
+
+    std::ifstream inFile(fullPathJsonFile);
+    if (!inFile.is_open()) {
+        return answer;
+    }
+
+    // Retrieve all test cases
+    JSONCPP_STRING errs;
+    Json::parseFromStream(builder, inFile, &obj, &errs);
+    std::cout << "Number of testcases: " << obj.size() << std::endl;
+
+    for (auto &i : obj) {
+        auto outputs = GenerateExpectedUIOutput(i, false);
+        auto outputs_expert = GenerateExpectedUIOutput(i, true);
+
+        bool valid = true;
+        if (i.isMember("value")) {
+            valid = i["valid"].asBool();
+        }
+
+        auto name = CleanTestname(i["name"].asString());
+
+        answer.push_back(testcase_t{
+                i["index"].asUInt64(),
+                name,
+                i["blob"].asString(),
+                valid,
+                outputs,
+                outputs_expert
+        });
+    }
+
+    return answer;
+}
+
+void check_testcase(const testcase_t &tc, bool expert_mode) {
+    app_mode_set_expert(expert_mode);
 
     parser_context_t ctx;
     parser_error_t err;
 
-    // Define mainnet or testnet through derivation path
-    hdPath[0] = HDPATH_0_DEFAULT;
-    hdPath[1] = HDPATH_1_DEFAULT;
-    if (tc.testnet) {
-        hdPath[0] = HDPATH_0_TESTNET;
-        hdPath[1] = HDPATH_1_TESTNET;
-    }
+    uint8_t buffer[10000];
+    uint16_t bufferLen = parseHexString(buffer, sizeof(buffer), tc.blob.c_str());
 
-    app_mode_set_expert(tc.expert);
+    err = parser_parse(&ctx, buffer, bufferLen);
 
-    err = parser_parse(&ctx, tc.blob.data(), tc.blob.size());
     if (tc.valid) {
         ASSERT_EQ(err, parser_ok) << parser_getErrorDescription(err);
     } else {
@@ -54,29 +111,21 @@ void check_testcase(const testcase_t &testcase) {
     }
 
     err = parser_validate(&ctx);
-    if (tc.valid) {
-        EXPECT_EQ(err, parser_ok) << parser_getErrorDescription(err);
-    } else {
-        EXPECT_NE(err, parser_ok) << parser_getErrorDescription(err);
-        return;
-    }
+    ASSERT_EQ(err, parser_ok) << parser_getErrorDescription(err);
 
-    auto output = dumpUI(&ctx, 40, 40);
+    auto output = dumpUI(&ctx, 40, 37);
 
     std::cout << std::endl;
     for (const auto &i : output) {
         std::cout << i << std::endl;
     }
+    std::cout << std::endl << std::endl;
 
-    std::cout << " EXPECTED ============" << std::endl;
-    for (const auto &i : tc.expected_ui_output) {
-        std::cout << i << std::endl;
-    }
-
-    EXPECT_EQ(output.size(), tc.expected_ui_output.size());
-    for (size_t i = 0; i < tc.expected_ui_output.size(); i++) {
+    std::vector<std::string> expected = app_mode_expert() ? tc.expected_expert : tc.expected;
+    EXPECT_EQ(output.size(), expected.size());
+    for (size_t i = 0; i < expected.size(); i++) {
         if (i < output.size()) {
-            EXPECT_THAT(output[i], testing::Eq(tc.expected_ui_output[i]));
+            EXPECT_THAT(output[i], testing::Eq(expected[i]));
         }
     }
 }
@@ -92,7 +141,7 @@ public:
         std::string operator()(const testing::TestParamInfo<ParamType> &info) const {
             auto p = static_cast<testcase_t>(info.param);
             std::stringstream ss;
-            ss << std::setfill('0') << std::setw(5) << p.index << "_" << p.description;
+            ss << std::setfill('0') << std::setw(5) << p.index << "_" << p.name;
             return ss.str();
         }
     };
@@ -112,6 +161,8 @@ INSTANTIATE_TEST_SUITE_P(
         ::testing::ValuesIn(GetJsonTestCases("testvectors/manual.json")), VerifyTestVectors::PrintToStringParamName()
 );
 
-TEST_P(VerifyTestVectors, CheckUIOutput_Manual) { check_testcase(GetParam()); }
+TEST_P(VerifyTestVectors, CheckUIOutput_CurrentTX_Normal) { check_testcase(GetParam(), false); }
+
+TEST_P(VerifyTestVectors, CheckUIOutput_CurrentTX_Expert) { check_testcase(GetParam(), true); }
 
 #pragma clang diagnostic pop

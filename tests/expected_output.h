@@ -17,6 +17,5 @@
 #include <fstream>
 #include <vector>
 #include <json/json.h>
-#include "types.h"
 
-std::vector<std::string> GenerateExpectedUIOutput(const testcaseData_t &tcd);
+std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool expertMode);
