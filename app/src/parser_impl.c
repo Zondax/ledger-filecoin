@@ -264,12 +264,12 @@ parser_error_t _printParam(const parser_tx_t *tx, uint8_t paramIdx,
                 CHECK_CBOR_MAP_ERR(cbor_value_advance(&container));
             }
 
-            CHECK_CBOR_MAP_ERR(_printValue(&container, outVal, outValLen, pageIdx, pageCount));
+            CHECK_PARSER_ERR(_printValue(&container, outVal, outValLen, pageIdx, pageCount));
 
             CHECK_CBOR_MAP_ERR(cbor_value_leave_container(&params, &container));
             break;
         }
-        default: CHECK_CBOR_MAP_ERR(_printValue(&params, outVal, outValLen, pageIdx, pageCount));
+        default: CHECK_PARSER_ERR(_printValue(&params, outVal, outValLen, pageIdx, pageCount));
     }
     return parser_ok;
 }
@@ -443,6 +443,8 @@ parser_error_t _read(const parser_context_t *c, parser_tx_t *v) {
 }
 
 parser_error_t _validateTx(const parser_context_t *c, const parser_tx_t *v) {
+    (void)c;
+    (void)v;
     // Note: This is place holder for transaction level checks that the project may require before accepting
     // the parsed values. the parser already validates input
     // This function is called by parser_validate, where additional checks are made (formatting, UI/UX, etc.(
@@ -450,6 +452,7 @@ parser_error_t _validateTx(const parser_context_t *c, const parser_tx_t *v) {
 }
 
 uint8_t _getNumItems(const parser_context_t *c, const parser_tx_t *v) {
+    UNUSED(c);
     uint8_t itemCount = 8;
 
     return itemCount + v->numparams;

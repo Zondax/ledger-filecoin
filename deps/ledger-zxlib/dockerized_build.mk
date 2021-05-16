@@ -65,6 +65,7 @@ define run_docker
 	-e BOLOS_ENV=/opt/bolos \
 	-u $(USERID) \
 	-v $(shell pwd):/project \
+	-e SUPPORT_SR25519=$(SUPPORT_SR25519) \
 	-e COIN=$(COIN) \
 	-e APP_TESTING=$(APP_TESTING) \
 	$(DOCKER_IMAGE) "$(2)"

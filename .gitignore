@@ -88,3 +88,4 @@ cmake-build-fuzz/
 \fuzz/corpora/*
 
 node_modules/.yarn-integrity
+\.vscode

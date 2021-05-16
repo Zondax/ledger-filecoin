@@ -30,6 +30,61 @@
 #include "coin.h"
 #include "zxmacros.h"
 
+void extractHDPath(uint32_t rx, uint32_t offset) {
+    if ((rx - offset) < sizeof(uint32_t) * HDPATH_LEN_DEFAULT) {
+        THROW(APDU_CODE_WRONG_LENGTH);
+    }
+
+    MEMCPY(hdPath, G_io_apdu_buffer + offset, sizeof(uint32_t) * HDPATH_LEN_DEFAULT);
+
+    const bool mainnet = hdPath[0] == HDPATH_0_DEFAULT &&
+                         hdPath[1] == HDPATH_1_DEFAULT;
+
+    const bool testnet = hdPath[0] == HDPATH_0_TESTNET &&
+                         hdPath[1] == HDPATH_1_TESTNET;
+
+    if (!mainnet && !testnet) {
+        THROW(APDU_CODE_DATA_INVALID);
+    }
+}
+
+bool process_chunk(volatile uint32_t *tx, uint32_t rx) {
+    UNUSED(tx);
+
+    const uint8_t payloadType = G_io_apdu_buffer[OFFSET_PAYLOAD_TYPE];
+
+    if (G_io_apdu_buffer[OFFSET_P2] != 0) {
+        THROW(APDU_CODE_INVALIDP1P2);
+    }
+
+    if (rx < OFFSET_DATA) {
+        THROW(APDU_CODE_WRONG_LENGTH);
+    }
+
+    uint32_t added;
+    switch (payloadType) {
+        case 0:
+            tx_initialize();
+            tx_reset();
+            extractHDPath(rx, OFFSET_DATA);
+            return false;
+        case 1:
+            added = tx_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
+            if (added != rx - OFFSET_DATA) {
+                THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
+            }
+            return false;
+        case 2:
+            added = tx_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
+            if (added != rx - OFFSET_DATA) {
+                THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
+            }
+            return true;
+    }
+
+    THROW(APDU_CODE_INVALIDP1P2);
+}
+
 __Z_INLINE void handleGetAddr(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     extractHDPath(rx, OFFSET_DATA);
 

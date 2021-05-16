@@ -1,5 +1,4 @@
 /*******************************************************************************
-*   (c) 2016 Ledger
 *   (c) 2018 Zondax GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,26 +15,24 @@
 ********************************************************************************/
 #pragma once
 
-#include <stdbool.h>
-#include "apdu_codes.h"
+#if !defined (TARGET_NANOS) && !defined(TARGET_NANOX)
 
-#define OFFSET_CLA                      0
-#define OFFSET_INS                      1  //< Instruction offset
-#define OFFSET_P1                       2  //< P1
-#define OFFSET_P2                       3  //< P2
-#define OFFSET_DATA_LEN                 4  //< Data Length
-#define OFFSET_DATA                     5  //< Data offset
+#define MEMMOVE memmove
+#define MEMSET memset
+#define MEMCPY memcpy
+#define MEMCMP memcmp
+#define MEMCPY_NV memcpy
 
-#define APDU_MIN_LENGTH                 5
+#define PIC(x) (x)
+#define CHECK_APP_CANARY() {}
+//#define CX_ECCINFO_PARITY_ODD 1u
+//#define CX_ECCINFO_xGTn 2u
 
-#define OFFSET_PAYLOAD_TYPE             OFFSET_P1
+#ifndef __APPLE__
+#define MEMZERO explicit_bzero
+#else
+__Z_INLINE void __memzero(void *buffer, size_t s) { memset(buffer, 0, s); }
+#define MEMZERO __memzero
+#endif
 
-#define INS_GET_VERSION                 0x00
-#define INS_GET_ADDR_SECP256K1          0x01
-#define INS_SIGN_SECP256K1              0x02
-
-void app_init();
-
-void app_main();
-
-void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx);
+#endif

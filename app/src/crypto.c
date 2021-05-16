@@ -101,6 +101,10 @@ typedef struct {
 
 
 zxerr_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen, uint16_t *sigSize) {
+    if (signatureMaxlen < sizeof(signature_t) ) {
+        return zxerr_invalid_crypto_settings;
+    }
+
     uint8_t tmp[BLAKE2B_256_SIZE];
     uint8_t message_digest[BLAKE2B_256_SIZE];
 
@@ -263,14 +267,12 @@ uint16_t formatProtocol(const uint8_t *addressBytes,
                         uint16_t addressSize,
                         uint8_t *formattedAddress,
                         uint16_t formattedAddressSize) {
-    if (formattedAddress == NULL) {
+    if (formattedAddress == NULL || formattedAddressSize < 2u) {
         return 0;
     }
     if (addressBytes == NULL || addressSize < 2u) {
         return 0;
     }
-
-    MEMZERO(formattedAddress, formattedAddressSize);
 
     const uint8_t protocol = addressBytes[0];
 
@@ -327,9 +329,9 @@ uint16_t formatProtocol(const uint8_t *addressBytes,
 
     // Now prepare the address output
     if (base32_encode(payload_crc,
-                      (int) (payloadSize + CHECKSUM_LENGTH),
-                      (formattedAddress + 2),
-                      formattedAddressSize - 2) < 0) {
+                      (uint32_t) (payloadSize + CHECKSUM_LENGTH),
+                      (char *)(formattedAddress + 2),
+                      (uint32_t) (formattedAddressSize - 2)) < 0) {
         return 0;
     }
 

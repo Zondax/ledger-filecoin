@@ -53,8 +53,7 @@ void check_app_canary() {
 }
 
 void zemu_log_stack(const char *ctx) {
-#if defined(ZEMU_LOGGING)
-#if defined (TARGET_NANOS) || defined(TARGET_NANOX)
+#if defined(ZEMU_LOGGING) && (defined (TARGET_NANOS) || defined(TARGET_NANOX))
 #define STACK_SHIFT 20
     void* p = NULL;
     char buf[70];
@@ -64,6 +63,7 @@ void zemu_log_stack(const char *ctx) {
             (uint32_t)((void*)&p)+STACK_SHIFT - (uint32_t)&app_stack_canary,
             ctx);
     zemu_log(buf);
-#endif
+#else
+    (void)ctx;
 #endif
 }

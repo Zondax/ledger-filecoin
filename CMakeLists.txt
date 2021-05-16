@@ -146,7 +146,6 @@ set_tests_properties(unittests PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOUR
 #  Fuzz Targets
 if (ENABLE_FUZZING)
     set(FUZZ_TARGETS
-        base32_encode_decode
         decompressLEB128
         formatProtocol
         parseHexString

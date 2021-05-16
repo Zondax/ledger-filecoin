@@ -21,22 +21,33 @@
 
 #include <string.h>
 
-uint32_t base32_encode(const uint8_t *data, unsigned int length, char *result, uint32_t bufSize) {
-    if (length < 0 || length > (1 << 28)) {
+uint32_t base32_encode(const uint8_t *data,
+                       uint32_t length,
+                       char *result,
+                       uint32_t resultLen)
+{
+    if (length < 0 || length > (1 << 28))
+    {
         return -1;
     }
     uint32_t count = 0;
-    if (length > 0) {
+    if (length > 0)
+    {
         uint32_t buffer = data[0];
         uint32_t next = 1;
         uint32_t bitsLeft = 8;
-        while (count < bufSize && (bitsLeft > 0 || next < length)) {
-            if (bitsLeft < 5) {
-                if (next < length) {
+        while (count < resultLen && (bitsLeft > 0 || next < length))
+        {
+            if (bitsLeft < 5)
+            {
+                if (next < length)
+                {
                     buffer <<= 8;
                     buffer |= data[next++] & 0xFF;
                     bitsLeft += 8;
-                } else {
+                }
+                else
+                {
                     uint32_t pad = 5u - bitsLeft;
                     buffer <<= pad;
                     bitsLeft += pad;
@@ -47,7 +58,8 @@ uint32_t base32_encode(const uint8_t *data, unsigned int length, char *result, u
             result[count++] = "abcdefghijklmnopqrstuvwxyz234567"[index];
         }
     }
-    if (count < bufSize) {
+    if (count < resultLen)
+    {
         result[count] = '\000';
     }
     return count;
