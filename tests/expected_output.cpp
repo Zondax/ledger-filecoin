@@ -18,20 +18,34 @@
 #include "testcases.h"
 #include "zxmacros.h"
 
-bool TestcaseIsValid(const Json::Value &) {
-    return true;
-}
+const uint32_t fieldSize = 37;
 
 template<typename S, typename... Args>
 void addTo(std::vector<std::string> &answer, const S &format_str, Args &&... args) {
     answer.push_back(fmt::format(format_str, args...));
 }
 
-std::string FormatAddress(const std::string &address, uint8_t idx, uint8_t *pageCount) {
-    char outBuffer[40];
-    pageString(outBuffer, sizeof(outBuffer), address.c_str(), idx, pageCount);
+std::vector<std::string> FormatAddress(uint32_t prefix, const std::string &name, const std::string &address) {
+    auto answer = std::vector<std::string>();
+    uint8_t numPages = 0;
+    char outBuffer[100];
 
-    return std::string(outBuffer);
+    pageString(outBuffer, fieldSize, address.c_str(), 0, &numPages);
+
+    for (auto i = 0; i < numPages; i++) {
+        MEMZERO(outBuffer, sizeof(outBuffer));
+        pageString(outBuffer, fieldSize, address.c_str(), i, &numPages);
+
+        auto pages = std::string("");
+
+        if (numPages > 1) {
+            pages = fmt::format("[{}/{}] ", i + 1, numPages);
+        }
+
+        addTo(answer, "{} | {}{}: {}", prefix, name, pages, outBuffer);
+    }
+
+    return answer;
 }
 
 std::string FormatAmount(const std::string &amount) {
@@ -56,50 +70,45 @@ std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool 
 
     ///
 
+    auto message = json["message"];
+    auto from = message["from"].asString();
+
+    auto to = message["to"].asString();
+    auto nonce = message["nonce"].asUInt64();
+
+    auto value = message["value"].asString();
+    auto gaslimit = message["gaslimit"].asString();
+    auto gaspremium = message["gaspremium"].asString();
+    auto gasfeecap = message["gasfeecap"].asString();
+    auto method = message["method"].asUInt64();
+
     ///
 
-    uint8_t dummy;
+    auto toAddress = FormatAddress(0, "To ", to);
+    answer.insert(answer.end(), toAddress.begin(), toAddress.end());
 
-    if (tc.to.length() > 40) {
-        addTo(answer, "0 | To : {}", FormatAddress(tc.to, 0, &dummy));
-        addTo(answer, "0 | To : {}", FormatAddress(tc.to, 1, &dummy));
-        if (tc.to.length() > 80) {
-            addTo(answer, "0 | To : {}", FormatAddress(tc.to, 2, &dummy));
-        }
+    auto fromAddress = FormatAddress(1, "From ", from);
+    answer.insert(answer.end(), fromAddress.begin(), fromAddress.end());
+
+
+    addTo(answer, "2 | Nonce : {}", nonce);
+
+    addTo(answer, "3 | Value : {}", FormatAmount(value));
+
+    addTo(answer, "4 | Gas Limit : {}", gaslimit);
+
+    addTo(answer, "5 | Gas Premium : {}", FormatAmount(gaspremium));
+
+    addTo(answer, "6 | Gas Fee Cap : {}", FormatAmount(gasfeecap));
+
+    if (method != 0) {
+        addTo(answer, "7 | Method : Method{}", method);
     } else {
-        // To print protocol 0 addresses which seems to be always less than 20char
-        addTo(answer, "0 | To : {}", FormatAddress(tc.to, 0, &dummy));
-    }
-
-    if (tc.from.length() > 40) {
-        addTo(answer, "1 | From : {}", FormatAddress(tc.from, 0, &dummy));
-        addTo(answer, "1 | From : {}", FormatAddress(tc.from, 1, &dummy));
-        if (tc.from.length() > 80) {
-            addTo(answer, "1 | From : {}", FormatAddress(tc.from, 2, &dummy));
-        }
-    } else {
-        // To print protocol 0 addresses which seems to be always less than 20char
-        addTo(answer, "1 | From : {}", FormatAddress(tc.from, 0, &dummy));
-    }
-
-    addTo(answer, "2 | Nonce : {}", tc.nonce);
-
-    addTo(answer, "3 | Value : {}", FormatAmount(tc.value));
-
-    addTo(answer, "4 | Gas Limit : {}", tc.gaslimit);
-
-    addTo(answer, "5 | Gas Premium : {}", FormatAmount(tc.gaspremium));
-
-    addTo(answer, "6 | Gas Fee Cap : {}", FormatAmount(tc.gasfeecap));
-
-    if (tc.method != 0) {
-        addTo(answer, "7 | Method : Method{}", tc.method);
-    } else {
-        addTo(answer, "7 | Method : Transfer", tc.method);
+        addTo(answer, "7 | Method : Transfer", method);
     }
 
     // If 0 we have a no parameters
-    if (tc.method != 0) {
+    if (method != 0) {
         addTo(answer, "8 | Params : Not Available");
     }
 

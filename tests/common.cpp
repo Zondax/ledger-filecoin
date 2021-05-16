@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2019 Zondax GmbH
+*   (c) 2019-2021 Zondax GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -47,9 +47,9 @@ std::vector<std::string> dumpUI(parser_context_t *ctx,
 
             ss << fmt::format("{} | {}", idx, keyBuffer);
             if (pageCount > 1) {
-                ss << fmt::format("[{}/{}]", pageIdx + 1, pageCount);
+                ss << fmt::format("[{}/{}] ", pageIdx + 1, pageCount);
             }
-            ss << " : ";
+            ss << ": ";
 
             if (err == parser_ok) {
                 // Model multiple lines
@@ -58,7 +58,13 @@ std::vector<std::string> dumpUI(parser_context_t *ctx,
                 ss << parser_getErrorDescription(err);
             }
 
-            answer.push_back(ss.str());
+            auto output = ss.str();
+            if (output.back() == ' ') {
+                output = output.substr(0, output.size() - 1);
+            }
+
+
+            answer.push_back(output);
 
             pageIdx++;
         }

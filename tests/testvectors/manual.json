@@ -4,6 +4,7 @@
         "encoded_tx": "igBAQABCAAAAQgAAQgAAAEA=",
         "valid": false,
         "testnet": false,
+        "error": "Invalid address format",
         "message": {
             "version": 0,
             "to": "",
@@ -21,6 +22,7 @@
         "description": "Basic test case",
         "encoded_tx": "igBVAf0dD0381+ma/Lmagya33EWdMsYoVQG4gmGdRlWPPZ4xbRG0jc8hEycCWgFEAAGGoBlhqEIAAEMACcQAQA==",
         "valid": true,
+        "error": "",
         "testnet": false,
         "message": {
             "version": 0,
@@ -39,6 +41,7 @@
         "description": "Basic test case Testnet",
         "encoded_tx": "igBVAf0dD0381+ma/Lmagya33EWdMsYoVQG4gmGdRlWPPZ4xbRG0jc8hEycCWgFEAAGGoBlhqEIAAEMACcQAQA==",
         "valid": true,
+        "error": "",
         "testnet": true,
         "message": {
             "version": 0,
@@ -57,6 +60,7 @@
         "description": "Using Protocol 0 addresses",
         "encoded_tx": "igBCAABDAJYBAUQAAYagGWGoQgAAQwAJxABA",
         "valid": true,
+        "error": "",
         "testnet": false,
         "message": {
             "version": 0,
@@ -75,6 +79,7 @@
         "description": "Using Protocol 0 addresses 2",
         "encoded_tx": "igBDAIAIQwDBDQFEAAGGoBlhqEIAAEMACcQAQA==",
         "valid": true,
+        "error": "",
         "testnet": false,
         "message": {
             "version": 0,
@@ -93,6 +98,7 @@
         "description": "Using Protocol 0 addresses 3",
         "encoded_tx": "igBLAP///////////wFCAAABRAABhqAZYahCAABDAAnEAEA=",
         "valid": true,
+        "error": "",
         "testnet": false,
         "message": {
             "version": 0,
@@ -111,6 +117,7 @@
         "description": "Using Protocol 1 addresses",
         "encoded_tx": "igBVAf0dD0381+ma/Lmagya33EWdMsYoVQG4gmGdRlWPPZ4xbRG0jc8hEycCagFEAAGGoBlhqEIAAEMACcQAQA==",
         "valid": true,
+        "error": "",
         "testnet": false,
         "message": {
             "version": 0,
@@ -129,6 +136,7 @@
         "description": "Using Protocol 1 addresses 2",
         "encoded_tx": "igBVAbzsB8BeafkkaOKz4793yHTyxdqMVQGwbnpvD1Ud4mH+Om/hgrQi7gvGtgFEAAGGoBlhqEIAAEMACcQAQA==",
         "valid": true,
+        "error": "",
         "testnet": false,
         "message": {
             "version": 0,
@@ -147,6 +155,7 @@
         "description": "Using Protocol 1 addresses 3",
         "encoded_tx": "igBVAdFQBQTk0aw+iayJGkUCWG+r2bQXVQH9HQ9N/Nfpmvy5moMmt9xFnTLGKAFEAAGGoBlhqEIAAEMACcQAQA==",
         "valid": true,
+        "error": "",
         "testnet": false,
         "message": {
             "version": 0,
@@ -165,6 +174,7 @@
         "description": "Using Protocol 2 addresses",
         "encoded_tx": "igBVAuVN6k+bxbR9JhgZgm1eH7+LxVA7VQLrWL0IoVpq3hnQmJZ0FI+pWoFXxgFEAAGGoBlhqEIAAEMACcQAQA==",
         "valid": true,
+        "error": "",
         "testnet": false,
         "message": {
             "version": 0,
@@ -183,6 +193,7 @@
         "description": "Using Protocol 2 addresses 2",
         "encoded_tx": "igBVAm0hE360xIFCaeiU0pbPZQDkPNcUVQLgx8dfgtVeXtVdsoAzYw30J0qYTwFEAAGGoBlhqEIAAEMACcQAQA==",
         "valid": true,
+        "error": "",
         "testnet": false,
         "message": {
             "version": 0,
@@ -201,6 +212,7 @@
         "description": "Using Protocol 2 addresses 3",
         "encoded_tx": "igBVAjFrTB/11K+3gmzqtbsPLD4PNkBTVQLlTepPm8W0fSYYGYJtXh+/i8VQOwFEAAGGoBlhqEIAAEMACcQAQA==",
         "valid": true,
+        "error": "",
         "testnet": false,
         "message": {
             "version": 0,
@@ -219,6 +231,7 @@
         "description": "Using Protocol 3 addresses",
         "encoded_tx": "igBYMQOtWN9pbi1OkeqGyIHpOLpOqBs5XhJ5e4S5zzFLlUZwXoOcepnWBrJH3bT5rHo0FN1YMQOzKU8KLingxm68I10v7cpWl794SvYFx1r2COamPVzTjqhcqJieDv3pGIs4L5NyRg0BRAABhqAZYahCAABDAAnEAEA=",
         "valid": true,
+        "error": "",
         "testnet": false,
         "message": {
             "version": 0,
@@ -237,6 +250,7 @@
         "description": "Using Protocol 3 addresses 2",
         "encoded_tx": "igBYMQOWoaPk6noU1JmF5mGyJAHUT+1ALR0JJbJDySNYnA+8fjLNBOKe140V0306qj/m2jNYMQOGtFQljFiUdffRb1qsAYp59sEWnSD8M5Id2LXOHKxsNI+Qo2A2JPauuRtkUYwugJUBRAABhqAZYahCAABDAAnEAEA=",
         "valid": true,
+        "error": "",
         "testnet": false,
         "message": {
             "version": 0,
@@ -255,6 +269,7 @@
         "description": "Using Protocol 3 addresses 3",
         "encoded_tx": "igBYMQOncmsDgCL3WjhGF1hTYM7mKQcKLZ0ocSll5fJuzECFg4KANyTtNPJyAzbwnbYx8HRYMQOtWN9pbi1OkeqGyIHpOLpOqBs5XhJ5e4S5zzFLlUZwXoOcepnWBrJH3bT5rHo0FN0BRAABhqAZYahCAABDAAnEAEA=",
         "valid": true,
+        "error": "",
         "testnet": false,
         "message": {
             "version": 0,
@@ -273,6 +288,7 @@
         "description": "Using Protocol 3 addresses 3",
         "encoded_tx": "igBYMQOncmsDgCL3WjhGF1hTYM7mKQcKLZ0ocSll5fJuzECFg4KANyTtNPJyAzbwnbYx8HRYMQOtWN9pbi1OkeqGyIHpOLpOqBs5XhJ5e4S5zzFLlUZwXoOcepnWBrJH3bT5rHo0FN0BRAABhqAZYahCAABDAAnEAEA=",
         "valid": true,
+        "error": "",
         "testnet": false,
         "message": {
             "version": 0,
@@ -291,6 +307,7 @@
         "description": "Address protocol 1 Invalid payload length of 21 bytes",
         "encoded_tx": "igBWAQAAAAAAAAAAAAAAAAAAAAAAAAAAAVYBAAAAAAAAAAAAAAAAAAAAAAAAAAABAUQAAYagGWGoQgAAQwAJxABA",
         "valid": false,
+        "error": "Invalid address format",
         "testnet": false,
         "message": {
             "version": 0,
@@ -309,6 +326,7 @@
         "description": "Address protocol 1 Invalid payload length of 19 bytes",
         "encoded_tx": "igBUAQAAAAAAAAAAAAAAAAAAAAAAAABUAQAAAAAAAAAAAAAAAAAAAAAAAAABRAABhqAZYahCAABDAAnEAEA=",
         "valid": false,
+        "error": "Invalid address format",
         "testnet": false,
         "message": {
             "version": 0,
@@ -327,6 +345,7 @@
         "description": "Address protocol 0 Invalid payload length of 21 bytes",
         "encoded_tx": "igBWAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUQAAYagGWGoQgAAQwAJxABA",
         "valid": false,
+        "error": "Invalid address format",
         "testnet": false,
         "message": {
             "version": 0,
@@ -345,6 +364,7 @@
         "description": "Address protocol 2 Invalid payload length of 21 bytes",
         "encoded_tx": "igBWAgAAAAAAAAAAAAAAAAAAAAAAAAAAAFYCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUQAAYagGWGoQgAAQwAJxABA",
         "valid": false,
+        "error": "Invalid address format",
         "testnet": false,
         "message": {
             "version": 0,
@@ -363,6 +383,7 @@
         "description": "Address protocol 2 Invalid payload length of 19 bytes",
         "encoded_tx": "igBUAgAAAAAAAAAAAAAAAAAAAAAAAABUAgAAAAAAAAAAAAAAAAAAAAAAAAABRAABhqAZYahCAABDAAnEAEA=",
         "valid": false,
+        "error": "Invalid address format",
         "testnet": false,
         "message": {
             "version": 0,
@@ -381,6 +402,7 @@
         "description": "Address protocol 3 Invalid payload length of 47 bytes",
         "encoded_tx": "igBYMAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFgwAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUQAAYagGWGoQgAAQwAJxABA",
         "valid": false,
+        "error": "Invalid address format",
         "testnet": false,
         "message": {
             "version": 0,
@@ -399,6 +421,7 @@
         "description": "Address protocol 3 Invalid payload length of 49 bytes",
         "encoded_tx": "igBYMgMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWDIDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFEAAGGoBlhqEIAAEMACcQAQA==",
         "valid": false,
+        "error": "Invalid address format",
         "testnet": false,
         "message": {
             "version": 0,
@@ -417,6 +440,7 @@
         "description": "Address with unknown protocol",
         "encoded_tx": "igBVBAAAAAAAAAAAAAAAAAAAAAAAAAAAVQQAAAAAAAAAAAAAAAAAAAAAAAAAAAFEAAGGoBlhqEIAAEMACcQAQA==",
         "valid": false,
+        "error": "Invalid address format",
         "testnet": false,
         "message": {
             "version": 0,
@@ -435,6 +459,7 @@
         "description": "Negative sign byte",
         "encoded_tx": "igBVAdFQBQTk0aw+iayJGkUCWG+r2bQXVQG4gmGdRlWPPZ4xbRG0jc8hEycCagFBARlhqEIAAEMACcQAQA==",
         "valid": false,
+        "error": "Unexpected value",
         "testnet": false,
         "message": {
             "version": 0,
@@ -453,6 +478,7 @@
         "description": "Empty value",
         "encoded_tx": "igBVAdFQBQTk0aw+iayJGkUCWG+r2bQXVQG4gmGdRlWPPZ4xbRG0jc8hEycCagFBABlhqEIAAEMACcQAQA==",
         "valid": false,
+        "error": "Unexpected value",
         "testnet": false,
         "message": {
             "version": 0,
@@ -471,6 +497,7 @@
         "description": "Wrong version",
         "encoded_tx": "ihh7VQHRUAUE5NGsPomsiRpFAlhvq9m0F1UBuIJhnUZVjz2eMW0RtI3PIRMnAmoBQQAZYahCAABDAAnEAEA=",
         "valid": false,
+        "error": "tx version is not supported",
         "testnet": false,
         "message": {
             "version": 123,

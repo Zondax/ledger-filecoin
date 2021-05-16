@@ -73,17 +73,19 @@ std::vector<testcase_t> GetJsonTestCases(const std::string &jsonFile) {
         auto outputs_expert = GenerateExpectedUIOutput(i, true);
 
         bool valid = true;
-        if (i.isMember("value")) {
+        if (i.isMember("valid")) {
             valid = i["valid"].asBool();
         }
 
-        auto name = CleanTestname(i["name"].asString());
+        auto name = CleanTestname(i["description"].asString());
 
         answer.push_back(testcase_t{
-                i["index"].asUInt64(),
+                answer.size() + 1,
                 name,
-                i["blob"].asString(),
+                i["encoded_tx_hex"].asString(),
                 valid,
+                i["testnet"].asBool(),
+                i["error"].asString(),
                 outputs,
                 outputs_expert
         });
@@ -101,12 +103,20 @@ void check_testcase(const testcase_t &tc, bool expert_mode) {
     uint8_t buffer[10000];
     uint16_t bufferLen = parseHexString(buffer, sizeof(buffer), tc.blob.c_str());
 
+    hdPath[0] = HDPATH_0_DEFAULT;
+    hdPath[1] = HDPATH_1_DEFAULT;
+    if (tc.testnet) {
+        hdPath[0] = HDPATH_0_TESTNET;
+        hdPath[1] = HDPATH_1_TESTNET;
+    }
+
     err = parser_parse(&ctx, buffer, bufferLen);
 
     if (tc.valid) {
         ASSERT_EQ(err, parser_ok) << parser_getErrorDescription(err);
     } else {
-        ASSERT_NE(err, parser_ok) << parser_getErrorDescription(err);
+        ASSERT_NE(err, parser_ok);
+        ASSERT_EQ(tc.error, parser_getErrorDescription(err));
         return;
     }
 
@@ -164,5 +174,3 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(VerifyTestVectors, CheckUIOutput_CurrentTX_Normal) { check_testcase(GetParam(), false); }
 
 TEST_P(VerifyTestVectors, CheckUIOutput_CurrentTX_Expert) { check_testcase(GetParam(), true); }
-
-#pragma clang diagnostic pop

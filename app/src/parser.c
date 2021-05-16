@@ -141,19 +141,19 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
     }
 
     if (displayIdx == 0) {
-        snprintf(outKey, outKeyLen, "To");
+        snprintf(outKey, outKeyLen, "To ");
         return parser_printAddress(&parser_tx_obj.to,
                                    outVal, outValLen, pageIdx, pageCount);
     }
 
     if (displayIdx == 1) {
-        snprintf(outKey, outKeyLen, "From");
+        snprintf(outKey, outKeyLen, "From ");
         return parser_printAddress(&parser_tx_obj.from,
                                    outVal, outValLen, pageIdx, pageCount);
     }
 
     if (displayIdx == 2) {
-        snprintf(outKey, outKeyLen, "Nonce");
+        snprintf(outKey, outKeyLen, "Nonce ");
         if (uint64_to_str(outVal, outValLen, parser_tx_obj.nonce) != NULL) {
             return parser_unexepected_error;
         }
@@ -162,12 +162,12 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
     }
 
     if (displayIdx == 3) {
-        snprintf(outKey, outKeyLen, "Value");
+        snprintf(outKey, outKeyLen, "Value ");
         return parser_printBigIntFixedPoint(&parser_tx_obj.value, outVal, outValLen, pageIdx, pageCount);
     }
 
     if (displayIdx == 4) {
-        snprintf(outKey, outKeyLen, "Gas Limit");
+        snprintf(outKey, outKeyLen, "Gas Limit ");
         if (int64_to_str(outVal, outValLen, parser_tx_obj.gaslimit) != NULL) {
             return parser_unexepected_error;
         }
@@ -176,22 +176,22 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
     }
 
     if (displayIdx == 5) {
-        snprintf(outKey, outKeyLen, "Gas Premium");
+        snprintf(outKey, outKeyLen, "Gas Premium ");
         return parser_printBigIntFixedPoint(&parser_tx_obj.gaspremium, outVal, outValLen, pageIdx, pageCount);
     }
 
     if (displayIdx == 6) {
-        snprintf(outKey, outKeyLen, "Gas Fee Cap");
+        snprintf(outKey, outKeyLen, "Gas Fee Cap ");
         return parser_printBigIntFixedPoint(&parser_tx_obj.gasfeecap, outVal, outValLen, pageIdx, pageCount);
     }
 
     if (displayIdx == 7) {
-        snprintf(outKey, outKeyLen, "Method");
+        snprintf(outKey, outKeyLen, "Method ");
         *pageCount = 1;
 
         CHECK_PARSER_ERR(checkMethod(parser_tx_obj.method));
         if (parser_tx_obj.method == 0) {
-            snprintf(outVal, outValLen, "Transfer");
+            snprintf(outVal, outValLen, "Transfer ");
             return parser_ok;
         } else {
             char buffer[100];
@@ -203,7 +203,7 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
     }
 
     if (parser_tx_obj.numparams == 0) {
-        snprintf(outKey, outKeyLen, "Params");
+        snprintf(outKey, outKeyLen, "Params ");
         snprintf(outVal, outValLen, "-");
         return parser_ok;
     }
@@ -218,6 +218,6 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
 
     uint8_t paramIdx = (uint8_t) paramIdxSigned;
     *pageCount = 1;
-    snprintf(outKey, outKeyLen, "Params - %d", paramIdx + 1);
+    snprintf(outKey, outKeyLen, "Params - %d ", paramIdx + 1);
     return parser_printParam(&parser_tx_obj, paramIdx, outVal, outValLen, pageIdx, pageCount);
 }

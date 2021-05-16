@@ -36,6 +36,8 @@ typedef struct {
     std::string name;
     std::string blob;
     bool valid;
+    bool testnet;
+    std::string error;
 
     std::vector<std::string> expected;
     std::vector<std::string> expected_expert;
