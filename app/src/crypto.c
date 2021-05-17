@@ -15,10 +15,9 @@
 ********************************************************************************/
 
 #include "crypto.h"
-
-#include "base32.h"
 #include "coin.h"
 #include "zxmacros.h"
+#include "base32.h"
 
 uint32_t hdPath[HDPATH_LEN_DEFAULT];
 
