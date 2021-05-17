@@ -35,11 +35,17 @@ parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data, size_t d
 }
 
 parser_error_t parser_validate(const parser_context_t *ctx) {
+    zemu_log("parser_validate");
     CHECK_PARSER_ERR(_validateTx(ctx, &parser_tx_obj))
+    zemu_log("parser_validate::validated\n");
 
     // Iterate through all items to check that all can be shown and are valid
     uint8_t numItems = 0;
     CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems));
+
+    char log_tmp[100];
+    snprintf(log_tmp, sizeof(log_tmp), "parser_validate %d\n", numItems);
+    zemu_log(log_tmp);
 
     char tmpKey[40];
     char tmpVal[40];
@@ -49,10 +55,12 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
         CHECK_PARSER_ERR(parser_getItem(ctx, idx, tmpKey, sizeof(tmpKey), tmpVal, sizeof(tmpVal), 0, &pageCount))
     }
 
+    zemu_log("parser_validate::ok\n");
     return parser_ok;
 }
 
 parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_items) {
+    zemu_log("parser_getNumItems\n");
     *num_items = _getNumItems(ctx, &parser_tx_obj);
     return parser_ok;
 }
@@ -73,7 +81,8 @@ __Z_INLINE bool format_quantity(const bigint_t *b,
     return bignumBigEndian_bcdprint(bignum, bignumSize, bcd, bcdSize);
 }
 
-parser_error_t parser_printParam(const parser_tx_t *tx, uint8_t paramIdx, char *outVal, uint16_t outValLen,
+parser_error_t parser_printParam(const parser_tx_t *tx, uint8_t paramIdx,
+                                 char *outVal, uint16_t outValLen,
                                  uint8_t pageIdx, uint8_t *pageCount) {
     return _printParam(tx, paramIdx, outVal, outValLen, pageIdx, pageCount);
 }
@@ -126,6 +135,10 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
                               char *outKey, uint16_t outKeyLen,
                               char *outVal, uint16_t outValLen,
                               uint8_t pageIdx, uint8_t *pageCount) {
+    char log_tmp[100];
+    snprintf(log_tmp, sizeof(log_tmp), "getItem %d\n", displayIdx);
+    zemu_log(log_tmp);
+
     MEMZERO(outKey, outKeyLen);
     MEMZERO(outVal, outValLen);
     snprintf(outKey, outKeyLen, "?");
@@ -204,7 +217,7 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
 
     if (parser_tx_obj.numparams == 0) {
         snprintf(outKey, outKeyLen, "Params ");
-        snprintf(outVal, outValLen, "-");
+        snprintf(outVal, outValLen, "- NONE -");
         return parser_ok;
     }
 
@@ -218,6 +231,8 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
 
     uint8_t paramIdx = (uint8_t) paramIdxSigned;
     *pageCount = 1;
-    snprintf(outKey, outKeyLen, "Params - %d ", paramIdx + 1);
+    snprintf(outKey, outKeyLen, "Params |%d| ", paramIdx + 1);
+
+    zemu_log_stack(outKey);
     return parser_printParam(&parser_tx_obj, paramIdx, outVal, outValLen, pageIdx, pageCount);
 }

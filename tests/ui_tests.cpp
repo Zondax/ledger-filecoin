@@ -95,7 +95,7 @@ std::vector<testcase_t> GetJsonTestCases(const std::string &jsonFile) {
 }
 
 void check_testcase(const testcase_t &tc, bool expert_mode) {
-    app_mode_set_expert(expert_mode);
+    app_mode_set_expert(true);
 
     parser_context_t ctx;
     parser_error_t err;

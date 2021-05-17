@@ -83,9 +83,11 @@ const char *tx_parse() {
     CHECK_APP_CANARY()
 
     if (err != parser_ok) {
+        zemu_log("parser_validate::failed\n");
         return parser_getErrorDescription(err);
     }
 
+    zemu_log("parser_validate::ok\n");
     return NULL;
 }
 

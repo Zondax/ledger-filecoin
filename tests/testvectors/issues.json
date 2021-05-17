@@ -1,2 +1,21 @@
 [
+  {
+    "description": "TODO invalid test case ",
+    "encoded_tx": "igBAQABCAAAAQgAAQgAAAEA=",
+    "valid": true,
+    "testnet": false,
+    "error": "Invalid address format",
+    "message": {
+      "version": 0,
+      "to": "",
+      "from": "",
+      "nonce": 0,
+      "value": "0",
+      "gaslimit": "0",
+      "gaspremium": "0",
+      "gasfeecap": "0",
+      "method": 0
+    },
+    "encoded_tx_hex": "8a004300ec075501dfe49184d46adc8f89d44638beb45f78fcad259001401a000f4240430009c4430009c402581d845501dfe49184d46adc8f89d44638beb45f78fcad2590430003e80040"
+  }
 ]

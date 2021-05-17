@@ -20,9 +20,13 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     parser_context_t ctx;
     parser_error_t rc;
 
+    char buffer[10000];
+    array_to_hexstr(buffer, sizeof(buffer), data, size);
+    fprintf(stderr, "input blob: %s\n", buffer);
+
     rc = parser_parse(&ctx, data, size);
     if (rc != parser_ok) {
-        // fprintf(stderr, "parser error: %s\n", parser_getErrorDescription(rc));
+        fprintf(stderr, "parser error: %s\n", parser_getErrorDescription(rc));
         return 0;
     }
 

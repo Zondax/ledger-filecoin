@@ -228,6 +228,7 @@ void h_secret_click() {
 //////////////////////////
 
 void view_idle_show_impl(uint8_t item_idx, char *statusString) {
+    zemu_log_stack("view_idle_show_impl");
     if (statusString == NULL ) {
         if (app_mode_secret()) {
             snprintf(viewdata.key, MAX_CHARS_PER_KEY_LINE, "%s", MENU_MAIN_APP_LINE2_SECRET);
@@ -245,6 +246,7 @@ void view_idle_show_impl(uint8_t item_idx, char *statusString) {
 }
 
 void view_review_show_impl(){
+    zemu_log_stack("view_review_show_impl");
     h_paging_init();
     h_paging_decrease();
     ////
@@ -256,6 +258,7 @@ void view_review_show_impl(){
 }
 
 void view_error_show_impl() {
+    zemu_log_stack("view_error_show_impl");
     ux_layout_bnnn_paging_reset();
     if(G_ux.stack_count == 0) {
         ux_stack_push();

@@ -30,11 +30,11 @@ __Z_INLINE parser_error_t parser_mapCborError(CborError err);
 
 #define PARSER_ASSERT_OR_ERROR(CALL, ERROR) if (!(CALL)) return ERROR;
 
-#define CHECK_CBOR_TYPE(type, expected) {if (type!=expected) return parser_unexpected_type;}
+#define CHECK_CBOR_TYPE(type, expected) {if ((type)!=(expected)) return parser_unexpected_type;}
 
 #define INIT_CBOR_PARSER(c, it)  \
     CborParser parser;           \
-    CHECK_CBOR_MAP_ERR(cbor_parser_init(c->buffer + c->offset, c->bufferLen - c->offset, 0, &parser, &it))
+    CHECK_CBOR_MAP_ERR(cbor_parser_init((c)->buffer + (c)->offset, (c)->bufferLen - (c)->offset, 0, &parser, &(it)))
 
 parser_error_t parser_init_context(parser_context_t *ctx,
                                    const uint8_t *buffer,
@@ -131,7 +131,7 @@ const char *parser_getErrorDescription(parser_error_t err) {
     }
 }
 
-__Z_INLINE parser_error_t _readAddress(address_t *address, CborValue *value) {
+__Z_INLINE parser_error_t readAddress(address_t *address, CborValue *value) {
     CHECK_CBOR_TYPE(cbor_value_get_type(value), CborByteStringType)
 
     CborValue dummy;
@@ -169,7 +169,7 @@ __Z_INLINE parser_error_t _readAddress(address_t *address, CborValue *value) {
     return parser_ok;
 }
 
-__Z_INLINE parser_error_t _readBigInt(bigint_t *bigint, CborValue *value) {
+__Z_INLINE parser_error_t readBigInt(bigint_t *bigint, CborValue *value) {
     CHECK_CBOR_TYPE(cbor_value_get_type(value), CborByteStringType)
     CborValue dummy;
 
@@ -191,19 +191,28 @@ __Z_INLINE parser_error_t _readBigInt(bigint_t *bigint, CborValue *value) {
     return parser_ok;
 }
 
-parser_error_t _printValue(const struct CborValue *value,
+parser_error_t printValue(const struct CborValue *value,
                            char *outVal, uint16_t outValLen,
                            uint8_t pageIdx, uint8_t *pageCount) {
     switch (value->type) {
         case CborByteStringType: {
+            zemu_log("printValue::CborByteStringType\n");
+            CHECK_APP_CANARY()
+
             uint8_t buff[200];
             size_t len = sizeof(buff);
-            CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(value, buff, &len, NULL /* next */));
+            CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(value, buff, &len, NULL /* next */))
+
+            zemu_log("printValue::CborByteStringType::b\n");
+            CHECK_APP_CANARY()
 
             if (len == 0) {
                 snprintf(outVal, outValLen, "-");
                 break;
             }
+
+            zemu_log("printValue::CborByteStringType::c\n");
+            CHECK_APP_CANARY()
 
             // 0x + val + \0
             size_t hexStrLen = 2 + len * 2 + 1;
@@ -212,16 +221,28 @@ parser_error_t _printValue(const struct CborValue *value,
             hexStr[0] = '0';
             hexStr[1] = 'x';
 
+            zemu_log("printValue::CborByteStringType::d\n");
+            CHECK_APP_CANARY()
+
             size_t count = array_to_hexstr(hexStr + 2, len * 2 + 1, buff, len);
-            PARSER_ASSERT_OR_ERROR(count == len * 2, parser_value_out_of_range);
+            PARSER_ASSERT_OR_ERROR(count == len * 2, parser_value_out_of_range)
+
+            zemu_log("printValue::CborByteStringType::e\n");
+            CHECK_APP_CANARY()
 
             pageString(outVal, outValLen, hexStr, pageIdx, pageCount);
+
+            zemu_log("printValue::CborByteStringType::f\n");
+            CHECK_APP_CANARY()
             break;
         }
         case CborTextStringType: {
+            zemu_log("printValue::CborTextStringType\n");
+            CHECK_APP_CANARY()
+
             char buff[200];
             size_t len = sizeof(buff);
-            CHECK_CBOR_MAP_ERR(cbor_value_copy_text_string(value, buff, &len, NULL /* next */));
+            CHECK_CBOR_MAP_ERR(cbor_value_copy_text_string(value, buff, &len, NULL /* next */))
 
             if (len == 0) {
                 snprintf(outVal, outValLen, "-");
@@ -232,8 +253,11 @@ parser_error_t _printValue(const struct CborValue *value,
             break;
         }
         case CborIntegerType: {
+            zemu_log("printValue::CborIntegerType\n");
+            CHECK_APP_CANARY()
+
             int paramValue = 0;
-            CHECK_CBOR_MAP_ERR(cbor_value_get_int(value, &paramValue));
+            CHECK_CBOR_MAP_ERR(cbor_value_get_int(value, &paramValue))
             snprintf(outVal, outValLen, "%d", paramValue);
             break;
         }
@@ -246,31 +270,59 @@ parser_error_t _printValue(const struct CborValue *value,
 parser_error_t _printParam(const parser_tx_t *tx, uint8_t paramIdx,
                            char *outVal, uint16_t outValLen,
                            uint8_t pageIdx, uint8_t *pageCount) {
+    zemu_log("_printParam\n");
+    CHECK_APP_CANARY()
+
     if (paramIdx >= tx->numparams) {
+        zemu_log("_printParam::OOB\n");
+        CHECK_APP_CANARY()
         return parser_value_out_of_range;
     }
 
     CborParser parser;
     CborValue params;
-    CHECK_CBOR_MAP_ERR(cbor_parser_init(tx->params, sizeof(tx->params), 0, &parser, &params));
+    CHECK_CBOR_MAP_ERR(cbor_parser_init(tx->params, sizeof(tx->params), 0, &parser, &params))
+
+    zemu_log("cbor_parser_init\n");
+    CHECK_APP_CANARY()
 
     switch (params.type) {
         case CborMapType:
         case CborArrayType: {
+            zemu_log("CborArrayType A\n");
+            CHECK_APP_CANARY()
+
             CborValue container;
-            CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&params, &container));
+            CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&params, &container))
+
+            zemu_log("CborArrayType B\n");
+            CHECK_APP_CANARY()
 
             for (uint8_t i = 0; i < paramIdx; ++i) {
-                CHECK_CBOR_MAP_ERR(cbor_value_advance(&container));
+                CHECK_CBOR_MAP_ERR(cbor_value_advance(&container))
+                zemu_log("CborArrayType C\n");
+                CHECK_APP_CANARY()
             }
 
-            CHECK_PARSER_ERR(_printValue(&container, outVal, outValLen, pageIdx, pageCount));
+            zemu_log("CborArrayType D\n");
+            CHECK_APP_CANARY()
 
-            CHECK_CBOR_MAP_ERR(cbor_value_leave_container(&params, &container));
+            CHECK_PARSER_ERR(printValue(&container, outVal, outValLen, pageIdx, pageCount))
+            CHECK_APP_CANARY()
+
+            zemu_log("CborArrayType E\n");
+
+            CHECK_CBOR_MAP_ERR(cbor_value_leave_container(&params, &container))
+
+            CHECK_APP_CANARY()
+
+            zemu_log("CborArrayType F\n");
             break;
         }
-        default: CHECK_PARSER_ERR(_printValue(&params, outVal, outValLen, pageIdx, pageCount));
+        default: CHECK_PARSER_ERR(printValue(&params, outVal, outValLen, pageIdx, pageCount))
     }
+
+    zemu_log("_printParam::OK\n");
     return parser_ok;
 }
 
@@ -282,7 +334,7 @@ parser_error_t checkMethod(uint64_t methodValue) {
     }
 }
 
-__Z_INLINE parser_error_t _readMethod(parser_tx_t *tx, CborValue *value) {
+__Z_INLINE parser_error_t readMethod(parser_tx_t *tx, CborValue *value) {
 
     uint64_t methodValue;
     PARSER_ASSERT_OR_ERROR(cbor_value_is_unsigned_integer(value), parser_unexpected_type)
@@ -291,7 +343,7 @@ __Z_INLINE parser_error_t _readMethod(parser_tx_t *tx, CborValue *value) {
     tx->numparams = 0;
     MEMZERO(tx->params, sizeof(tx->params));
 
-    CHECK_PARSER_ERR(checkMethod(methodValue));
+    CHECK_PARSER_ERR(checkMethod(methodValue))
 
     if (methodValue == 0) {
         PARSER_ASSERT_OR_ERROR(value->type != CborInvalidType, parser_unexpected_type)
@@ -314,38 +366,38 @@ __Z_INLINE parser_error_t _readMethod(parser_tx_t *tx, CborValue *value) {
         // and sets txn->numparams to the number of params within cbor container
         // Parsing of the individual params is deferred until the display stage
 
-        PARSER_ASSERT_OR_ERROR(value->type != CborInvalidType, parser_unexpected_type);
-        CHECK_CBOR_MAP_ERR(cbor_value_advance(value));
-        CHECK_CBOR_TYPE(value->type, CborByteStringType);
+        PARSER_ASSERT_OR_ERROR(value->type != CborInvalidType, parser_unexpected_type)
+        CHECK_CBOR_MAP_ERR(cbor_value_advance(value))
+        CHECK_CBOR_TYPE(value->type, CborByteStringType)
 
-        PARSER_ASSERT_OR_ERROR(cbor_value_is_byte_string(value), parser_unexpected_type);
+        PARSER_ASSERT_OR_ERROR(cbor_value_is_byte_string(value), parser_unexpected_type)
 
         size_t paramsBufferSize = 0;
-        CHECK_CBOR_MAP_ERR(cbor_value_get_string_length(value, &paramsBufferSize));
-        PARSER_ASSERT_OR_ERROR(paramsBufferSize <= sizeof(tx->params), parser_unexpected_number_items);
+        CHECK_CBOR_MAP_ERR(cbor_value_get_string_length(value, &paramsBufferSize))
+        PARSER_ASSERT_OR_ERROR(paramsBufferSize <= sizeof(tx->params), parser_unexpected_number_items)
 
         // short-ciruit if there are no params
         if (paramsBufferSize != 0) {
             size_t len = sizeof(tx->params);
-            CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(value, tx->params, &len, NULL /* next */));
-            PARSER_ASSERT_OR_ERROR(len <= sizeof(tx->params), parser_unexpected_value);
+            CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(value, tx->params, &len, NULL /* next */))
+            PARSER_ASSERT_OR_ERROR(len <= sizeof(tx->params), parser_unexpected_value)
 
             CborParser parser;
             CborValue params;
-            CHECK_CBOR_MAP_ERR(cbor_parser_init(tx->params, sizeof(tx->params), 0, &parser, &params));
+            CHECK_CBOR_MAP_ERR(cbor_parser_init(tx->params, sizeof(tx->params), 0, &parser, &params))
 
             switch (params.type) {
                 case CborArrayType: {
                     size_t arrayLength = 0;
-                    CHECK_CBOR_MAP_ERR(cbor_value_get_array_length(&params, &arrayLength));
-                    PARSER_ASSERT_OR_ERROR(arrayLength < UINT8_MAX, parser_value_out_of_range);
+                    CHECK_CBOR_MAP_ERR(cbor_value_get_array_length(&params, &arrayLength))
+                    PARSER_ASSERT_OR_ERROR(arrayLength < UINT8_MAX, parser_value_out_of_range)
                     tx->numparams = arrayLength;
                     break;
                 }
                 case CborMapType: {
                     size_t mapLength = 0;
-                    CHECK_CBOR_MAP_ERR(cbor_value_get_map_length(&params, &mapLength));
-                    PARSER_ASSERT_OR_ERROR(mapLength < UINT8_MAX, parser_value_out_of_range);
+                    CHECK_CBOR_MAP_ERR(cbor_value_get_map_length(&params, &mapLength))
+                    PARSER_ASSERT_OR_ERROR(mapLength < UINT8_MAX, parser_value_out_of_range)
                     tx->numparams = mapLength;
                     break;
                 }
@@ -373,7 +425,7 @@ parser_error_t _read(const parser_context_t *c, parser_tx_t *v) {
     CHECK_CBOR_MAP_ERR(cbor_value_get_array_length(&it, &arraySize))
 
     // Depends if we have params or not
-    PARSER_ASSERT_OR_ERROR(arraySize == 10 || arraySize == 9, parser_unexpected_number_items);
+    PARSER_ASSERT_OR_ERROR(arraySize == 10 || arraySize == 9, parser_unexpected_number_items)
 
     CborValue arrayContainer;
     PARSER_ASSERT_OR_ERROR(cbor_value_is_container(&it), parser_unexpected_type)
@@ -381,7 +433,7 @@ parser_error_t _read(const parser_context_t *c, parser_tx_t *v) {
 
     // "version" field
     PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(&arrayContainer), parser_unexpected_type)
-    CHECK_PARSER_ERR(cbor_value_get_int64_checked(&arrayContainer, &v->version))
+    CHECK_CBOR_MAP_ERR(cbor_value_get_int64_checked(&arrayContainer, &v->version))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
@@ -390,50 +442,50 @@ parser_error_t _read(const parser_context_t *c, parser_tx_t *v) {
     }
 
     // "to" field
-    CHECK_PARSER_ERR(_readAddress(&v->to, &arrayContainer))
+    CHECK_PARSER_ERR(readAddress(&v->to, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // "from" field
-    CHECK_PARSER_ERR(_readAddress(&v->from, &arrayContainer))
+    CHECK_PARSER_ERR(readAddress(&v->from, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // "nonce" field
     PARSER_ASSERT_OR_ERROR(cbor_value_is_unsigned_integer(&arrayContainer), parser_unexpected_type)
-    CHECK_PARSER_ERR(cbor_value_get_uint64(&arrayContainer, &v->nonce))
+    CHECK_CBOR_MAP_ERR(cbor_value_get_uint64(&arrayContainer, &v->nonce))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // "value" field
-    CHECK_PARSER_ERR(_readBigInt(&v->value, &arrayContainer))
+    CHECK_PARSER_ERR(readBigInt(&v->value, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // "gasLimit" field
     PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(&arrayContainer), parser_unexpected_type)
-    CHECK_PARSER_ERR(cbor_value_get_int64(&arrayContainer, &v->gaslimit))
+    CHECK_CBOR_MAP_ERR(cbor_value_get_int64_checked(&arrayContainer, &v->gaslimit))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // "gasFeeCap" field
-    CHECK_PARSER_ERR(_readBigInt(&v->gasfeecap, &arrayContainer))
+    CHECK_PARSER_ERR(readBigInt(&v->gasfeecap, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // "gasPremium" field
-    CHECK_PARSER_ERR(_readBigInt(&v->gaspremium, &arrayContainer))
+    CHECK_PARSER_ERR(readBigInt(&v->gaspremium, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // "method" field
-    CHECK_PARSER_ERR(_readMethod(v, &arrayContainer))
+    CHECK_PARSER_ERR(readMethod(v, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // "params" field is consumed inside readMethod
     PARSER_ASSERT_OR_ERROR(cbor_value_is_container(&it), parser_unexpected_type)
-    PARSER_ASSERT_OR_ERROR(arrayContainer.type == CborInvalidType, parser_unexpected_type)
+    PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_leave_container(&it, &arrayContainer))
 
     // End of buffer does not match end of parsed data
