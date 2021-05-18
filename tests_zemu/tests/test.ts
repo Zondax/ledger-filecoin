@@ -36,7 +36,7 @@ const defaultOptions = {
 jest.setTimeout(60000)
 
 export const models: DeviceModel[] = [
-//  {name: 'nanos', prefix: 'S', path: APP_PATH_S},
+  {name: 'nanos', prefix: 'S', path: APP_PATH_S},
   {name: 'nanox', prefix: 'X', path: APP_PATH_X}
 ]
 
