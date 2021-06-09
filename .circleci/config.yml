@@ -28,27 +28,6 @@ jobs:
             source /home/zondax/.cargo/env
             make
 
-  test_fuzz_crash_fixes:
-    docker:
-      - image: zondax/circleci:latest
-    steps:
-      - checkout
-      - run: git submodule update --init --recursive
-      - run: sudo apt update && sudo apt -y install clang-10 clang-tidy
-      - run: clang-tidy --version
-      - run:
-          name: Build
-          command: |
-            cmake -B build \
-                    -DCMAKE_C_COMPILER=clang-11 \
-                    -DCMAKE_CXX_COMPILER=clang++-11 \
-                    -DCMAKE_BUILD_TYPE=Debug \
-                    -DENABLE_FUZZING=1 \
-                    -DENABLE_SANITIZERS=1 \
-                    .
-            make -C build
-      - run: ./run-fuzz-crashes.py
-
   test_zemu:
     machine:
       image: ubuntu-2004:202101-01
@@ -116,7 +95,6 @@ workflows:
     jobs:
       - build
       - build_ledger
-      - test_fuzz_crash_fixes
       - test_zemu
       - build_package:
           requires:

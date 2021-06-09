@@ -30,7 +30,11 @@
 #include "coin.h"
 #include "zxmacros.h"
 
+static bool tx_initialized = false;
+
 void extractHDPath(uint32_t rx, uint32_t offset) {
+    tx_initialized = false;
+
     if ((rx - offset) < sizeof(uint32_t) * HDPATH_LEN_DEFAULT) {
         THROW(APDU_CODE_WRONG_LENGTH);
     }
@@ -63,19 +67,28 @@ bool process_chunk(volatile uint32_t *tx, uint32_t rx) {
 
     uint32_t added;
     switch (payloadType) {
-        case 0:
+        case P1_INIT:
             tx_initialize();
             tx_reset();
             extractHDPath(rx, OFFSET_DATA);
+            tx_initialized = true;
             return false;
-        case 1:
+        case P1_ADD:
+            if (!tx_initialized) {
+                THROW(APDU_CODE_TX_NOT_INITIALIZED);
+            }
             added = tx_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
             if (added != rx - OFFSET_DATA) {
+                tx_initialized = false;
                 THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
             }
             return false;
-        case 2:
+        case P1_LAST:
+            if (!tx_initialized) {
+                THROW(APDU_CODE_TX_NOT_INITIALIZED);
+            }
             added = tx_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
+            tx_initialized = false;
             if (added != rx - OFFSET_DATA) {
                 THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
             }
