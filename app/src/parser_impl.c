@@ -311,11 +311,7 @@ __Z_INLINE parser_error_t readMethod(parser_tx_t *tx, CborValue *value) {
         PARSER_ASSERT_OR_ERROR(arraySize == 0, parser_unexpected_number_items)
         tx->method = 0;
 
-    }
-
-    if (!app_mode_expert()) {
-        // Only en expert mode methods != 0 are allowed for now
-        return parser_unexpected_method;
+        return parser_ok;
     }
 
     // This area reads the entire params byte string (if present) into the txn->params
