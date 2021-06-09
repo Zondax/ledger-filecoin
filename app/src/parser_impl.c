@@ -229,7 +229,7 @@ parser_error_t printValue(const struct CborValue *value,
         case CborIntegerType: {
             int64_t paramValue = 0;
             CHECK_CBOR_MAP_ERR(cbor_value_get_int64_checked(value, &paramValue))
-            snprintf(outVal, outValLen, "%ld", paramValue);
+            int64_to_str(outVal, outValLen, paramValue);
             break;
         }
         default:

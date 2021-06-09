@@ -324,10 +324,10 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
-"@grpc/grpc-js@^1.3.1":
-  version "1.3.1"
-  resolved "https://registry.yarnpkg.com/@grpc/grpc-js/-/grpc-js-1.3.1.tgz#8b57430b72b77ce5eb1925c2c9951b7e68eb1971"
-  integrity sha512-zyFq9eW0U4vGyhJS/oeW3mIeKTzB13we9rBclcisfRHxGQbC9FCOKQ5BBA2129yZwRVMt4hQia1igGzECeuY9g==
+"@grpc/grpc-js@^1.3.2":
+  version "1.3.2"
+  resolved "https://registry.yarnpkg.com/@grpc/grpc-js/-/grpc-js-1.3.2.tgz#eae97e6daf5abd49a7818aadeca0744dfb1ebca1"
+  integrity sha512-UXepkOKCATJrhHGsxt+CGfpZy9zUn1q9mop5kfcXq1fBkTePxVNPOdnISlCbJFlCtld+pSLGyZCzr9/zVprFKA==
   dependencies:
     "@types/node" ">=12.12.47"
 
@@ -970,12 +970,12 @@
     "@babel/runtime" "^7.10.4"
     "@ledgerhq/hw-transport" "^5.19.1"
 
-"@zondax/zemu@^0.13.0":
-  version "0.13.0"
-  resolved "https://registry.yarnpkg.com/@zondax/zemu/-/zemu-0.13.0.tgz#e58b255a5c09adb23316ec97f97204b4a9e21ab9"
-  integrity sha512-TsJOdtzngyIX3NAIkozJlHyfPN81dMDg1XjFrUAjO7ABoY/RC4kfY5d2NbaFQ8TbTBqd2eFrY/iwwJ6qdhqFng==
+"@zondax/zemu@^0.14.5":
+  version "0.14.5"
+  resolved "https://registry.yarnpkg.com/@zondax/zemu/-/zemu-0.14.5.tgz#c50517fb8d310a7a85ecb01d999ebf5568000e04"
+  integrity sha512-o8/NOMppMYP9lrHpMXs7wsuZh2YGljlYtjlgisWy+GnSk5MS08ULtCb3EzCe0Wc6W3hGBk6siZzpHX/UqqJi3g==
   dependencies:
-    "@grpc/grpc-js" "^1.3.1"
+    "@grpc/grpc-js" "^1.3.2"
     "@grpc/proto-loader" "^0.6.2"
     "@ledgerhq/hw-transport" "^5.51.1"
     "@ledgerhq/hw-transport-http" "^5.51.1"
