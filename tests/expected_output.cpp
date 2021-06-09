@@ -55,7 +55,7 @@ std::string FormatAmount(const std::string &amount) {
     return std::string(buffer);
 }
 
-std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool expertMode) {
+std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool) {
     auto answer = std::vector<std::string>();
 
     bool valid = true;

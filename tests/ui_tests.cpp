@@ -28,7 +28,6 @@
 #include "expected_output.h"
 
 using ::testing::TestWithParam;
-using ::testing::Values;
 
 class JsonTests : public ::testing::TestWithParam<testcase_t> {
 public:
