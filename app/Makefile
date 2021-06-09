@@ -166,7 +166,7 @@ endif
 #########################
 
 CC := $(CLANGPATH)clang
-CFLAGS += -O3 -Os -Wno-unknown-pragmas -Wno-implicit-fallthrough
+CFLAGS += -O3 -Os -Wno-unknown-pragmas -Wno-implicit-fallthrough -Wvla
 
 AS := $(GCCPATH)arm-none-eabi-gcc
 AFLAGS +=

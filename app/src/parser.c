@@ -226,7 +226,7 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
 
     // end of params
     if (paramIdxSigned < 0 || paramIdxSigned >= parser_tx_obj.numparams) {
-        return parser_ok;
+        return parser_unexpected_field;
     }
 
     uint8_t paramIdx = (uint8_t) paramIdxSigned;

@@ -291,5 +291,6 @@ fuzz: fuzz_build
 	./fuzz/run-fuzzers.py
 
 .PHONY: fuzz_crash
+fuzz_crash: FUZZ_LOGGING=1
 fuzz_crash: fuzz_build
 	./fuzz/run-fuzz-crashes.py

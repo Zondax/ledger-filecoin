@@ -27,7 +27,10 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
-#define MAX_SUPPORT_METHOD 23
+#define MAX_SUPPORT_METHOD      50
+#define MAX_PARAMS_BUFFER_SIZE  200
+
+
 // https://github.com/filecoin-project/lotus/blob/65c669b0f2dfd8c28b96755e198b9cdaf0880df8/chain/address/address.go#L36
 // https://github.com/filecoin-project/lotus/blob/65c669b0f2dfd8c28b96755e198b9cdaf0880df8/chain/address/address.go#L371-L373
 // Should not be more than 64 bytes
@@ -56,7 +59,7 @@ typedef struct {
     uint64_t method;
 
     uint8_t numparams;
-    uint8_t params[200];
+    uint8_t params[MAX_PARAMS_BUFFER_SIZE];
 } parser_tx_t;
 
 #ifdef __cplusplus
