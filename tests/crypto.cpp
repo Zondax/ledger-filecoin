@@ -21,9 +21,6 @@
 #include <crypto.h>
 #include <bignum.h>
 
-using ::testing::TestWithParam;
-using ::testing::Values;
-
 extern const char *crypto_testPubKey;
 #define ADDRESS_BYTE_TO_STRING_LEN    (42 + 1)
 

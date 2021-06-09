@@ -21,80 +21,45 @@
 
 #include <string.h>
 
-int base32_decode(const uint8_t *encoded, unsigned int encodedSize,  uint8_t *result, unsigned int bufSize) {
-    if (encoded == NULL) {
-        return 0;
-    }
-
-    unsigned int buffer = 0;
-    int bitsLeft = 0;
-    unsigned int count = 0;
-    for (const uint8_t *ptr = encoded; count < bufSize && *ptr && (ptr - encoded) < encodedSize; ++ptr) {
-        uint8_t ch = *ptr;
-        if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' || ch == '-') {
-            continue;
-        }
-        buffer <<= 5;
-
-        // Deal with commonly mistyped characters
-        if (ch == '0') {
-            ch = 'O';
-        } else if (ch == '1') {
-            ch = 'L';
-        } else if (ch == '8') {
-            ch = 'B';
-        }
-
-        // Look up one base32 digit
-        if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')) {
-            ch = (ch & 0x1F) - 1;
-        } else if (ch >= '2' && ch <= '7') {
-            ch -= '2' - 26;
-        } else {
-            return -1;
-        }
-
-        buffer |= ch;
-        bitsLeft += 5;
-        if (bitsLeft >= 8) {
-            result[count++] = buffer >> (bitsLeft - 8);
-            bitsLeft -= 8;
-        }
-    }
-    if (count < bufSize) {
-        result[count] = '\000';
-    }
-
-    return count;
-}
-
-int base32_encode(const uint8_t *data, unsigned int length, uint8_t *result, unsigned int bufSize) {
-    if (length < 0 || length > (1 << 28)) {
+uint32_t base32_encode(const uint8_t *data,
+                       uint32_t length,
+                       char *result,
+                       uint32_t resultLen)
+{
+    if (length < 0 || length > (1 << 28))
+    {
         return -1;
     }
-    unsigned int count = 0;
-    if (length > 0) {
-        unsigned int buffer = data[0];
-        unsigned int next = 1;
-        int bitsLeft = 8;
-        while (count < bufSize && (bitsLeft > 0 || next < length)) {
-            if (bitsLeft < 5) {
-                if (next < length) {
+    uint32_t count = 0;
+    if (length > 0)
+    {
+        uint32_t buffer = data[0];
+        uint32_t next = 1;
+        uint32_t bitsLeft = 8;
+        while (count < resultLen && (bitsLeft > 0 || next < length))
+        {
+            if (bitsLeft < 5)
+            {
+                if (next < length)
+                {
                     buffer <<= 8;
                     buffer |= data[next++] & 0xFF;
                     bitsLeft += 8;
-                } else {
-                    int pad = 5 - bitsLeft;
+                }
+                else
+                {
+                    uint32_t pad = 5u - bitsLeft;
                     buffer <<= pad;
                     bitsLeft += pad;
                 }
             }
-            int index = 0x1F & (buffer >> (bitsLeft - 5));
+            uint32_t index = 0x1Fu & (buffer >> (bitsLeft - 5u));
             bitsLeft -= 5;
             result[count++] = "abcdefghijklmnopqrstuvwxyz234567"[index];
         }
     }
-    if (count < bufSize) {
+    if (count < resultLen)
+    {
         result[count] = '\000';
     }
     return count;

@@ -28,10 +28,15 @@
 #include "crypto.h"
 #include "coin.h"
 #include "zxmacros.h"
+#include "app_mode.h"
+
+static bool tx_initialized = false;
 
 unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 
 unsigned char io_event(unsigned char channel) {
+    UNUSED(channel);
+
     switch (G_io_seproxyhal_spi_buffer[0]) {
         case SEPROXYHAL_TAG_FINGER_EVENT: //
             UX_FINGER_EVENT(G_io_seproxyhal_spi_buffer);
@@ -91,168 +96,10 @@ unsigned short io_exchange_al(unsigned char channel, unsigned short tx_len) {
     return 0;
 }
 
-void extractHDPath(uint32_t rx, uint32_t offset) {
-    if ((rx - offset) < sizeof(uint32_t) * HDPATH_LEN_DEFAULT) {
-        THROW(APDU_CODE_WRONG_LENGTH);
-    }
-
-    MEMCPY(hdPath, G_io_apdu_buffer + offset, sizeof(uint32_t) * HDPATH_LEN_DEFAULT);
-
-    const bool mainnet = hdPath[0] == HDPATH_0_DEFAULT &&
-                         hdPath[1] == HDPATH_1_DEFAULT;
-
-    const bool testnet = hdPath[0] == HDPATH_0_TESTNET &&
-            hdPath[1] == HDPATH_1_TESTNET;
-
-    if (!mainnet && !testnet) {
-        THROW(APDU_CODE_DATA_INVALID);
-    }
-}
-
-bool process_chunk(volatile uint32_t *tx, uint32_t rx) {
-    const uint8_t payloadType = G_io_apdu_buffer[OFFSET_PAYLOAD_TYPE];
-
-    if (G_io_apdu_buffer[OFFSET_P2] != 0) {
-        THROW(APDU_CODE_INVALIDP1P2);
-    }
-
-    if (rx < OFFSET_DATA) {
-        THROW(APDU_CODE_WRONG_LENGTH);
-    }
-
-    uint32_t added;
-    switch (payloadType) {
-        case 0:
-            tx_initialize();
-            tx_reset();
-            extractHDPath(rx, OFFSET_DATA);
-            return false;
-        case 1:
-            added = tx_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
-            if (added != rx - OFFSET_DATA) {
-                THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
-            }
-            return false;
-        case 2:
-            added = tx_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
-            if (added != rx - OFFSET_DATA) {
-                THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
-            }
-            return true;
-    }
-
-    THROW(APDU_CODE_INVALIDP1P2);
-}
-
-void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
-    uint16_t sw = 0;
-
-    BEGIN_TRY
-    {
-        TRY
-        {
-            if (G_io_apdu_buffer[OFFSET_CLA] != CLA) {
-                THROW(APDU_CODE_CLA_NOT_SUPPORTED);
-            }
-
-            if (rx < APDU_MIN_LENGTH) {
-                THROW(APDU_CODE_WRONG_LENGTH);
-            }
-
-            switch (G_io_apdu_buffer[OFFSET_INS]) {
-                case INS_GET_VERSION: {
-#ifdef TESTING_ENABLED
-                    G_io_apdu_buffer[0] = 0xFF;
-#else
-                    G_io_apdu_buffer[0] = 0;
-#endif
-                    G_io_apdu_buffer[1] = LEDGER_MAJOR_VERSION;
-                    G_io_apdu_buffer[2] = LEDGER_MINOR_VERSION;
-                    G_io_apdu_buffer[3] = LEDGER_PATCH_VERSION;
-                    G_io_apdu_buffer[4] = !IS_UX_ALLOWED;
-
-                    G_io_apdu_buffer[5] = (TARGET_ID >> 24) & 0xFF;
-                    G_io_apdu_buffer[6] = (TARGET_ID >> 16) & 0xFF;
-                    G_io_apdu_buffer[7] = (TARGET_ID >> 8) & 0xFF;
-                    G_io_apdu_buffer[8] = (TARGET_ID >> 0) & 0xFF;
-
-                    *tx += 9;
-                    THROW(APDU_CODE_OK);
-                    break;
-                }
-
-                case INS_GET_ADDR_SECP256K1: {
-                    extractHDPath(rx, OFFSET_DATA);
-
-                    uint8_t requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
-
-                    if (requireConfirmation) {
-                        app_fill_address();
-                        view_address_show(addr_secp256k1);
-                        *flags |= IO_ASYNCH_REPLY;
-                        break;
-                    }
-
-                    *tx = app_fill_address();
-                    THROW(APDU_CODE_OK);
-                    break;
-                }
-
-                case INS_SIGN_SECP256K1: {
-                    if (!process_chunk(tx, rx))
-                        THROW(APDU_CODE_OK);
-
-                    CHECK_APP_CANARY()
-
-                    const char *error_msg = tx_parse();
-                    CHECK_APP_CANARY()
-
-                    if (error_msg != NULL) {
-                        int error_msg_length = strlen(error_msg);
-                        MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
-                        *tx += (error_msg_length);
-                        THROW(APDU_CODE_DATA_INVALID);
-                    }
-
-                    CHECK_APP_CANARY()
-
-                    view_sign_show();
-                    *flags |= IO_ASYNCH_REPLY;
-                    break;
-                }
-
-                default:
-                    THROW(APDU_CODE_INS_NOT_SUPPORTED);
-            }
-        }
-        CATCH(EXCEPTION_IO_RESET)
-        {
-            THROW(EXCEPTION_IO_RESET);
-        }
-        CATCH_OTHER(e)
-        {
-            switch (e & 0xF000) {
-                case 0x6000:
-                case APDU_CODE_OK:
-                    sw = e;
-                    break;
-                default:
-                    sw = 0x6800 | (e & 0x7FF);
-                    break;
-            }
-            G_io_apdu_buffer[*tx] = sw >> 8;
-            G_io_apdu_buffer[*tx + 1] = sw;
-            *tx += 2;
-        }
-        FINALLY
-        {
-        }
-    }
-    END_TRY;
-}
-
 void handle_generic_apdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
-    if (rx > 4 && os_memcmp(G_io_apdu_buffer, "\xE0\x01\x00\x00", 4) == 0) {
+    UNUSED(flags);
+
+    if (rx > 4 && MEMCMP(G_io_apdu_buffer, "\xE0\x01\x00\x00", 4) == 0) {
         // Respond to get device info command
         uint8_t *p = G_io_apdu_buffer;
         // Target ID        4 bytes
@@ -278,9 +125,23 @@ void handle_generic_apdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32
 
 void app_init() {
     io_seproxyhal_init();
+
+#ifdef TARGET_NANOX
+    // grab the current plane mode setting
+    G_io_app.plane_mode = os_setting_get(OS_SETTING_PLANEMODE, NULL, 0);
+#endif // TARGET_NANOX
+
     USB_power(0);
     USB_power(1);
-    view_idle_show(0);
+    app_mode_reset();
+    view_idle_show(0, NULL);
+
+#ifdef HAVE_BLE
+    // Enable Bluetooth
+    BLE_power(0, NULL);
+    BLE_power(1, "Nano X");
+#endif // HAVE_BLE
+
 }
 
 #pragma clang diagnostic push
@@ -311,6 +172,12 @@ void app_main() {
 
                 handleApdu(&flags, &tx, rx);
                 CHECK_APP_CANARY()
+            }
+            CATCH(EXCEPTION_IO_RESET)
+            {
+                // reset IO and UX before continuing
+                app_init();
+                continue;
             }
             CATCH_OTHER(e);
             {

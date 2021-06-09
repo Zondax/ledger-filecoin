@@ -23,13 +23,14 @@
 #include "coin.h"
 #include "zxerror.h"
 
-extern uint16_t action_addr_len;
+extern uint16_t action_addrResponseLen;
 
 __Z_INLINE void app_sign() {
     const uint8_t *message = tx_get_buffer();
     const uint16_t messageLength = tx_get_buffer_length();
-
     uint16_t replyLen = 0;
+
+    MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
     zxerr_t err = crypto_sign(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE - 3, message, messageLength, &replyLen);
 
     if (err != zxerr_ok || replyLen == 0) {
@@ -42,27 +43,28 @@ __Z_INLINE void app_sign() {
 }
 
 __Z_INLINE void app_reject() {
+    MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
     set_code(G_io_apdu_buffer, 0, APDU_CODE_COMMAND_NOT_ALLOWED);
     io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
 }
 
-__Z_INLINE uint8_t app_fill_address() {
+__Z_INLINE zxerr_t app_fill_address() {
     // Put data directly in the apdu buffer
     MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
 
-    action_addr_len = 0;
-    zxerr_t err = crypto_fillAddress(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE - 2, &action_addr_len);
+    action_addrResponseLen = 0;
+    zxerr_t err = crypto_fillAddress(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE - 2, &action_addrResponseLen);
 
-    if (err != zxerr_ok || action_addr_len == 0) {
+    if (err != zxerr_ok || action_addrResponseLen == 0) {
         THROW(APDU_CODE_EXECUTION_ERROR);
     }
 
-    return action_addr_len;
+    return zxerr_ok;
 }
 
 __Z_INLINE void app_reply_address() {
-    set_code(G_io_apdu_buffer, action_addr_len, APDU_CODE_OK);
-    io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, action_addr_len + 2);
+    set_code(G_io_apdu_buffer, action_addrResponseLen, APDU_CODE_OK);
+    io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, action_addrResponseLen + 2);
 }
 
 __Z_INLINE void app_reply_error() {

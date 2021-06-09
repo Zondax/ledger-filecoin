@@ -35,11 +35,17 @@ parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data, size_t d
 }
 
 parser_error_t parser_validate(const parser_context_t *ctx) {
+    zemu_log("parser_validate");
     CHECK_PARSER_ERR(_validateTx(ctx, &parser_tx_obj))
+    zemu_log("parser_validate::validated\n");
 
     // Iterate through all items to check that all can be shown and are valid
     uint8_t numItems = 0;
     CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems));
+
+    char log_tmp[100];
+    snprintf(log_tmp, sizeof(log_tmp), "parser_validate %d\n", numItems);
+    zemu_log(log_tmp);
 
     char tmpKey[40];
     char tmpVal[40];
@@ -49,10 +55,12 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
         CHECK_PARSER_ERR(parser_getItem(ctx, idx, tmpKey, sizeof(tmpKey), tmpVal, sizeof(tmpVal), 0, &pageCount))
     }
 
+    zemu_log("parser_validate::ok\n");
     return parser_ok;
 }
 
 parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_items) {
+    zemu_log("parser_getNumItems\n");
     *num_items = _getNumItems(ctx, &parser_tx_obj);
     return parser_ok;
 }
@@ -71,6 +79,12 @@ __Z_INLINE bool format_quantity(const bigint_t *b,
     // first byte of b is the sign byte so we can remove this one
     bignumBigEndian_to_bcd(bcd, bcdSize, b->buffer + 1, b->len - 1);
     return bignumBigEndian_bcdprint(bignum, bignumSize, bcd, bcdSize);
+}
+
+parser_error_t parser_printParam(const parser_tx_t *tx, uint8_t paramIdx,
+                                 char *outVal, uint16_t outValLen,
+                                 uint8_t pageIdx, uint8_t *pageCount) {
+    return _printParam(tx, paramIdx, outVal, outValLen, pageIdx, pageCount);
 }
 
 __Z_INLINE parser_error_t parser_printBigIntFixedPoint(const bigint_t *b,
@@ -121,6 +135,10 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
                               char *outKey, uint16_t outKeyLen,
                               char *outVal, uint16_t outValLen,
                               uint8_t pageIdx, uint8_t *pageCount) {
+    char log_tmp[100];
+    snprintf(log_tmp, sizeof(log_tmp), "getItem %d\n", displayIdx);
+    zemu_log(log_tmp);
+
     MEMZERO(outKey, outKeyLen);
     MEMZERO(outVal, outValLen);
     snprintf(outKey, outKeyLen, "?");
@@ -136,19 +154,19 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
     }
 
     if (displayIdx == 0) {
-        snprintf(outKey, outKeyLen, "To");
+        snprintf(outKey, outKeyLen, "To ");
         return parser_printAddress(&parser_tx_obj.to,
                                    outVal, outValLen, pageIdx, pageCount);
     }
 
     if (displayIdx == 1) {
-        snprintf(outKey, outKeyLen, "From");
+        snprintf(outKey, outKeyLen, "From ");
         return parser_printAddress(&parser_tx_obj.from,
                                    outVal, outValLen, pageIdx, pageCount);
     }
 
     if (displayIdx == 2) {
-        snprintf(outKey, outKeyLen, "Nonce");
+        snprintf(outKey, outKeyLen, "Nonce ");
         if (uint64_to_str(outVal, outValLen, parser_tx_obj.nonce) != NULL) {
             return parser_unexepected_error;
         }
@@ -157,12 +175,12 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
     }
 
     if (displayIdx == 3) {
-        snprintf(outKey, outKeyLen, "Value");
+        snprintf(outKey, outKeyLen, "Value ");
         return parser_printBigIntFixedPoint(&parser_tx_obj.value, outVal, outValLen, pageIdx, pageCount);
     }
 
     if (displayIdx == 4) {
-        snprintf(outKey, outKeyLen, "Gas Limit");
+        snprintf(outKey, outKeyLen, "Gas Limit ");
         if (int64_to_str(outVal, outValLen, parser_tx_obj.gaslimit) != NULL) {
             return parser_unexepected_error;
         }
@@ -171,53 +189,50 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
     }
 
     if (displayIdx == 5) {
-        snprintf(outKey, outKeyLen, "Gas Premium");
+        snprintf(outKey, outKeyLen, "Gas Premium ");
         return parser_printBigIntFixedPoint(&parser_tx_obj.gaspremium, outVal, outValLen, pageIdx, pageCount);
     }
 
     if (displayIdx == 6) {
-        snprintf(outKey, outKeyLen, "Gas Fee Cap");
+        snprintf(outKey, outKeyLen, "Gas Fee Cap ");
         return parser_printBigIntFixedPoint(&parser_tx_obj.gasfeecap, outVal, outValLen, pageIdx, pageCount);
     }
 
     if (displayIdx == 7) {
-        snprintf(outKey, outKeyLen, "Method");
+        snprintf(outKey, outKeyLen, "Method ");
         *pageCount = 1;
-        switch(parser_tx_obj.method) {
-            case method0:
-                snprintf(outVal, outValLen, "Transfer");
-                return parser_ok;
-            case method1:
-                snprintf(outVal, outValLen, "Method1");
-                return parser_ok;
-            case method2:
-                snprintf(outVal, outValLen, "Method2");
-                return parser_ok;
-            case method3:
-                snprintf(outVal, outValLen, "Method3");
-                return parser_ok;
-            case method4:
-                snprintf(outVal, outValLen, "Method4");
-                return parser_ok;
-            case method5:
-                snprintf(outVal, outValLen, "Method5");
-                return parser_ok;
-            case method6:
-                snprintf(outVal, outValLen, "Method6");
-                return parser_ok;
-            case method7:
-                snprintf(outVal, outValLen, "Method7");
-                return parser_ok;
+
+        CHECK_PARSER_ERR(checkMethod(parser_tx_obj.method));
+        if (parser_tx_obj.method == 0) {
+            snprintf(outVal, outValLen, "Transfer ");
+            return parser_ok;
+        } else {
+            char buffer[100];
+            MEMZERO(buffer, sizeof(buffer));
+            fpuint64_to_str(buffer, sizeof(buffer), parser_tx_obj.method, 0);
+            pageString(outVal, outValLen, buffer, pageIdx, pageCount);
+            return parser_ok;
         }
-        return parser_unexpected_method;
     }
 
-    if (displayIdx == 8) {
-        *pageCount = 1;
-        snprintf(outKey, outKeyLen, "Params");
-        snprintf(outVal, outValLen, "Not Available");
+    if (parser_tx_obj.numparams == 0) {
+        snprintf(outKey, outKeyLen, "Params ");
+        snprintf(outVal, outValLen, "- NONE -");
         return parser_ok;
     }
 
-    return parser_ok;
+    // remaining display pages show the params
+    int32_t paramIdxSigned = displayIdx - 8;
+
+    // end of params
+    if (paramIdxSigned < 0 || paramIdxSigned >= parser_tx_obj.numparams) {
+        return parser_unexpected_field;
+    }
+
+    uint8_t paramIdx = (uint8_t) paramIdxSigned;
+    *pageCount = 1;
+    snprintf(outKey, outKeyLen, "Params |%d| ", paramIdx + 1);
+
+    zemu_log_stack(outKey);
+    return parser_printParam(&parser_tx_obj, paramIdx, outVal, outValLen, pageIdx, pageCount);
 }

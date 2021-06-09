@@ -15,10 +15,9 @@
 ********************************************************************************/
 
 #include "crypto.h"
-
-#include "base32.h"
 #include "coin.h"
 #include "zxmacros.h"
+#include "base32.h"
 
 uint32_t hdPath[HDPATH_LEN_DEFAULT];
 
@@ -39,6 +38,7 @@ zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t
         return zxerr_invalid_crypto_settings;
     }
 
+    zxerr_t error = zxerr_ok;
     BEGIN_TRY
     {
         TRY {
@@ -52,7 +52,7 @@ zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t
             cx_ecfp_generate_pair(CX_CURVE_256K1, &cx_publicKey, &cx_privateKey, 1);
         }
         CATCH_OTHER(e) {
-            return zxerr_ledger_api_error;
+            error = zxerr_ledger_api_error;
         }
         FINALLY {
             MEMZERO(&cx_privateKey, sizeof(cx_privateKey));
@@ -61,7 +61,12 @@ zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t
     }
     END_TRY;
 
+    if (error != zxerr_ok) {
+        return error;
+    }
+
     memcpy(pubKey, cx_publicKey.W, SECP256K1_PK_LEN);
+
     return zxerr_ok;
 }
 
@@ -101,6 +106,10 @@ typedef struct {
 
 
 zxerr_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen, uint16_t *sigSize) {
+    if (signatureMaxlen < sizeof(signature_t) ) {
+        return zxerr_invalid_crypto_settings;
+    }
+
     uint8_t tmp[BLAKE2B_256_SIZE];
     uint8_t message_digest[BLAKE2B_256_SIZE];
 
@@ -114,6 +123,7 @@ zxerr_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *me
 
     signature_t *const signature = (signature_t *) buffer;
 
+    zxerr_t error = zxerr_ok;
     BEGIN_TRY
     {
         TRY
@@ -137,7 +147,7 @@ zxerr_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *me
                                             &info);
         }
         CATCH_OTHER(e) {
-            return zxerr_ledger_api_error;
+            error = zxerr_ledger_api_error;
         }
         FINALLY {
             MEMZERO(&cx_privateKey, sizeof(cx_privateKey));
@@ -145,6 +155,10 @@ zxerr_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *me
         }
     }
     END_TRY;
+
+    if (error != zxerr_ok) {
+        return error;
+    }
 
     err_convert_e err = convertDERtoRSV(signature->der_signature, info,  signature->r, signature->s, &signature->v);
     if (err != no_error) {
@@ -263,14 +277,12 @@ uint16_t formatProtocol(const uint8_t *addressBytes,
                         uint16_t addressSize,
                         uint8_t *formattedAddress,
                         uint16_t formattedAddressSize) {
-    if (formattedAddress == NULL) {
+    if (formattedAddress == NULL || formattedAddressSize < 2u) {
         return 0;
     }
     if (addressBytes == NULL || addressSize < 2u) {
         return 0;
     }
-
-    MEMZERO(formattedAddress, formattedAddressSize);
 
     const uint8_t protocol = addressBytes[0];
 
@@ -327,9 +339,9 @@ uint16_t formatProtocol(const uint8_t *addressBytes,
 
     // Now prepare the address output
     if (base32_encode(payload_crc,
-                      (int) (payloadSize + CHECKSUM_LENGTH),
-                      (formattedAddress + 2),
-                      formattedAddressSize - 2) < 0) {
+                      (uint32_t) (payloadSize + CHECKSUM_LENGTH),
+                      (char *)(formattedAddress + 2),
+                      (uint32_t) (formattedAddressSize - 2)) < 0) {
         return 0;
     }
 

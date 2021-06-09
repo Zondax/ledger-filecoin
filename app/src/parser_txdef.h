@@ -27,16 +27,9 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
-typedef enum {
-    method0 = 0,
-    method1 = 1,
-    method2 = 2,
-    method3 = 3,
-    method4 = 4,
-    method5 = 5,
-    method6 = 6,
-    method7 = 7,
-} method_e;
+#define MAX_SUPPORT_METHOD      50
+#define MAX_PARAMS_BUFFER_SIZE  200
+
 
 // https://github.com/filecoin-project/lotus/blob/65c669b0f2dfd8c28b96755e198b9cdaf0880df8/chain/address/address.go#L36
 // https://github.com/filecoin-project/lotus/blob/65c669b0f2dfd8c28b96755e198b9cdaf0880df8/chain/address/address.go#L371-L373
@@ -64,8 +57,9 @@ typedef struct {
     bigint_t gaspremium;
     bigint_t gasfeecap;
     uint64_t method;
-    // params are not supported at this moment
-    // char *params
+
+    uint8_t numparams;
+    uint8_t params[MAX_PARAMS_BUFFER_SIZE];
 } parser_tx_t;
 
 #ifdef __cplusplus

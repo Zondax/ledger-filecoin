@@ -28,6 +28,11 @@
 
 #define APDU_MIN_LENGTH                 5
 
+#define P1_INIT                         0  //< P1
+#define P1_ADD                          1  //< P1
+#define P1_LAST                         2  //< P1
+
+
 #define OFFSET_PAYLOAD_TYPE             OFFSET_P1
 
 #define INS_GET_VERSION                 0x00
@@ -37,3 +42,5 @@
 void app_init();
 
 void app_main();
+
+void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx);
