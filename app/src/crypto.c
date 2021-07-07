@@ -39,6 +39,7 @@ zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t
         return zxerr_invalid_crypto_settings;
     }
 
+    zxerr_t error = zxerr_ok;
     BEGIN_TRY
     {
         TRY {
@@ -52,7 +53,7 @@ zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t
             cx_ecfp_generate_pair(CX_CURVE_256K1, &cx_publicKey, &cx_privateKey, 1);
         }
         CATCH_OTHER(e) {
-            return zxerr_ledger_api_error;
+            error = zxerr_ledger_api_error;
         }
         FINALLY {
             MEMZERO(&cx_privateKey, sizeof(cx_privateKey));
@@ -61,7 +62,12 @@ zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t
     }
     END_TRY;
 
+    if (error != zxerr_ok) {
+        return error;
+    }
+
     memcpy(pubKey, cx_publicKey.W, SECP256K1_PK_LEN);
+
     return zxerr_ok;
 }
 
@@ -114,6 +120,7 @@ zxerr_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *me
 
     signature_t *const signature = (signature_t *) buffer;
 
+    zxerr_t error = zxerr_ok;
     BEGIN_TRY
     {
         TRY
@@ -137,7 +144,7 @@ zxerr_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *me
                                             &info);
         }
         CATCH_OTHER(e) {
-            return zxerr_ledger_api_error;
+            error = zxerr_ledger_api_error;
         }
         FINALLY {
             MEMZERO(&cx_privateKey, sizeof(cx_privateKey));
@@ -145,6 +152,10 @@ zxerr_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *me
         }
     }
     END_TRY;
+
+    if (error != zxerr_ok) {
+        return error;
+    }
 
     err_convert_e err = convertDERtoRSV(signature->der_signature, info,  signature->r, signature->s, &signature->v);
     if (err != no_error) {
