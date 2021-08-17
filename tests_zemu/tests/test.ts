@@ -275,4 +275,74 @@ describe('Standard', function () {
       await sim.close();
     }
   });
+
+/*
+  Should reject BLS signature
+  test.each(models)('try signing using BLS - fail', async function (m) {
+    const sim = new Zemu(m.path);
+    try {
+      await sim.start({...defaultOptions, model: m.name,});
+      const app = new FilecoinApp(sim.getTransport());
+      const path = "m/44'/461'/0'/0/1";
+      const txBlob = Buffer.from(
+        "8a00583103a7726b038022f75a384617585360cee629070a2d9d28712965e5f26ecc40858382803724ed34f2720336f09db631f074583103ad58df696e2d4e91ea86c881e938ba4ea81b395e12797b84b9cf314b9546705e839c7a99d606b247ddb4f9ac7a3414dd0144000186a01961a8420000430009c40040",
+        "hex",
+      );
+      // do not wait here so we can get snapshots and interact with the app
+      const signatureRequest = app.sign(path, txBlob);
+      // Wait until we are not in the main menu
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
+      let resp = await signatureRequest;
+      console.log(resp);
+      expect(resp.return_code).toEqual(0x6984);
+      expect(resp.error_message).toEqual("Data is invalid : Unexpected data type");
+    } finally {
+      await sim.close();
+    }
+  });*/
+
+  test.each(models)('test change owner', async function (m) {
+    const sim = new Zemu(m.path);
+    try {
+      await sim.start({ ...defaultOptions, model: m.name, });
+      const app = new FilecoinApp(sim.getTransport());
+
+      // Put the app in expert mode
+      await sim.clickRight();
+      await sim.clickBoth();
+      await sim.clickLeft();
+
+      const path = "m/44'/461'/0'/0/1";
+      const txBlob = Buffer.from(
+        "8A004300EC075501DFE49184D46ADC8F89D44638BEB45F78FCAD259001401A000F4240430009C4430009C41757815501DFE49184D46ADC8F89D44638BEB45F78FCAD2590",
+        "hex",
+      );
+
+      const pkResponse = await app.getAddressAndPubKey(path);
+      console.log(pkResponse);
+      expect(pkResponse.return_code).toEqual(0x9000);
+      expect(pkResponse.error_message).toEqual("No errors");
+
+      // do not wait here so we can get snapshots and interact with the app
+      const signatureRequest = app.sign(path, txBlob);
+
+      // Wait until we are not in the main menu
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
+
+      for (let i = 0; i < 10; i++) {
+        await sim.clickRight();
+      }
+
+      await sim.clickBoth();
+
+      let resp = await signatureRequest;
+      console.log(resp);
+
+      expect(resp.return_code).toEqual(0x9000);
+      expect(resp.error_message).toEqual("No errors");
+    } finally {
+      await sim.close();
+    }
+  });
+
 })
