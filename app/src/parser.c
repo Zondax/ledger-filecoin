@@ -213,6 +213,63 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
             case method7:
                 snprintf(outVal, outValLen, "7");
                 return parser_ok;
+            case method8:
+                snprintf(outVal, outValLen, "8");
+                return parser_ok;
+            case method9:
+                snprintf(outVal, outValLen, "9");
+                return parser_ok;
+            case method10:
+                snprintf(outVal, outValLen, "10");
+                return parser_ok;
+            case method11:
+                snprintf(outVal, outValLen, "11");
+                return parser_ok;
+            case method12:
+                snprintf(outVal, outValLen, "12");
+                return parser_ok;
+            case method13:
+                snprintf(outVal, outValLen, "13");
+                return parser_ok;
+            case method14:
+                snprintf(outVal, outValLen, "14");
+                return parser_ok;
+            case method15:
+                snprintf(outVal, outValLen, "15");
+                return parser_ok;
+            case method16:
+                snprintf(outVal, outValLen, "16");
+                return parser_ok;
+            case method17:
+                snprintf(outVal, outValLen, "17");
+                return parser_ok;
+            case method18:
+                snprintf(outVal, outValLen, "18");
+                return parser_ok;
+            case method19:
+                snprintf(outVal, outValLen, "19");
+                return parser_ok;
+            case method20:
+                snprintf(outVal, outValLen, "20");
+                return parser_ok;
+            case method21:
+                snprintf(outVal, outValLen, "21");
+                return parser_ok;
+            case method22:
+                snprintf(outVal, outValLen, "22");
+                return parser_ok;
+            case method23:
+                snprintf(outVal, outValLen, "23");
+                return parser_ok;
+            case method24:
+                snprintf(outVal, outValLen, "24");
+                return parser_ok;
+            case method25:
+                snprintf(outVal, outValLen, "25");
+                return parser_ok;
+            case method26:
+                snprintf(outVal, outValLen, "26");
+                return parser_ok;
         }
         return parser_unexpected_method;
     }

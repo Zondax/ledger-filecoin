@@ -277,7 +277,26 @@ __Z_INLINE parser_error_t _readMethod(parser_tx_t *tx, CborValue *value) {
         case method4:
         case method5:
         case method6:
-        case method7: {
+        case method7:
+        case method8:
+        case method9:
+        case method10:
+        case method11:
+        case method12:
+        case method13:
+        case method14:
+        case method15:
+        case method16:
+        case method17:
+        case method18:
+        case method19:
+        case method20:
+        case method21:
+        case method22:
+        case method23:
+        case method24:
+        case method25:
+        case method26: {
             if (!app_mode_expert()) {
                 return parser_unexpected_method;
             }
@@ -385,7 +404,7 @@ parser_error_t _read(const parser_context_t *c, parser_tx_t *v) {
     CHECK_PARSER_ERR(_readBigInt(&v->gasfeecap, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
-    
+
     // "gasPremium" field
     CHECK_PARSER_ERR(_readBigInt(&v->gaspremium, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
