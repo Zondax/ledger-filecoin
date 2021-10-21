@@ -6,6 +6,7 @@ jobs:
     steps:
       - checkout
       - run: git submodule update --init --recursive
+      - run: conan config install https://github.com/conan-io/conanclientcert.git
       - run: cmake -DCMAKE_BUILD_TYPE=Debug . && make
       # Unfortunately need to disable leak sanitizer https://github.com/google/sanitizers/issues/916
       # Still run all other ASAN components
