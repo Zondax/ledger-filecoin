@@ -17,6 +17,7 @@
 #include <coin.h>
 #include "testcases.h"
 #include "zxmacros.h"
+#include "zxformat.h"
 
 const uint32_t fieldSize = 37;
 

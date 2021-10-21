@@ -50,6 +50,10 @@ extern void explicit_bzero(void *s, size_t n) __THROW __nonnull ((1));
 
 #include "zxmacros_x64.h"
 
+#ifndef UNUSED
+#define UNUSED(x) (void)x
+#endif
+
 #endif
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__

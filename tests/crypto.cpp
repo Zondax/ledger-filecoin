@@ -20,6 +20,7 @@
 #include <hexutils.h>
 #include <crypto.h>
 #include <bignum.h>
+#include <zxformat.h>
 
 extern const char *crypto_testPubKey;
 #define ADDRESS_BYTE_TO_STRING_LEN    (42 + 1)
