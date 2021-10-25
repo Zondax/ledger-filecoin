@@ -19,6 +19,7 @@
 #include "parser_txdef.h"
 #include "cbor.h"
 #include "app_mode.h"
+#include "zxformat.h"
 
 parser_tx_t parser_tx_obj;
 

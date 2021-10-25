@@ -35,6 +35,8 @@ void h_review_button_left();
 void h_review_button_right();
 void h_review_button_both();
 
+bool exceed_pixel_in_display(const uint8_t length);
+
 #ifdef APP_SECRET_MODE_ENABLED
 void h_secret_click();
 #endif
@@ -59,7 +61,6 @@ const ux_menu_entry_t menu_main[] = {
 #endif
      0, &C_icon_app, "Developed by:", "Zondax.ch", 33, 12},
 
-    {NULL, NULL, 0, &C_icon_app, "Developed by:", "Zondax.ch", 33, 12},
     {NULL, NULL, 0, &C_icon_app, "License: ", "Apache 2.0", 33, 12},
     {NULL, os_exit, 0, &C_icon_dashboard, "Quit", NULL, 50, 29},
     UX_MENU_END
@@ -86,8 +87,7 @@ static const bagl_element_t view_error[] = {
     UI_LabelLineScrolling(UIID_LABELSCROLL, 0, 30, 128, UI_11PX, UI_WHITE, UI_BLACK, viewdata.value2),
 };
 
-static unsigned int view_error_button(unsigned int button_mask, unsigned int button_mask_counter) {
-    UNUSED(button_mask_counter);
+static unsigned int view_error_button(unsigned int button_mask, __Z_UNUSED unsigned int button_mask_counter) {
     switch (button_mask) {
         case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT:
         case BUTTON_EVT_RELEASED | BUTTON_LEFT:
@@ -99,8 +99,7 @@ static unsigned int view_error_button(unsigned int button_mask, unsigned int but
     return 0;
 }
 
-static unsigned int view_message_button(unsigned int button_mask, unsigned int button_mask_counter) {
-    UNUSED(button_mask_counter);
+static unsigned int view_message_button(unsigned int button_mask, __Z_UNUSED unsigned int button_mask_counter) {
     switch (button_mask) {
         case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT:
         case BUTTON_EVT_RELEASED | BUTTON_LEFT:
@@ -110,8 +109,7 @@ static unsigned int view_message_button(unsigned int button_mask, unsigned int b
     return 0;
 }
 
-static unsigned int view_review_button(unsigned int button_mask, unsigned int button_mask_counter) {
-    UNUSED(button_mask_counter);
+static unsigned int view_review_button(unsigned int button_mask, __Z_UNUSED unsigned int button_mask_counter) {
     switch (button_mask) {
         case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT:
             h_review_button_both();
@@ -193,11 +191,43 @@ void h_review_button_both() {
 
 void splitValueField() {
     print_value2("");
-    uint16_t vlen = strlen(viewdata.value);
+    const uint16_t vlen = strlen(viewdata.value);
     if (vlen > MAX_CHARS_PER_VALUE2_LINE - 1) {
-        strcpy(viewdata.value2, viewdata.value + MAX_CHARS_PER_VALUE_LINE);
+        snprintf(viewdata.value2, MAX_CHARS_PER_VALUE2_LINE, "%s", viewdata.value + MAX_CHARS_PER_VALUE_LINE);
         viewdata.value[MAX_CHARS_PER_VALUE_LINE] = 0;
     }
+}
+void splitValueAddress() {
+    uint8_t len = MAX_CHARS_PER_VALUE_LINE;
+    bool exceeding_max = exceed_pixel_in_display(len);
+    while(exceeding_max) {
+        len--;
+        exceeding_max = exceed_pixel_in_display(len);
+    }
+    print_value2("");
+    const uint16_t vlen = strlen(viewdata.value);
+    if (vlen > len) {
+        snprintf(viewdata.value2, MAX_CHARS_PER_VALUE2_LINE, "%s", viewdata.value + len);
+        viewdata.value[len] = 0;
+    }
+}
+
+max_char_display get_max_char_per_line() {
+    uint8_t len = MAX_CHARS_PER_VALUE_LINE;
+    bool exceeding_max = exceed_pixel_in_display(len);
+    while(exceeding_max) {
+        len--;
+        exceeding_max = exceed_pixel_in_display(len);
+    }
+    //MAX_CHARS_PER_VALUE1_LINE is defined this way
+    return 2 * len + 1;
+}
+
+bool exceed_pixel_in_display(const uint8_t length) {
+    unsigned short strWidth = bagl_compute_line_width((BAGL_FONT_OPEN_SANS_EXTRABOLD_11px
+                                | BAGL_FONT_ALIGNMENT_CENTER |BAGL_FONT_ALIGNMENT_MIDDLE),
+                                200, viewdata.value, length, BAGL_ENCODING_LATIN1);
+    return (strWidth >= (BAGL_WIDTH - BAGL_WIDTH_MARGIN));
 }
 
 //////////////////////////

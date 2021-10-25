@@ -18,6 +18,7 @@
 #include "coin.h"
 #include "zxmacros.h"
 #include "base32.h"
+#include "zxformat.h"
 
 uint32_t hdPath[HDPATH_LEN_DEFAULT];
 

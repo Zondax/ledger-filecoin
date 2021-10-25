@@ -30,15 +30,19 @@ const defaultOptions = {
   ...DEFAULT_START_OPTIONS,
   logging: true,
   custom: `-s "${APP_SEED}"`,
-  X11: true,
+  X11: false,
 };
 
 jest.setTimeout(60000)
 
 export const models: DeviceModel[] = [
-//  {name: 'nanos', prefix: 'S', path: APP_PATH_S},
+  {name: 'nanos', prefix: 'S', path: APP_PATH_S},
   {name: 'nanox', prefix: 'X', path: APP_PATH_X}
 ]
+
+beforeAll(async () => {
+  await Zemu.checkAndPullImage()
+})
 
 describe('Standard', function () {
   test.each(models)('can start and stop container', async function (m) {
@@ -329,7 +333,8 @@ describe('Standard', function () {
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
-      for (let i = 0; i < 10; i++) {
+      const clicks = m.name === "nanos" ? 11 : 10;
+      for (let i = 0; i < clicks; i++) {
         await sim.clickRight();
       }
 

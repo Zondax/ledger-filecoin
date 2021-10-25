@@ -20,6 +20,7 @@
 #include "zxmacros.h"
 #include "app_mode.h"
 #include "crypto.h"
+#include "zxformat.h"
 
 zxerr_t addr_getNumItems(uint8_t *num_items) {
     zemu_log_stack("addr_getNumItems");

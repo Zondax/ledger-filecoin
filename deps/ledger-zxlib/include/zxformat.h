@@ -20,6 +20,7 @@ extern "C" {
 #endif
 
 #include "zxmacros.h"
+#include "zxerror.h"
 
 #define NUM_TO_STR(TYPE) __Z_INLINE const char * TYPE##_to_str(char *data, int dataLen, TYPE##_t number) { \
     if (dataLen < 2) return "Buffer too small";     \
@@ -43,9 +44,15 @@ extern "C" {
     return NULL;                                    \
 }
 
+NUM_TO_STR(int32)
+
 NUM_TO_STR(int64)
 
 NUM_TO_STR(uint64)
+
+size_t z_strlen(const char *buffer, size_t maxSize);
+
+zxerr_t z_str3join(char *buffer, size_t bufferSize, const char *prefix, const char *suffix);
 
 __Z_INLINE void bip32_to_str(char *s, uint32_t max, const uint32_t *path, uint8_t pathLen) {
     MEMZERO(s, max);
@@ -167,35 +174,57 @@ __Z_INLINE uint8_t fpstr_to_str(char *out, uint16_t outLen, const char *number, 
         if (digits == 0) {
             snprintf(out, outLen, "0");
             return 0;
-        } else if (outLen < digits) {
+        }
+
+        if (outLen < digits) {
             snprintf(out, outLen, "ERR");
             return 1;
         }
-        strcpy(out, number);
+
+        // No need for formatting
+        snprintf(out, outLen, "%s", number);
         return 0;
     }
 
-    if ((outLen < decimals + 2) ||
-        (outLen < digits + 1)) {
+    if ((outLen < decimals + 2)) {
+        snprintf(out, outLen, "ERR");
+        return 1;
+    }
+
+    if (outLen < digits + 2) {
         snprintf(out, outLen, "ERR");
         return 1;
     }
 
     if (digits <= decimals) {
+        if (outLen <= decimals + 2) {
+            snprintf(out, outLen, "ERR");
+            return 1;
+        }
+
         // First part
-        strcpy(out, "0.");
+        snprintf(out, outLen, "0.");
         out += 2;
+        outLen -= 2;
+
         MEMSET(out, '0', decimals - digits);
         out += decimals - digits;
-    } else {
-        const size_t shift = digits - decimals;
-        strcpy(out, number);
-        number += shift;
-        out += shift;
-        *out++ = '.';
+        outLen -= decimals - digits;
+
+        snprintf(out, outLen, "%s", number);
+        return 0;
     }
 
-    strcpy(out, number);
+    const size_t shift = digits - decimals;
+    snprintf(out, outLen, "%s", number);
+    number += shift;
+
+    out += shift;
+    outLen -= shift;
+
+    *out++ = '.';
+    outLen--;
+    snprintf(out, outLen, "%s", number);
     return 0;
 }
 

@@ -6,6 +6,7 @@ jobs:
     steps:
       - checkout
       - run: git submodule update --init --recursive
+      - run: conan config install https://github.com/conan-io/conanclientcert.git
       - run: cmake -DCMAKE_BUILD_TYPE=Debug . && make
       # Unfortunately need to disable leak sanitizer https://github.com/google/sanitizers/issues/916
       # Still run all other ASAN components
@@ -49,25 +50,24 @@ jobs:
       - run:
           name: Install node + yarn
           command: |
-            nvm install 14.4.0
-            nvm use 14.4.0
+            nvm install 14.17.0
+            nvm use 14.17.0
             npm install -g yarn
       - run:
           name: Build Ledger app
           command: |
-            make buildS
-            make clean
-            make buildX
+            make clean_build && make buildS
+            make clean_build && make buildX
       - run:
           name: Build/Install build js deps
           command: |
-            nvm use 14.4.0
+            nvm use 14.17.0
             export PATH=~/.cargo/bin:$PATH
             make zemu_install
       - run:
           name: Run zemu tests
           command: |
-            nvm use 14.4.0
+            nvm use 14.17.0
             export PATH=~/.cargo/bin:$PATH
             make zemu_test
 
