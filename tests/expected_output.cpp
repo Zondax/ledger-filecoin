@@ -18,7 +18,7 @@
 #include "testcases.h"
 #include "zxmacros.h"
 #include "zxformat.h"
-
+#include <iostream>
 const uint32_t fieldSize = 37;
 
 template<typename S, typename... Args>
@@ -83,6 +83,8 @@ std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool)
     auto gasfeecap = message["gasfeecap"].asString();
     auto method = message["method"].asUInt64();
 
+    auto numparams = message["numparams"].asUInt64();
+    auto params = message["params"];
     ///
 
     auto toAddress = FormatAddress(0, "To ", to);
@@ -102,15 +104,22 @@ std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool)
 
     addTo(answer, "6 | Gas Fee Cap : {}", FormatAmount(gasfeecap));
 
-    if (method != 0) {
-        addTo(answer, "7 | Method : Method{}", method);
-    } else {
-        addTo(answer, "7 | Method : Transfer", method);
-    }
+    switch (method) {
+        case 0:
+            addTo(answer, "7 | Method : Transfer", method);
+            break;
+        case 23:
+        default:
+            addTo(answer, "7 | Method : {}", method);
 
-    // If 0 we have a no parameters
-    if (method != 0) {
-        addTo(answer, "8 | Params : Not Available");
+            int paramIdx = 1;
+            for(auto value : params) {
+                std::string paramText = "Params |" + std::to_string(paramIdx) + "| ";
+                auto paramsAddress = FormatAddress(8, paramText, value.asString());
+                answer.insert(answer.end(), paramsAddress.begin(), paramsAddress.end());
+                paramIdx++;
+            }
+            break;
     }
 
     return answer;
