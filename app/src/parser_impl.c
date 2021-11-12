@@ -281,6 +281,7 @@ parser_error_t _printParam(const parser_tx_t *tx, uint8_t paramIdx,
             CHECK_PARSER_ERR(_printAddress(&tmpAddr, outVal, outValLen, pageIdx, pageCount));
             break;
         }
+        case 2:
         case 0: {
             /// Enter container
             CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&itContainer, &itParams))
@@ -369,6 +370,7 @@ __Z_INLINE parser_error_t readMethod(parser_tx_t *tx, CborValue *value) {
         CborValue itParams;
         CHECK_CBOR_MAP_ERR(cbor_parser_init(tx->params, paramsLen, 0, &parser, &itParams))
         switch (methodValue) {
+            case 2:
             case 0: {
                 switch (itParams.type) {
                     case CborArrayType: {
