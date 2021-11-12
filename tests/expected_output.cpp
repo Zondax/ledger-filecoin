@@ -33,6 +33,13 @@ std::vector<std::string> FormatAddress(uint32_t prefix, const std::string &name,
 
     pageString(outBuffer, fieldSize, address.c_str(), 0, &numPages);
 
+    if(numPages == 0) {
+        auto pages = std::string("");
+        snprintf(outBuffer, sizeof(outBuffer), "-- EMPTY --");
+        addTo(answer, "{} | {}{}: {}", prefix, name, pages, outBuffer);
+        return answer;
+    }
+
     for (auto i = 0; i < numPages; i++) {
         MEMZERO(outBuffer, sizeof(outBuffer));
         pageString(outBuffer, fieldSize, address.c_str(), i, &numPages);
@@ -109,13 +116,14 @@ std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool)
             addTo(answer, "7 | Method : Transfer", method);
             break;
         case 23:
+        case 2:
         default:
             addTo(answer, "7 | Method : {}", method);
 
             int paramIdx = 1;
             for(auto value : params) {
                 std::string paramText = "Params |" + std::to_string(paramIdx) + "| ";
-                auto paramsAddress = FormatAddress(8, paramText, value.asString());
+                auto paramsAddress = FormatAddress(8 + paramIdx - 1, paramText, value.asString());
                 answer.insert(answer.end(), paramsAddress.begin(), paramsAddress.end());
                 paramIdx++;
             }
