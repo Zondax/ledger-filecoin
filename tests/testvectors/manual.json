@@ -553,5 +553,26 @@
             "params": ["01dfe49184d46adc8f89d44638beb45f78fcad2590"]
         },
         "encoded_tx_hex": "8A004300EC075501DFE49184D46ADC8F89D44638BEB45F78FCAD259001401A000F4240430009C4430009C41757815501DFE49184D46ADC8F89D44638BEB45F78FCAD2590"
+    },
+    {
+        "description": "Sign proposal",
+        "encoded_tx": "notAvailable",
+        "valid": true,
+        "error": "",
+        "testnet": false,
+        "message": {
+            "version": 0,
+            "to": "f01004",
+            "from": "f137sjdbgunloi7couiy4l5nc7pd6k2jmq32vizpy",
+            "nonce": 1,
+            "value": "0",
+            "gaslimit": "1000000",
+            "gasfeecap": "0000000000000002500",
+            "gaspremium": "0000000000000002500",
+            "method": 2,
+            "numparams": 1,
+            "params": ["01dfe49184d46adc8f89d44638beb45f78fcad2590", "0003e8", "0", ""]
+        },
+        "encoded_tx_hex": "8a004300ec075501dfe49184d46adc8f89d44638beb45f78fcad259001401a000f4240430009c4430009c402581d845501dfe49184d46adc8f89d44638beb45f78fcad2590430003e80040"
     }
 ]
