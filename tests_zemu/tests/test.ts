@@ -318,7 +318,7 @@ describe('Standard', function () {
 
       const path = "m/44'/461'/0'/0/1";
       const txBlob = Buffer.from(
-        "8A004300EC075501DFE49184D46ADC8F89D44638BEB45F78FCAD259001401A000F4240430009C4430009C41757815501DFE49184D46ADC8F89D44638BEB45F78FCAD2590",
+        "8a0044008bcb534400f59c53004000404017454400f59c53",
         "hex",
       );
 
@@ -333,7 +333,7 @@ describe('Standard', function () {
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
-      const clicks = m.name === "nanos" ? 11 : 10;
+      const clicks = m.name === "nanos" ? 9 : 10;
       for (let i = 0; i < clicks; i++) {
         await sim.clickRight();
       }
