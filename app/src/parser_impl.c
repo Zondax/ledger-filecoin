@@ -239,6 +239,22 @@ parser_error_t printValue(const struct CborValue *value,
     return parser_ok;
 }
 
+parser_error_t _printAddress(const address_t *a,char *outVal, uint16_t outValLen,
+                             uint8_t pageIdx, uint8_t *pageCount) {
+    // the format :
+    // network (1 byte) + protocol (1 byte) + base 32 [ payload (20 bytes or 48 bytes) + checksum (optional - 4bytes)]
+    // Max we need 84 bytes to support BLS + 16 bytes padding
+    char outBuffer[84 + 16];
+    MEMZERO(outBuffer, sizeof(outBuffer));
+
+    if (formatProtocol(a->buffer, a->len, (uint8_t *) outBuffer, sizeof(outBuffer)) == 0) {
+        return parser_invalid_address;
+    }
+
+    pageString(outVal, outValLen, outBuffer, pageIdx, pageCount);
+    return parser_ok;
+}
+
 parser_error_t _printParam(const parser_tx_t *tx, uint8_t paramIdx,
                            char *outVal, uint16_t outValLen,
                            uint8_t pageIdx, uint8_t *pageCount) {
@@ -255,25 +271,39 @@ parser_error_t _printParam(const parser_tx_t *tx, uint8_t paramIdx,
 
     CborValue itParams = itContainer;
 
-    /// Enter container?
-    if (itContainer.type == CborMapType || itContainer.type == CborArrayType) {
-        CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&itContainer, &itParams))
-        CHECK_APP_CANARY()
-        for (uint8_t i = 0; i < paramIdx; ++i) {
-            CHECK_CBOR_MAP_ERR(cbor_value_advance(&itParams))
+    switch(tx->method) {
+        case 23: {
+            PARSER_ASSERT_OR_ERROR(itContainer.type == CborByteStringType, parser_unexpected_type)
+            address_t tmpAddr;
+            MEMZERO(&tmpAddr, sizeof(address_t));
+            CHECK_PARSER_ERR(readAddress(&tmpAddr, &itContainer))
+            PARSER_ASSERT_OR_ERROR(itContainer.type != CborInvalidType, parser_unexpected_type)
+            CHECK_PARSER_ERR(_printAddress(&tmpAddr, outVal, outValLen, pageIdx, pageCount));
+            break;
+        }
+        case 2:
+        case 0: {
+            /// Enter container
+            CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&itContainer, &itParams))
             CHECK_APP_CANARY()
-        }
-    }
+            for (uint8_t i = 0; i < paramIdx; ++i) {
+                CHECK_CBOR_MAP_ERR(cbor_value_advance(&itParams))
+                CHECK_APP_CANARY()
+            }
 
-    CHECK_PARSER_ERR(printValue(&itParams, outVal, outValLen, pageIdx, pageCount))
+            CHECK_PARSER_ERR(printValue(&itParams, outVal, outValLen, pageIdx, pageCount))
 
-    /// Leave container
-    if (itContainer.type == CborMapType || itContainer.type == CborArrayType) {
-        while (!cbor_value_at_end(&itParams)) {
-            CHECK_CBOR_MAP_ERR(cbor_value_advance(&itParams))
+            /// Leave container
+            while (!cbor_value_at_end(&itParams)) {
+                CHECK_CBOR_MAP_ERR(cbor_value_advance(&itParams))
+            }
+            CHECK_CBOR_MAP_ERR(cbor_value_leave_container(&itContainer, &itParams))
+            CHECK_APP_CANARY()
+            break;
         }
-        CHECK_CBOR_MAP_ERR(cbor_value_leave_container(&itContainer, &itParams))
-        CHECK_APP_CANARY()
+        default:
+            return parser_unexpected_method;
+            break;
     }
 
     return parser_ok;
@@ -339,25 +369,46 @@ __Z_INLINE parser_error_t readMethod(parser_tx_t *tx, CborValue *value) {
         CborParser parser;
         CborValue itParams;
         CHECK_CBOR_MAP_ERR(cbor_parser_init(tx->params, paramsLen, 0, &parser, &itParams))
-
-        switch (itParams.type) {
-            case CborArrayType: {
-                size_t arrayLength = 0;
-                CHECK_CBOR_MAP_ERR(cbor_value_get_array_length(&itParams, &arrayLength))
-                PARSER_ASSERT_OR_ERROR(arrayLength < UINT8_MAX, parser_value_out_of_range)
-                tx->numparams = arrayLength;
+        switch (methodValue) {
+            case 2:
+            case 0: {
+                switch (itParams.type) {
+                    case CborArrayType: {
+                        size_t arrayLength = 0;
+                        CHECK_CBOR_MAP_ERR(cbor_value_get_array_length(&itParams, &arrayLength))
+                        PARSER_ASSERT_OR_ERROR(arrayLength < UINT8_MAX, parser_value_out_of_range)
+                        tx->numparams = arrayLength;
+                        break;
+                    }
+                    case CborMapType: {
+                        size_t mapLength = 0;
+                        CHECK_CBOR_MAP_ERR(cbor_value_get_map_length(&itParams, &mapLength))
+                        PARSER_ASSERT_OR_ERROR(mapLength < UINT8_MAX, parser_value_out_of_range)
+                        tx->numparams = mapLength;
+                        break;
+                    }
+                    case CborInvalidType:
+                    default:
+                        return parser_unexpected_type;
+                }
                 break;
             }
-            case CborMapType: {
-                size_t mapLength = 0;
-                CHECK_CBOR_MAP_ERR(cbor_value_get_map_length(&itParams, &mapLength))
-                PARSER_ASSERT_OR_ERROR(mapLength < UINT8_MAX, parser_value_out_of_range)
-                tx->numparams = mapLength;
+            case 23: {
+                switch (itParams.type) {
+                    case CborByteStringType: {
+                        //Only one parameter is expected when ByteStringType is received.
+                        PARSER_ASSERT_OR_ERROR(itParams.remaining == 1, parser_value_out_of_range)
+                        tx->numparams = 1;
+                        break;
+                    }
+                    default:
+                        return parser_unexpected_type;
+                }
                 break;
             }
-            case CborInvalidType:
-            default:
-                return parser_unexpected_type;
+            default: {
+                return parser_unexpected_method;
+            }
         }
     }
     tx->method = methodValue;

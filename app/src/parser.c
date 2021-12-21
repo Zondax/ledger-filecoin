@@ -113,24 +113,6 @@ __Z_INLINE parser_error_t parser_printBigIntFixedPoint(const bigint_t *b,
     return parser_ok;
 }
 
-__Z_INLINE parser_error_t parser_printAddress(const address_t *a,
-                                              char *outVal, uint16_t outValLen,
-                                              uint8_t pageIdx, uint8_t *pageCount) {
-
-    // the format :
-    // network (1 byte) + protocol (1 byte) + base 32 [ payload (20 bytes or 48 bytes) + checksum (optional - 4bytes)]
-    // Max we need 84 bytes to support BLS + 16 bytes padding
-    char outBuffer[84 + 16];
-    MEMZERO(outBuffer, sizeof(outBuffer));
-
-    if (formatProtocol(a->buffer, a->len, (uint8_t *) outBuffer, sizeof(outBuffer)) == 0) {
-        return parser_invalid_address;
-    }
-
-    pageString(outVal, outValLen, outBuffer, pageIdx, pageCount);
-    return parser_ok;
-}
-
 parser_error_t parser_getItem(const parser_context_t *ctx,
                               uint8_t displayIdx,
                               char *outKey, uint16_t outKeyLen,
@@ -156,14 +138,14 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
 
     if (displayIdx == 0) {
         snprintf(outKey, outKeyLen, "To ");
-        return parser_printAddress(&parser_tx_obj.to,
-                                   outVal, outValLen, pageIdx, pageCount);
+        return _printAddress(&parser_tx_obj.to,
+                             outVal, outValLen, pageIdx, pageCount);
     }
 
     if (displayIdx == 1) {
         snprintf(outKey, outKeyLen, "From ");
-        return parser_printAddress(&parser_tx_obj.from,
-                                   outVal, outValLen, pageIdx, pageCount);
+        return _printAddress(&parser_tx_obj.from,
+                             outVal, outValLen, pageIdx, pageCount);
     }
 
     if (displayIdx == 2) {
