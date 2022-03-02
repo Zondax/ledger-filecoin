@@ -502,8 +502,7 @@ parser_error_t _validateTx(const parser_context_t *c, const parser_tx_t *v) {
     return parser_ok;
 }
 
-uint8_t _getNumItems(const parser_context_t *c, const parser_tx_t *v) {
-    UNUSED(c);
+uint8_t _getNumItems(const parser_context_t *c __attribute((unused)), const parser_tx_t *v) {
     uint8_t itemCount = 8;
 
     return itemCount + v->numparams;
