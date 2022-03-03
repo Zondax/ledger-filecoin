@@ -175,6 +175,7 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
         }
 
         if (displayIdx == 6) {
+            snprintf(outKey, outKeyLen, "Nonce ");
             if (uint64_to_str(outVal, outValLen, parser_tx_obj.nonce) != NULL) {
                 return parser_unexepected_error;
             }
