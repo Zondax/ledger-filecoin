@@ -101,15 +101,15 @@ std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool)
     answer.insert(answer.end(), fromAddress.begin(), fromAddress.end());
 
 
-    addTo(answer, "2 | Nonce : {}", nonce);
+    addTo(answer, "2 | Value : {}", FormatAmount(value));
 
-    addTo(answer, "3 | Value : {}", FormatAmount(value));
+    addTo(answer, "3 | Gas Limit : {}", gaslimit);
 
-    addTo(answer, "4 | Gas Limit : {}", gaslimit);
+    addTo(answer, "4 | Gas Fee Cap : {}", FormatAmount(gasfeecap));
 
     addTo(answer, "5 | Gas Premium : {}", FormatAmount(gaspremium));
 
-    addTo(answer, "6 | Gas Fee Cap : {}", FormatAmount(gasfeecap));
+    addTo(answer, "6 | Nonce : {}", nonce);
 
     switch (method) {
         case 0:
