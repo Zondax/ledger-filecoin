@@ -502,7 +502,11 @@ parser_error_t _validateTx(__Z_UNUSED const parser_context_t *c, __Z_UNUSED cons
 
 uint8_t _getNumItems(__Z_UNUSED const parser_context_t *c, const parser_tx_t *v) {
 
-    uint8_t itemCount = 8;
+    uint8_t itemCount = 6;
+
+    if (app_mode_expert()){
+        itemCount = 8;
+    }
 
     return itemCount + v->numparams;
 }
