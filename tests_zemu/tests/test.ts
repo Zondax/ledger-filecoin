@@ -158,7 +158,7 @@ describe('Standard', function () {
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
-      await sim.compareSnapshotsAndAccept(".", `${m.prefix.toLowerCase()}-sign_basic`, m.name === "nanos" ? 12 : 11);
+      await sim.compareSnapshotsAndAccept(".", `${m.prefix.toLowerCase()}-sign_basic`, m.name === "nanos" ? 10 : 9);
 
       let resp = await signatureRequest;
       console.log(resp);
@@ -212,6 +212,42 @@ describe('Standard', function () {
       await sim.start({...defaultOptions, model: m.name,});
       const app = new FilecoinApp(sim.getTransport());
 
+      const path = "m/44'/461'/0'/0/1";
+      const txBlob = Buffer.from(
+        "8a004300ec075501dfe49184d46adc8f89d44638beb45f78fcad259001401a000f4240430009c4430009c402581d845501dfe49184d46adc8f89d44638beb45f78fcad2590430003e80040",
+        "hex",
+      );
+
+      const pkResponse = await app.getAddressAndPubKey(path);
+      console.log(pkResponse);
+      expect(pkResponse.return_code).toEqual(0x9000);
+      expect(pkResponse.error_message).toEqual("No errors");
+      console.log("No errors retriving address")
+
+      // do not wait here so we can get snapshots and interact with the app
+      const signatureRequest = app.sign(path, txBlob);
+
+      // Wait until we are not in the main menu
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
+
+      await sim.compareSnapshotsAndAccept(".", `${m.prefix.toLowerCase()}-sign_proposal`, m.name === "nanos" ? 12 : 11);
+
+      let resp = await signatureRequest;
+      console.log(resp);
+
+      expect(resp.return_code).toEqual(0x9000);
+      expect(resp.error_message).toEqual("No errors");
+    } finally {
+      await sim.close();
+    }
+  });
+
+  test.each(models)('sign proposal expert ', async function (m) {
+    const sim = new Zemu(m.path);
+    try {
+      await sim.start({...defaultOptions, model: m.name,});
+      const app = new FilecoinApp(sim.getTransport());
+
       // Put the app in expert mode
       await sim.clickRight();
       await sim.clickBoth();
@@ -234,7 +270,7 @@ describe('Standard', function () {
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
-      await sim.compareSnapshotsAndAccept(".", `${m.prefix.toLowerCase()}-sign_proposal`, m.name === "nanos" ? 14 : 13);
+      await sim.compareSnapshotsAndAccept(".", `${m.prefix.toLowerCase()}-sign_proposal_expert`, m.name === "nanos" ? 14 : 13);
 
       let resp = await signatureRequest;
       console.log(resp);
@@ -245,6 +281,7 @@ describe('Standard', function () {
       await sim.close();
     }
   });
+
 
   test.each(models)('sign proposal -- unsupported method', async function (m) {
     const sim = new Zemu(m.path);
