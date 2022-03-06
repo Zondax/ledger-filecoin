@@ -493,17 +493,15 @@ parser_error_t _read(const parser_context_t *c, parser_tx_t *v) {
     return parser_ok;
 }
 
-parser_error_t _validateTx(const parser_context_t *c, const parser_tx_t *v) {
-    (void) c;
-    (void) v;
+parser_error_t _validateTx(__Z_UNUSED const parser_context_t *c, __Z_UNUSED const parser_tx_t *v) {
     // Note: This is place holder for transaction level checks that the project may require before accepting
     // the parsed values. the parser already validates input
     // This function is called by parser_validate, where additional checks are made (formatting, UI/UX, etc.(
     return parser_ok;
 }
 
-uint8_t _getNumItems(const parser_context_t *c, const parser_tx_t *v) {
-    UNUSED(c);
+uint8_t _getNumItems(__Z_UNUSED const parser_context_t *c, const parser_tx_t *v) {
+
     uint8_t itemCount = 8;
 
     return itemCount + v->numparams;
