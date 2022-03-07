@@ -36,7 +36,7 @@ parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data, size_t d
 }
 
 parser_error_t parser_validate(const parser_context_t *ctx) {
-    zemu_log("parser_validate");
+    zemu_log("parser_validate\n");
     CHECK_PARSER_ERR(_validateTx(ctx, &parser_tx_obj))
     zemu_log("parser_validate::validated\n");
 
@@ -121,6 +121,7 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
     char log_tmp[100];
     snprintf(log_tmp, sizeof(log_tmp), "getItem %d\n", displayIdx);
     zemu_log(log_tmp);
+    uint8_t expert_mode = app_mode_expert();
 
     MEMZERO(outKey, outKeyLen);
     MEMZERO(outVal, outValLen);
@@ -149,20 +150,11 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
     }
 
     if (displayIdx == 2) {
-        snprintf(outKey, outKeyLen, "Nonce ");
-        if (uint64_to_str(outVal, outValLen, parser_tx_obj.nonce) != NULL) {
-            return parser_unexepected_error;
-        }
-        *pageCount = 1;
-        return parser_ok;
-    }
-
-    if (displayIdx == 3) {
         snprintf(outKey, outKeyLen, "Value ");
         return parser_printBigIntFixedPoint(&parser_tx_obj.value, outVal, outValLen, pageIdx, pageCount);
     }
 
-    if (displayIdx == 4) {
+    if (displayIdx == 3) {
         snprintf(outKey, outKeyLen, "Gas Limit ");
         if (int64_to_str(outVal, outValLen, parser_tx_obj.gaslimit) != NULL) {
             return parser_unexepected_error;
@@ -171,17 +163,28 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
         return parser_ok;
     }
 
-    if (displayIdx == 5) {
-        snprintf(outKey, outKeyLen, "Gas Premium ");
-        return parser_printBigIntFixedPoint(&parser_tx_obj.gaspremium, outVal, outValLen, pageIdx, pageCount);
-    }
-
-    if (displayIdx == 6) {
+    if (displayIdx == 4) {
         snprintf(outKey, outKeyLen, "Gas Fee Cap ");
         return parser_printBigIntFixedPoint(&parser_tx_obj.gasfeecap, outVal, outValLen, pageIdx, pageCount);
     }
 
-    if (displayIdx == 7) {
+    if (expert_mode){
+        if (displayIdx == 5) {
+            snprintf(outKey, outKeyLen, "Gas Premium ");
+            return parser_printBigIntFixedPoint(&parser_tx_obj.gaspremium, outVal, outValLen, pageIdx, pageCount);
+        }
+
+        if (displayIdx == 6) {
+            snprintf(outKey, outKeyLen, "Nonce ");
+            if (uint64_to_str(outVal, outValLen, parser_tx_obj.nonce) != NULL) {
+                return parser_unexepected_error;
+            }
+            *pageCount = 1;
+            return parser_ok;
+        }
+    }
+
+    if ((displayIdx == 5 && !expert_mode) || (displayIdx == 7 && expert_mode)) {
         snprintf(outKey, outKeyLen, "Method ");
         *pageCount = 1;
 
@@ -205,7 +208,7 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
     }
 
     // remaining display pages show the params
-    int32_t paramIdxSigned = displayIdx - 8;
+    int32_t paramIdxSigned = displayIdx - (numItems - parser_tx_obj.numparams);
 
     // end of params
     if (paramIdxSigned < 0 || paramIdxSigned >= parser_tx_obj.numparams) {
