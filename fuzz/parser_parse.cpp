@@ -3,6 +3,7 @@
 #include <cstdio>
 
 #include "parser.h"
+#include "zxformat.h"
 
 
 #ifdef NDEBUG

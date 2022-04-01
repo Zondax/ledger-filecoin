@@ -21,6 +21,7 @@
 #include "parser.h"
 #include "parser_txdef.h"
 #include "coin.h"
+#include "app_mode.h"
 #include "zxformat.h"
 
 #if defined(TARGET_NANOX) || defined(TARGET_NANOS2)
