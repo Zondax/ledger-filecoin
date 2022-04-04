@@ -52,7 +52,7 @@ endif
 
 APPVERSION_M=0
 APPVERSION_N=22
-APPVERSION_P=1
+APPVERSION_P=2
 
 $(info COIN  = [$(COIN)])
 ifeq ($(COIN),FIL)
