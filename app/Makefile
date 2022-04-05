@@ -52,7 +52,7 @@ endif
 
 APPVERSION_M=0
 APPVERSION_N=22
-APPVERSION_P=1
+APPVERSION_P=2
 
 $(info COIN  = [$(COIN)])
 ifeq ($(COIN),FIL)
@@ -92,7 +92,7 @@ OUTPUT_INSTALLER:= $(CURDIR)/pkg/installer_x.sh
 endif
 
 ifeq ($(TARGET_NAME),TARGET_NANOS2)
-APP_LOAD_PARAMS += --appFlags 0x200
+APP_LOAD_PARAMS += --appFlags 0x000
 SCRIPT_LD:=$(CURDIR)/script_s2.ld
 ICONNAME:=$(CURDIR)/nanox_icon.gif
 OUTPUT_ELF ?= $(CURDIR)/output/app_s2.elf
