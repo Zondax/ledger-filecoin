@@ -574,5 +574,26 @@
             "params": ["01dfe49184d46adc8f89d44638beb45f78fcad2590", "0003e8", "0", ""]
         },
         "encoded_tx_hex": "8a004300ec075501dfe49184d46adc8f89d44638beb45f78fcad259001401a000f4240430009c4430009c402581d845501dfe49184d46adc8f89d44638beb45f78fcad2590430003e80040"
+    },
+    {
+        "description": "Transfer with params",
+        "encoded_tx": "notAvailable",
+        "valid": true,
+        "error": "",
+        "testnet": false,
+        "message": {
+            "version": 0,
+            "to": "f01369483",
+            "from": "f01363573",
+            "nonce": 0,
+            "value": "0",
+            "gaslimit": "0",
+            "gasfeecap": "0",
+            "gaspremium": "0",
+            "method": 0,
+            "numparams": 1,
+            "params": [1234]
+        },
+        "encoded_tx_hex": "8a0044008bcb534400f59c5300400040400044811904d2"
     }
 ]

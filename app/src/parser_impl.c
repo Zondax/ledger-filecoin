@@ -325,23 +325,6 @@ __Z_INLINE parser_error_t readMethod(parser_tx_t *tx, CborValue *value) {
 
     CHECK_PARSER_ERR(checkMethod(methodValue))
 
-    if (methodValue == 0) {
-        PARSER_ASSERT_OR_ERROR(value->type != CborInvalidType, parser_unexpected_type)
-        CHECK_CBOR_MAP_ERR(cbor_value_advance(value))
-        CHECK_CBOR_TYPE(value->type, CborByteStringType)
-
-        size_t arraySize;
-        PARSER_ASSERT_OR_ERROR(cbor_value_is_byte_string(value) || cbor_value_is_text_string(value),
-                               parser_unexpected_type)
-        CHECK_CBOR_MAP_ERR(cbor_value_get_string_length(value, &arraySize))
-
-        // method0 should have zero arguments
-        PARSER_ASSERT_OR_ERROR(arraySize == 0, parser_unexpected_number_items)
-        tx->method = 0;
-
-        return parser_ok;
-    }
-
     // This area reads the entire params byte string (if present) into the txn->params
     // and sets txn->numparams to the number of params within cbor container
     // Parsing of the individual params is deferred until the display stage
