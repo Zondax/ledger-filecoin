@@ -3,7 +3,7 @@
 #include <cstdio>
 
 #include "parser.h"
-
+#include "zxformat.h"
 
 #ifdef NDEBUG
 #error "This fuzz target won't work correctly with NDEBUG defined, which will cause asserts to be eliminated"
@@ -15,8 +15,7 @@ using std::size_t;
 static char PARSER_KEY[16384];
 static char PARSER_VALUE[16384];
 
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
-{
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     parser_context_t ctx;
     parser_error_t rc;
 
@@ -57,11 +56,11 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
                                 page_idx, &page_count);
 
             if (rc != parser_ok) {
-                fprintf(stderr,
-                        "error getting item %u at page index %u: %s\n",
-                        (unsigned)i,
-                        (unsigned)page_idx,
-                        parser_getErrorDescription(rc));
+                assert(fprintf(stderr,
+                               "error getting item %u at page index %u: %s\n",
+                               (unsigned) i,
+                               (unsigned) page_idx,
+                               parser_getErrorDescription(rc)) != 0);
                 assert(false);
             }
 

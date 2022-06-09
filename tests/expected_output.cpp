@@ -111,23 +111,18 @@ std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool)
 
     addTo(answer, "6 | Nonce : {}", nonce);
 
-    switch (method) {
-        case 0:
-            addTo(answer, "7 | Method : Transfer", method);
-            break;
-        case 23:
-        case 2:
-        default:
-            addTo(answer, "7 | Method : {}", method);
+    if (method != 0) {
+        addTo(answer, "7 | Method : {}", method);
+    } else {
+        addTo(answer, "7 | Method : Transfer", method);
+    }
 
-            int paramIdx = 1;
-            for(auto value : params) {
-                std::string paramText = "Params |" + std::to_string(paramIdx) + "| ";
-                auto paramsAddress = FormatAddress(8 + paramIdx - 1, paramText, value.asString());
-                answer.insert(answer.end(), paramsAddress.begin(), paramsAddress.end());
-                paramIdx++;
-            }
-            break;
+    int paramIdx = 1;
+    for(auto value : params) {
+        std::string paramText = "Params |" + std::to_string(paramIdx) + "| ";
+        auto paramsAddress = FormatAddress(8 + paramIdx - 1, paramText, value.asString());
+        answer.insert(answer.end(), paramsAddress.begin(), paramsAddress.end());
+        paramIdx++;
     }
 
     return answer;
