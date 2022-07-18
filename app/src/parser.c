@@ -22,10 +22,11 @@
 #include "parser_txdef.h"
 #include "coin.h"
 #include "zxformat.h"
+#include "app_mode.h"
 
-#if defined(TARGET_NANOX)
+#if defined(TARGET_NANOX) || defined(TARGET_NANOS2)
 // For some reason NanoX requires this function
-void __assert_fail(const char * assertion, const char * file, unsigned int line, const char * function){
+void __assert_fail(__Z_UNUSED const char * assertion, __Z_UNUSED const char * file, __Z_UNUSED unsigned int line, __Z_UNUSED const char * function){
     while(1) {};
 }
 #endif
@@ -36,7 +37,7 @@ parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data, size_t d
 }
 
 parser_error_t parser_validate(const parser_context_t *ctx) {
-    zemu_log("parser_validate");
+    zemu_log("parser_validate\n");
     CHECK_PARSER_ERR(_validateTx(ctx, &parser_tx_obj))
     zemu_log("parser_validate::validated\n");
 
@@ -113,24 +114,6 @@ __Z_INLINE parser_error_t parser_printBigIntFixedPoint(const bigint_t *b,
     return parser_ok;
 }
 
-__Z_INLINE parser_error_t parser_printAddress(const address_t *a,
-                                              char *outVal, uint16_t outValLen,
-                                              uint8_t pageIdx, uint8_t *pageCount) {
-
-    // the format :
-    // network (1 byte) + protocol (1 byte) + base 32 [ payload (20 bytes or 48 bytes) + checksum (optional - 4bytes)]
-    // Max we need 84 bytes to support BLS + 16 bytes padding
-    char outBuffer[84 + 16];
-    MEMZERO(outBuffer, sizeof(outBuffer));
-
-    if (formatProtocol(a->buffer, a->len, (uint8_t *) outBuffer, sizeof(outBuffer)) == 0) {
-        return parser_invalid_address;
-    }
-
-    pageString(outVal, outValLen, outBuffer, pageIdx, pageCount);
-    return parser_ok;
-}
-
 parser_error_t parser_getItem(const parser_context_t *ctx,
                               uint8_t displayIdx,
                               char *outKey, uint16_t outKeyLen,
@@ -139,6 +122,7 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
     char log_tmp[100];
     snprintf(log_tmp, sizeof(log_tmp), "getItem %d\n", displayIdx);
     zemu_log(log_tmp);
+    uint8_t expert_mode = app_mode_expert();
 
     MEMZERO(outKey, outKeyLen);
     MEMZERO(outVal, outValLen);
@@ -156,31 +140,22 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
 
     if (displayIdx == 0) {
         snprintf(outKey, outKeyLen, "To ");
-        return parser_printAddress(&parser_tx_obj.to,
-                                   outVal, outValLen, pageIdx, pageCount);
+        return _printAddress(&parser_tx_obj.to,
+                             outVal, outValLen, pageIdx, pageCount);
     }
 
     if (displayIdx == 1) {
         snprintf(outKey, outKeyLen, "From ");
-        return parser_printAddress(&parser_tx_obj.from,
-                                   outVal, outValLen, pageIdx, pageCount);
+        return _printAddress(&parser_tx_obj.from,
+                             outVal, outValLen, pageIdx, pageCount);
     }
 
     if (displayIdx == 2) {
-        snprintf(outKey, outKeyLen, "Nonce ");
-        if (uint64_to_str(outVal, outValLen, parser_tx_obj.nonce) != NULL) {
-            return parser_unexepected_error;
-        }
-        *pageCount = 1;
-        return parser_ok;
-    }
-
-    if (displayIdx == 3) {
         snprintf(outKey, outKeyLen, "Value ");
         return parser_printBigIntFixedPoint(&parser_tx_obj.value, outVal, outValLen, pageIdx, pageCount);
     }
 
-    if (displayIdx == 4) {
+    if (displayIdx == 3) {
         snprintf(outKey, outKeyLen, "Gas Limit ");
         if (int64_to_str(outVal, outValLen, parser_tx_obj.gaslimit) != NULL) {
             return parser_unexepected_error;
@@ -189,17 +164,28 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
         return parser_ok;
     }
 
-    if (displayIdx == 5) {
-        snprintf(outKey, outKeyLen, "Gas Premium ");
-        return parser_printBigIntFixedPoint(&parser_tx_obj.gaspremium, outVal, outValLen, pageIdx, pageCount);
-    }
-
-    if (displayIdx == 6) {
+    if (displayIdx == 4) {
         snprintf(outKey, outKeyLen, "Gas Fee Cap ");
         return parser_printBigIntFixedPoint(&parser_tx_obj.gasfeecap, outVal, outValLen, pageIdx, pageCount);
     }
 
-    if (displayIdx == 7) {
+    if (expert_mode){
+        if (displayIdx == 5) {
+            snprintf(outKey, outKeyLen, "Gas Premium ");
+            return parser_printBigIntFixedPoint(&parser_tx_obj.gaspremium, outVal, outValLen, pageIdx, pageCount);
+        }
+
+        if (displayIdx == 6) {
+            snprintf(outKey, outKeyLen, "Nonce ");
+            if (uint64_to_str(outVal, outValLen, parser_tx_obj.nonce) != NULL) {
+                return parser_unexepected_error;
+            }
+            *pageCount = 1;
+            return parser_ok;
+        }
+    }
+
+    if ((displayIdx == 5 && !expert_mode) || (displayIdx == 7 && expert_mode)) {
         snprintf(outKey, outKeyLen, "Method ");
         *pageCount = 1;
 
@@ -223,7 +209,7 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
     }
 
     // remaining display pages show the params
-    int32_t paramIdxSigned = displayIdx - 8;
+    int32_t paramIdxSigned = displayIdx - (numItems - parser_tx_obj.numparams);
 
     // end of params
     if (paramIdxSigned < 0 || paramIdxSigned >= parser_tx_obj.numparams) {

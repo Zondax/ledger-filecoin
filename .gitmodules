@@ -6,4 +6,7 @@
 	url = https://github.com/BLAKE2/BLAKE2
 [submodule "deps/nanox-secure-sdk"]
 	path = deps/nanox-secure-sdk
-	url = https://github.com/Zondax/nanox-secure-sdk.git
+	url = https://github.com/LedgerHQ/nanox-secure-sdk.git
+[submodule "deps/nanosplus-secure-sdk"]
+	path = deps/nanosplus-secure-sdk
+	url = https://github.com/LedgerHQ/nanosplus-secure-sdk

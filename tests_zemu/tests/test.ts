@@ -21,8 +21,9 @@ import {getDigest} from "./utils";
 import * as secp256k1 from "secp256k1";
 
 const Resolve = require("path").resolve;
-const APP_PATH_S = Resolve("../app/output/app_s.elf");
-const APP_PATH_X = Resolve("../app/output/app_x.elf");
+const APP_PATH_S = Resolve('../app/output/app_s.elf')
+const APP_PATH_X = Resolve('../app/output/app_x.elf')
+const APP_PATH_SP = Resolve('../app/output/app_s2.elf')
 
 const APP_SEED = "equip will roof matter pink blind book anxiety banner elbow sun young"
 
@@ -36,8 +37,9 @@ const defaultOptions = {
 jest.setTimeout(60000)
 
 export const models: DeviceModel[] = [
-  {name: 'nanos', prefix: 'S', path: APP_PATH_S},
-  {name: 'nanox', prefix: 'X', path: APP_PATH_X}
+  { name: 'nanos', prefix: 'S', path: APP_PATH_S },
+  { name: 'nanox', prefix: 'X', path: APP_PATH_X },
+  { name: 'nanosp', prefix: 'SP', path: APP_PATH_SP },
 ]
 
 beforeAll(async () => {
@@ -48,6 +50,7 @@ describe('Standard', function () {
   test.each(models)('can start and stop container', async function (m) {
     const sim = new Zemu(m.path);
     try {
+      console.log("model: ", m.name)
       await sim.start({...defaultOptions, model: m.name,});
     } finally {
       await sim.close();
@@ -58,7 +61,8 @@ describe('Standard', function () {
     const sim = new Zemu(m.path);
     try {
       await sim.start({...defaultOptions, model: m.name,});
-      await sim.compareSnapshotsAndAccept(".", `${m.prefix.toLowerCase()}-mainmenu`, 3);
+      // await sim.navigateAndCompareSnapshots('.', `${m.prefix.toLowerCase()}-mainmenu`, [1, 1, 1, 1])
+      await sim.navigateAndCompareSnapshots('.', `${m.prefix.toLowerCase()}-mainmenu`, [1, 0, 0, 4, -5])
     } finally {
       await sim.close();
     }
@@ -119,7 +123,7 @@ describe('Standard', function () {
 
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
-      await sim.compareSnapshotsAndAccept(".", `${m.prefix.toLowerCase()}-show_address`, m.name === "nanos" ? 2 : 2);
+      await sim.compareSnapshotsAndApprove(".", `${m.prefix.toLowerCase()}-show_address`)
 
       const resp = await respRequest;
 
@@ -158,7 +162,7 @@ describe('Standard', function () {
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
-      await sim.compareSnapshotsAndAccept(".", `${m.prefix.toLowerCase()}-sign_basic`, m.name === "nanos" ? 12 : 11);
+      await sim.compareSnapshotsAndApprove(".", `${m.prefix.toLowerCase()}-sign_basic`)
 
       let resp = await signatureRequest;
       console.log(resp);
@@ -209,6 +213,43 @@ describe('Standard', function () {
   test.each(models)('sign proposal', async function (m) {
     const sim = new Zemu(m.path);
     try {
+      console.log("model: ", m.name)
+      await sim.start({...defaultOptions, model: m.name,});
+      const app = new FilecoinApp(sim.getTransport());
+
+      const path = "m/44'/461'/0'/0/1";
+      const txBlob = Buffer.from(
+        "8a004300ec075501dfe49184d46adc8f89d44638beb45f78fcad259001401a000f4240430009c4430009c402581d845501dfe49184d46adc8f89d44638beb45f78fcad2590430003e80040",
+        "hex",
+      );
+
+      const pkResponse = await app.getAddressAndPubKey(path);
+      console.log(pkResponse);
+      expect(pkResponse.return_code).toEqual(0x9000);
+      expect(pkResponse.error_message).toEqual("No errors");
+      console.log("No errors retriving address")
+
+      // do not wait here so we can get snapshots and interact with the app
+      const signatureRequest = app.sign(path, txBlob);
+
+      // Wait until we are not in the main menu
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
+
+      await sim.compareSnapshotsAndApprove(".", `${m.prefix.toLowerCase()}-sign_proposal`)
+
+      let resp = await signatureRequest;
+      console.log(resp);
+
+      expect(resp.return_code).toEqual(0x9000);
+      expect(resp.error_message).toEqual("No errors");
+    } finally {
+      await sim.close();
+    }
+  });
+
+  test.each(models)('sign proposal expert ', async function (m) {
+    const sim = new Zemu(m.path);
+    try {
       await sim.start({...defaultOptions, model: m.name,});
       const app = new FilecoinApp(sim.getTransport());
 
@@ -234,7 +275,7 @@ describe('Standard', function () {
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
-      await sim.compareSnapshotsAndAccept(".", `${m.prefix.toLowerCase()}-sign_proposal`, m.name === "nanos" ? 14 : 13);
+      await sim.compareSnapshotsAndApprove(".", `${m.prefix.toLowerCase()}-sign_proposal_expert`)
 
       let resp = await signatureRequest;
       console.log(resp);
@@ -245,6 +286,7 @@ describe('Standard', function () {
       await sim.close();
     }
   });
+
 
   test.each(models)('sign proposal -- unsupported method', async function (m) {
     const sim = new Zemu(m.path);
@@ -318,7 +360,7 @@ describe('Standard', function () {
 
       const path = "m/44'/461'/0'/0/1";
       const txBlob = Buffer.from(
-        "8A004300EC075501DFE49184D46ADC8F89D44638BEB45F78FCAD259001401A000F4240430009C4430009C41757815501DFE49184D46ADC8F89D44638BEB45F78FCAD2590",
+        "8a0044008bcb534400f59c53004000404017454400f59c53",
         "hex",
       );
 
@@ -333,7 +375,7 @@ describe('Standard', function () {
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
-      const clicks = m.name === "nanos" ? 11 : 10;
+      const clicks = m.name === "nanos" ? 9 : 10;
       for (let i = 0; i < clicks; i++) {
         await sim.clickRight();
       }

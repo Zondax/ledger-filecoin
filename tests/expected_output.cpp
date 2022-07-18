@@ -18,7 +18,7 @@
 #include "testcases.h"
 #include "zxmacros.h"
 #include "zxformat.h"
-
+#include <iostream>
 const uint32_t fieldSize = 37;
 
 template<typename S, typename... Args>
@@ -32,6 +32,13 @@ std::vector<std::string> FormatAddress(uint32_t prefix, const std::string &name,
     char outBuffer[100];
 
     pageString(outBuffer, fieldSize, address.c_str(), 0, &numPages);
+
+    if(numPages == 0) {
+        auto pages = std::string("");
+        snprintf(outBuffer, sizeof(outBuffer), "-- EMPTY --");
+        addTo(answer, "{} | {}{}: {}", prefix, name, pages, outBuffer);
+        return answer;
+    }
 
     for (auto i = 0; i < numPages; i++) {
         MEMZERO(outBuffer, sizeof(outBuffer));
@@ -83,6 +90,8 @@ std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool)
     auto gasfeecap = message["gasfeecap"].asString();
     auto method = message["method"].asUInt64();
 
+    auto numparams = message["numparams"].asUInt64();
+    auto params = message["params"];
     ///
 
     auto toAddress = FormatAddress(0, "To ", to);
@@ -92,25 +101,28 @@ std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool)
     answer.insert(answer.end(), fromAddress.begin(), fromAddress.end());
 
 
-    addTo(answer, "2 | Nonce : {}", nonce);
+    addTo(answer, "2 | Value : {}", FormatAmount(value));
 
-    addTo(answer, "3 | Value : {}", FormatAmount(value));
+    addTo(answer, "3 | Gas Limit : {}", gaslimit);
 
-    addTo(answer, "4 | Gas Limit : {}", gaslimit);
+    addTo(answer, "4 | Gas Fee Cap : {}", FormatAmount(gasfeecap));
 
     addTo(answer, "5 | Gas Premium : {}", FormatAmount(gaspremium));
 
-    addTo(answer, "6 | Gas Fee Cap : {}", FormatAmount(gasfeecap));
+    addTo(answer, "6 | Nonce : {}", nonce);
 
     if (method != 0) {
-        addTo(answer, "7 | Method : Method{}", method);
+        addTo(answer, "7 | Method : {}", method);
     } else {
         addTo(answer, "7 | Method : Transfer", method);
     }
 
-    // If 0 we have a no parameters
-    if (method != 0) {
-        addTo(answer, "8 | Params : Not Available");
+    int paramIdx = 1;
+    for(auto value : params) {
+        std::string paramText = "Params |" + std::to_string(paramIdx) + "| ";
+        auto paramsAddress = FormatAddress(8 + paramIdx - 1, paramText, value.asString());
+        answer.insert(answer.end(), paramsAddress.begin(), paramsAddress.end());
+        paramIdx++;
     }
 
     return answer;
