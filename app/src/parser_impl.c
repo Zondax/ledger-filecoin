@@ -21,9 +21,15 @@
 #include "app_mode.h"
 #include "zxformat.h"
 
+#define TAG_CID 42
+
 parser_tx_t parser_tx_obj;
 
 __Z_INLINE parser_error_t parser_mapCborError(CborError err);
+
+parser_error_t renderByteString(uint8_t *in, uint16_t inLen,
+                          char *outVal, uint16_t outValLen,
+                          uint8_t pageIdx, uint8_t *pageCount);
 
 #define CHECK_CBOR_MAP_ERR(CALL) { \
     CborError err = CALL;  \
@@ -201,6 +207,24 @@ __Z_INLINE parser_error_t readBigInt(bigint_t *bigint, CborValue *value) {
     return parser_ok;
 }
 
+parser_error_t renderByteString(uint8_t *in, uint16_t inLen,
+                          char *outVal, uint16_t outValLen,
+                          uint8_t pageIdx, uint8_t *pageCount) {
+    if (inLen > 0) {
+        char hexStr[inLen * 2 + 1];
+        MEMZERO(hexStr, sizeof(hexStr));
+        size_t count = array_to_hexstr(hexStr, sizeof(hexStr), in, inLen);
+        PARSER_ASSERT_OR_ERROR(count == inLen * 2, parser_value_out_of_range)
+        CHECK_APP_CANARY()
+
+        pageString(outVal, outValLen, hexStr, pageIdx, pageCount);
+        CHECK_APP_CANARY()
+    }
+
+    return parser_ok;
+
+}
+
 parser_error_t printValue(const struct CborValue *value,
                           char *outVal, uint16_t outValLen,
                           uint8_t pageIdx, uint8_t *pageCount) {
@@ -216,14 +240,7 @@ parser_error_t printValue(const struct CborValue *value,
             CHECK_APP_CANARY()
 
             if (buffLen > 0) {
-                char hexStr[401];
-                MEMZERO(hexStr, sizeof(hexStr));
-                size_t count = array_to_hexstr(hexStr, sizeof(hexStr), buff, buffLen);
-                PARSER_ASSERT_OR_ERROR(count == buffLen * 2, parser_value_out_of_range)
-                CHECK_APP_CANARY()
-
-                pageString(outVal, outValLen, hexStr, pageIdx, pageCount);
-                CHECK_APP_CANARY()
+                PARSER_ASSERT_OR_ERROR(renderByteString(buff, buffLen, outVal, outValLen, pageIdx, pageCount))
             }
             break;
         }
@@ -241,6 +258,17 @@ parser_error_t printValue(const struct CborValue *value,
             CHECK_CBOR_MAP_ERR(cbor_value_get_int64_checked(value, &paramValue))
             int64_to_str(outVal, outValLen, paramValue);
             break;
+        }
+        // Add support to render fields tagged as Tag(42) as described here: https://github.com/ipld/cid-cbor/
+        case CborTagType: {
+            CborTag tag;
+            CHECK_CBOR_MAP_ERR(cbor_value_get_tag(value, &tag))
+            if (tag == TAG_CID && buffLen > 0) {
+                CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(value, buff, &buffLen, NULL /* next */))
+                CHECK_APP_CANARY()
+                PARSER_ASSERT_OR_ERROR(renderByteString(buff, buffLen, outVal, outValLen, pageIdx, pageCount))
+                break;
+            }
         }
         default:
             snprintf(outVal, outValLen, "Type: %d", value->type);
