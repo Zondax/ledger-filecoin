@@ -19,32 +19,8 @@ import Zemu, {DEFAULT_START_OPTIONS, DeviceModel} from "@zondax/zemu";
 import FilecoinApp from "@zondax/ledger-filecoin";
 import {getDigest} from "./utils";
 import * as secp256k1 from "secp256k1";
+import { APP_SEED, models, defaultOptions } from './common'
 
-const Resolve = require("path").resolve;
-const APP_PATH_S = Resolve('../app/output/app_s.elf')
-const APP_PATH_X = Resolve('../app/output/app_x.elf')
-const APP_PATH_SP = Resolve('../app/output/app_s2.elf')
-
-const APP_SEED = "equip will roof matter pink blind book anxiety banner elbow sun young"
-
-const defaultOptions = {
-  ...DEFAULT_START_OPTIONS,
-  logging: true,
-  custom: `-s "${APP_SEED}"`,
-  X11: false,
-};
-
-jest.setTimeout(60000)
-
-export const models: DeviceModel[] = [
-  { name: 'nanos', prefix: 'S', path: APP_PATH_S },
-  { name: 'nanox', prefix: 'X', path: APP_PATH_X },
-  { name: 'nanosp', prefix: 'SP', path: APP_PATH_SP },
-]
-
-beforeAll(async () => {
-  await Zemu.checkAndPullImage()
-})
 
 describe('Standard', function () {
   test.each(models)('can start and stop container', async function (m) {
@@ -431,4 +407,46 @@ describe('Standard', function () {
     }
   });
 
+})
+
+describe('Standard', function () {
+  test.each(models)('sign_proposal_multisig_expert', async function (m) {
+    const sim = new Zemu(m.path);
+    try {
+      await sim.start({...defaultOptions, model: m.name,});
+      const app = new FilecoinApp(sim.getTransport());
+
+      // Put the app in expert mode
+      await sim.clickRight();
+      await sim.clickBoth();
+      await sim.clickLeft();
+
+      const path = "m/44'/461'/0'/0/1";
+      const txBlob = Buffer.from(
+        "8a0042000155011eaf1c8a4bbfeeb0870b1745b1f57503470b711601430003e81a000f4240430009c4430009c402585f82d82a5827000155a0e402204eb19534c71ddafc0c89dfd7e8d9aea0eeebfd4d27c00da1c3fbe2dd56c74a035831848255011eaf1c8a4bbfeeb0870b1745b1f57503470b71165501dfe49184d46adc8f89d44638beb45f78fcad2590010000",
+        "hex",
+      );
+
+      const pkResponse = await app.getAddressAndPubKey(path);
+      console.log(pkResponse);
+      expect(pkResponse.return_code).toEqual(0x9000);
+      expect(pkResponse.error_message).toEqual("No errors");
+
+      // do not wait here so we can get snapshots and interact with the app
+      const signatureRequest = app.sign(path, txBlob);
+
+      // Wait until we are not in the main menu
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
+
+      await sim.compareSnapshotsAndApprove(".", `${m.prefix.toLowerCase()}-sign_proposal_multisig_expert`)
+
+      let resp = await signatureRequest;
+      console.log(resp);
+
+      expect(resp.return_code).toEqual(0x9000);
+      expect(resp.error_message).toEqual("No errors");
+    } finally {
+      await sim.close();
+    }
+  });
 })
