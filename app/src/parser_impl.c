@@ -240,7 +240,7 @@ parser_error_t printValue(const struct CborValue *value,
             CHECK_APP_CANARY()
 
             if (buffLen > 0) {
-                PARSER_ASSERT_OR_ERROR(renderByteString(buff, buffLen, outVal, outValLen, pageIdx, pageCount))
+                CHECK_PARSER_ERR(renderByteString(buff, buffLen, outVal, outValLen, pageIdx, pageCount))
             }
             break;
         }
@@ -266,7 +266,7 @@ parser_error_t printValue(const struct CborValue *value,
             if (tag == TAG_CID && buffLen > 0) {
                 CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(value, buff, &buffLen, NULL /* next */))
                 CHECK_APP_CANARY()
-                PARSER_ASSERT_OR_ERROR(renderByteString(buff, buffLen, outVal, outValLen, pageIdx, pageCount))
+                CHECK_PARSER_ERR(renderByteString(buff, buffLen, outVal, outValLen, pageIdx, pageCount))
                 break;
             }
         }
