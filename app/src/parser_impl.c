@@ -22,6 +22,7 @@
 #include "zxformat.h"
 
 #define TAG_CID 42
+#define STR_BUF_LEN 200
 
 parser_tx_t parser_tx_obj;
 
@@ -210,8 +211,11 @@ __Z_INLINE parser_error_t readBigInt(bigint_t *bigint, CborValue *value) {
 parser_error_t renderByteString(uint8_t *in, uint16_t inLen,
                           char *outVal, uint16_t outValLen,
                           uint8_t pageIdx, uint8_t *pageCount) {
-    if (inLen > 0) {
-        char hexStr[inLen * 2 + 1];
+    uint16_t len = inLen * 2;
+
+    // check bounds
+    if (len > 0 && len <= (STR_BUF_LEN * 2)) {
+        char hexStr[len + 1];
         MEMZERO(hexStr, sizeof(hexStr));
         size_t count = array_to_hexstr(hexStr, sizeof(hexStr), in, inLen);
         PARSER_ASSERT_OR_ERROR(count == inLen * 2, parser_value_out_of_range)
@@ -219,16 +223,18 @@ parser_error_t renderByteString(uint8_t *in, uint16_t inLen,
 
         pageString(outVal, outValLen, hexStr, pageIdx, pageCount);
         CHECK_APP_CANARY()
+        return parser_ok;
     }
 
-    return parser_ok;
+    return parser_value_out_of_range;
+
 
 }
 
 parser_error_t printValue(const struct CborValue *value,
                           char *outVal, uint16_t outValLen,
                           uint8_t pageIdx, uint8_t *pageCount) {
-    uint8_t buff[200];
+    uint8_t buff[STR_BUF_LEN];
     size_t buffLen = sizeof(buff);
     MEMZERO(buff, sizeof(buff));
 
