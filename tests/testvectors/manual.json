@@ -437,25 +437,6 @@
         "encoded_tx_hex": "8a0058320300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000583203000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000144000186a01961a8420000430009c40040"
     },
     {
-        "description": "Address with unknown protocol",
-        "encoded_tx": "igBVBAAAAAAAAAAAAAAAAAAAAAAAAAAAVQQAAAAAAAAAAAAAAAAAAAAAAAAAAAFEAAGGoBlhqEIAAEMACcQAQA==",
-        "valid": false,
-        "error": "Invalid address format",
-        "testnet": false,
-        "message": {
-            "version": 0,
-            "to": "faaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaryyc34i",
-            "from": "faaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaryyc34i",
-            "nonce": 1,
-            "value": "100000",
-            "gaslimit": "25000",
-            "gasfeecap": "0",
-            "gaspremium": "2500",
-            "method": 0
-        },
-        "encoded_tx_hex": "8a0055040000000000000000000000000000000000000000550400000000000000000000000000000000000000000144000186a01961a8420000430009c40040"
-    },
-    {
         "description": "Negative sign byte",
         "encoded_tx": "igBVAdFQBQTk0aw+iayJGkUCWG+r2bQXVQG4gmGdRlWPPZ4xbRG0jc8hEycCagFBARlhqEIAAEMACcQAQA==",
         "valid": false,
@@ -595,5 +576,42 @@
             "params": [1234]
         },
         "encoded_tx_hex": "8a0044008bcb534400f59c5300400040400044811904d2"
+    },
+    {
+        "description": "Using Protocol 4 addresses",
+        "encoded_tx": "notAvailable",
+        "valid": true,
+        "error": "",
+        "testnet": false,
+        "message": {
+            "version": 0,
+            "to": "f410f2qreez6evnfbqs6rvidgwm3b44hpxpvpeuoddga",
+            "from": "f410f2qreez6evnfbqs6rvidgwm3b44hpxpvpeuoddga",
+            "nonce": 1,
+            "value": "100000",
+            "gaslimit": "25000",
+            "gasfeecap": "1",
+            "gaspremium": "1",
+            "method": 0
+        },
+        "encoded_tx_hex": "8a0056040ad4224267c4ab4a184bd1aa066b3361e70efbbeaf56040ad4224267c4ab4a184bd1aa066b3361e70efbbeaf0144000186a01961a84200014200010040"
+    },
+    {
+        "description": "Address with unknown protocol",
+        "valid": false,
+        "error": "Invalid address format",
+        "testnet": false,
+        "message": {
+            "version": 0,
+            "to": "faaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaazuwnlsi",
+            "from": "faaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaazuwnlsi",
+            "nonce": 1,
+            "value": "100000",
+            "gaslimit": 25000,
+            "gasfeecap": "1",
+            "gaspremium": "1",
+            "method": 0
+        },
+        "encoded_tx_hex": "8A0055050000000000000000000000000000000000000000550400000000000000000000000000000000000000000144000186A01961A84200014200010040"
     }
 ]

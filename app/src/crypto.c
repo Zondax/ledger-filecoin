@@ -246,8 +246,8 @@ zxerr_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen,
 
 #endif
 
-uint8_t decompressLEB128(const uint8_t *input, uint16_t inputSize, uint64_t *v) {
-    unsigned int i = 0;
+uint16_t decompressLEB128(const uint8_t *input, uint16_t inputSize, uint64_t *v) {
+    uint16_t  i = 0;
 
     *v = 0;
     uint16_t shift = 0;
@@ -262,7 +262,7 @@ uint8_t decompressLEB128(const uint8_t *input, uint16_t inputSize, uint64_t *v) 
         *v |= b << shift;
 
         if (!(input[i] & 0x80u)) {
-            return 1;
+            return i + 1;
         }
 
         shift += 7;
@@ -284,6 +284,9 @@ uint16_t formatProtocol(const uint8_t *addressBytes,
     if (addressBytes == NULL || addressSize < 2u) {
         return 0;
     }
+
+    // Clean output buffer
+    MEMZERO(formattedAddress, formattedAddressSize);
 
     const uint8_t protocol = addressBytes[0];
 
@@ -322,27 +325,43 @@ uint16_t formatProtocol(const uint8_t *addressBytes,
             payloadSize = ADDRESS_PROTOCOL_BLS_PAYLOAD_LEN;
             break;
         }
+        case ADDRESS_PROTOCOL_DELEGATED: {
+            uint64_t actorId = 0;
+            const uint16_t actorIdSize = decompressLEB128(addressBytes + 1, addressSize - 1, &actorId);
+
+            // Check missing actor id or missing sub-address
+            if (actorIdSize == 0 || (addressSize <= actorIdSize + 1)) {
+                return 0;
+            }
+
+            // Copy Actor ID
+            snprintf(formattedAddress + 2, formattedAddressSize - 2, "%df", actorId);
+
+            payloadSize = addressSize - 1 - actorIdSize;
+            break;
+        }
         default:
             return 0;
     }
 
-    // Remove first byte which is the protocol byte
-    if (addressSize != payloadSize + 1) {
+    // Keep only one crc buffer using the biggest size
+    uint8_t payload_crc[ADDRESS_PROTOCOL_DELEGATED_MAX_SUBADDRESS_LEN + CHECKSUM_LENGTH] = {0};
+
+    // f4 addresses contain actorID
+    const uint16_t actorIdSize = (protocol == ADDRESS_PROTOCOL_DELEGATED) ? (addressSize - payloadSize - 1) : 0;
+    if (addressSize != payloadSize + 1 + actorIdSize) {
         return 0;
     }
+    MEMCPY(payload_crc, addressBytes + 1 + actorIdSize, payloadSize);
 
-    uint8_t payload_crc[ADDRESS_PROTOCOL_BLS_PAYLOAD_LEN + CHECKSUM_LENGTH]; // Max size 52 bytes
-
-    //We don't want the first byte which is the protocol byte
-    MEMCPY(payload_crc, addressBytes + 1, addressSize - 1);
-    // append 4 bytes checksum to payload_crc
     blake_hash(addressBytes, addressSize, payload_crc + payloadSize, CHECKSUM_LENGTH);
 
+    const uint16_t offset = strnlen((char *) formattedAddress, formattedAddressSize);
     // Now prepare the address output
     if (base32_encode(payload_crc,
                       (uint32_t) (payloadSize + CHECKSUM_LENGTH),
-                      (char *)(formattedAddress + 2),
-                      (uint32_t) (formattedAddressSize - 2)) < 0) {
+                      (char *)(formattedAddress + offset),
+                      (uint32_t) (formattedAddressSize - offset)) < 0) {
         return 0;
     }
 
