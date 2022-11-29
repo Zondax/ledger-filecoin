@@ -50,9 +50,7 @@ ifndef COIN
 COIN=FIL
 endif
 
-APPVERSION_M=0
-APPVERSION_N=22
-APPVERSION_P=5
+include $(CURDIR)/Makefile.version
 
 $(info COIN  = [$(COIN)])
 ifeq ($(COIN),FIL)
