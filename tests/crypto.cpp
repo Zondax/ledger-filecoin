@@ -104,7 +104,7 @@ TEST(CRYPTO, extractBitsFromLEB128_small) {
 
     auto ret = decompressLEB128(input, sizeof(input), &output);
 
-    EXPECT_THAT(ret, ::testing::Eq(1));
+    EXPECT_THAT(ret, ::testing::Gt(0));
     EXPECT_THAT(output, ::testing::Eq(0x81));
 
     char bufferUI[300];
@@ -120,7 +120,7 @@ TEST(CRYPTO, extractBitsFromLEB128_1byte) {
 
     auto ret = decompressLEB128(input, sizeof(input), &output);
 
-    EXPECT_THAT(ret, ::testing::Eq(1));
+    EXPECT_THAT(ret, ::testing::Gt(0));
     EXPECT_THAT(output, ::testing::Eq(1729));
 
     char bufferUI[300];
@@ -136,7 +136,7 @@ TEST(CRYPTO, extractBitsFromLEB128_big) {
 
     auto ret = decompressLEB128(input, sizeof(input), &output);
 
-    EXPECT_THAT(ret, ::testing::Eq(1));
+    EXPECT_THAT(ret, ::testing::Gt(0));
     EXPECT_THAT(output, ::testing::Eq(18446744073709551615u));
 
     char bufferUI[300];

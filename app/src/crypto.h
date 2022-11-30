@@ -40,13 +40,15 @@ extern uint32_t hdPath[HDPATH_LEN_DEFAULT];
 #define ADDRESS_PROTOCOL_SECP256K1  0x01
 #define ADDRESS_PROTOCOL_ACTOR      0x02
 #define ADDRESS_PROTOCOL_BLS        0x03
+#define ADDRESS_PROTOCOL_DELEGATED  0x04
 
 #define ADDRESS_PROTOCOL_ID_PAYLOAD_LEN         0x00
 #define ADDRESS_PROTOCOL_SECP256K1_PAYLOAD_LEN  20
 #define ADDRESS_PROTOCOL_ACTOR_PAYLOAD_LEN      20
 #define ADDRESS_PROTOCOL_BLS_PAYLOAD_LEN        48
+#define ADDRESS_PROTOCOL_DELEGATED_MAX_SUBADDRESS_LEN  54
 
-uint8_t decompressLEB128(const uint8_t *input, uint16_t inputSize, uint64_t *v);
+uint16_t decompressLEB128(const uint8_t *input, uint16_t inputSize, uint64_t *v);
 
 uint16_t formatProtocol(const uint8_t *addressBytes, uint16_t addressSize,
                         uint8_t *formattedAddress,

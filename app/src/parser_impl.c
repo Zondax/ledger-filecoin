@@ -163,6 +163,15 @@ __Z_INLINE parser_error_t readAddress(address_t *address, CborValue *value) {
             // protocol 3
             PARSER_ASSERT_OR_ERROR(address->len - 1 == ADDRESS_PROTOCOL_BLS_PAYLOAD_LEN, parser_invalid_address)
             break;
+        case ADDRESS_PROTOCOL_DELEGATED: {
+            // protocol 4
+            uint64_t actorId = 0;
+            const uint16_t actorIdSize = decompressLEB128(address->buffer + 1, address->len - 1, &actorId);
+            PARSER_ASSERT_OR_ERROR(actorIdSize > 0, parser_invalid_address)
+            // At least 1 byte in subaddress
+            PARSER_ASSERT_OR_ERROR(address->len > actorIdSize + 1, parser_invalid_address)
+            break;
+        }
         default:
             return parser_invalid_address;
     }

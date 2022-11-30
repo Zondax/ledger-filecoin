@@ -61,7 +61,6 @@ describe('Standard', function () {
     const sim = new Zemu(m.path);
     try {
       await sim.start({...defaultOptions, model: m.name,});
-      // await sim.navigateAndCompareSnapshots('.', `${m.prefix.toLowerCase()}-mainmenu`, [1, 1, 1, 1])
       await sim.navigateAndCompareSnapshots('.', `${m.prefix.toLowerCase()}-mainmenu`, [1, 0, 0, 4, -5])
     } finally {
       await sim.close();
@@ -387,6 +386,46 @@ describe('Standard', function () {
 
       expect(resp.return_code).toEqual(0x9000);
       expect(resp.error_message).toEqual("No errors");
+    } finally {
+      await sim.close();
+    }
+  });
+
+  test.each(models)('transfer using protocol 4 addresses', async function (m) {
+    const sim = new Zemu(m.path);
+    try {
+      await sim.start({...defaultOptions, model: m.name,});
+      const app = new FilecoinApp(sim.getTransport());
+
+      const path = "m/44'/461'/0'/0/1";
+      const txBlob = Buffer.from(
+        "8a0056040ad4224267c4ab4a184bd1aa066b3361e70efbbeaf56040ad4224267c4ab4a184bd1aa066b3361e70efbbeaf0144000186a01961a84200014200010040",
+        "hex",
+      );
+
+      const pkResponse = await app.getAddressAndPubKey(path);
+      console.log(pkResponse);
+      expect(pkResponse.return_code).toEqual(0x9000);
+      expect(pkResponse.error_message).toEqual("No errors");
+
+      // do not wait here..
+      const signatureRequest = app.sign(path, txBlob);
+
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
+      await sim.compareSnapshotsAndApprove(".", `${m.prefix.toLowerCase()}-sign_transfer_protocol4`)
+
+      let resp = await signatureRequest;
+      console.log(resp);
+
+      expect(resp.return_code).toEqual(0x9000);
+      expect(resp.error_message).toEqual("No errors");
+
+      // Verify signature
+      const pk = Uint8Array.from(pkResponse.compressed_pk)
+      const digest = getDigest(txBlob);
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signature_der));
+      const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
+      expect(signatureOk).toEqual(true);
     } finally {
       await sim.close();
     }
