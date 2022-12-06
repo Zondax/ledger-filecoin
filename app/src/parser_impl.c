@@ -28,10 +28,6 @@ parser_tx_t parser_tx_obj;
 
 __Z_INLINE parser_error_t parser_mapCborError(CborError err);
 
-parser_error_t renderByteString(uint8_t *in, uint16_t inLen,
-                          char *outVal, uint16_t outValLen,
-                          uint8_t pageIdx, uint8_t *pageCount);
-
 #define CHECK_CBOR_MAP_ERR(CALL) { \
     CborError err = CALL;  \
     if (err!=CborNoError) return parser_mapCborError(err);}
@@ -208,17 +204,16 @@ __Z_INLINE parser_error_t readBigInt(bigint_t *bigint, CborValue *value) {
     return parser_ok;
 }
 
-parser_error_t renderByteString(uint8_t *in, uint16_t inLen,
+static parser_error_t renderByteString(uint8_t *in, uint16_t inLen,
                           char *outVal, uint16_t outValLen,
                           uint8_t pageIdx, uint8_t *pageCount) {
-    uint16_t len = inLen * 2;
+    const uint32_t len = inLen * 2;
 
     // check bounds
-    if (len > 0 && len <= (STR_BUF_LEN * 2)) {
-        char hexStr[len + 1];
-        MEMZERO(hexStr, sizeof(hexStr));
-        size_t count = array_to_hexstr(hexStr, sizeof(hexStr), in, inLen);
-        PARSER_ASSERT_OR_ERROR(count == inLen * 2, parser_value_out_of_range)
+    if (inLen > 0 && inLen <= STR_BUF_LEN) {
+        char hexStr[STR_BUF_LEN * 2 + 1] = {0};
+        const uint32_t count = array_to_hexstr(hexStr, sizeof(hexStr), in, inLen);
+        PARSER_ASSERT_OR_ERROR(count == len, parser_value_out_of_range)
         CHECK_APP_CANARY()
 
         pageString(outVal, outValLen, hexStr, pageIdx, pageCount);
@@ -227,8 +222,6 @@ parser_error_t renderByteString(uint8_t *in, uint16_t inLen,
     }
 
     return parser_value_out_of_range;
-
-
 }
 
 parser_error_t printValue(const struct CborValue *value,
@@ -239,7 +232,6 @@ parser_error_t printValue(const struct CborValue *value,
     MEMZERO(buff, sizeof(buff));
 
     snprintf(outVal, outValLen, "-- EMPTY --");
-
     switch (value->type) {
         case CborByteStringType: {
             CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(value, buff, &buffLen, NULL /* next */))
@@ -278,6 +270,7 @@ parser_error_t printValue(const struct CborValue *value,
         }
         default:
             snprintf(outVal, outValLen, "Type: %d", value->type);
+            return parser_unexpected_type;
     }
     return parser_ok;
 }
