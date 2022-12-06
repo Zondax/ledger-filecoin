@@ -1,5 +1,5 @@
 /** ******************************************************************************
- *  (c) 2020 Zondax GmbH
+ *  (c) 2018 - 2022 Zondax AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -14,13 +14,13 @@
  *  limitations under the License.
  ******************************************************************************* */
 
-import Zemu, {DEFAULT_START_OPTIONS, DeviceModel} from "@zondax/zemu";
+import Zemu from "@zondax/zemu";
 // @ts-ignore
 import FilecoinApp from "@zondax/ledger-filecoin";
-import {getDigest} from "./utils";
 import * as secp256k1 from "secp256k1";
-import { APP_SEED, models, defaultOptions } from './common'
+import { models, defaultOptions } from './common'
 import * as multisigData from "./multisig.json"
+import { getDigest } from "./utils";
 
 const TEST_DATA = [
   {
@@ -79,6 +79,13 @@ describe.each(models)('Multisig', function (m) {
 
       expect(resp.return_code).toEqual(0x9000);
       expect(resp.error_message).toEqual("No errors");
+
+      // Verify signature
+      const pk = Uint8Array.from(pkResponse.compressed_pk)
+      const digest = getDigest(txBlob);
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signature_der));
+      const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
+      expect(signatureOk).toEqual(true);
     } finally {
       await sim.close();
     }

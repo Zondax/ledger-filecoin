@@ -1,5 +1,5 @@
 /** ******************************************************************************
- *  (c) 2020 Zondax GmbH
+ *  (c) 2018 - 2022 Zondax AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -14,12 +14,12 @@
  *  limitations under the License.
  ******************************************************************************* */
 
-import Zemu, {DEFAULT_START_OPTIONS, DeviceModel} from "@zondax/zemu";
+import Zemu from "@zondax/zemu";
 // @ts-ignore
 import FilecoinApp from "@zondax/ledger-filecoin";
 import {getDigest} from "./utils";
 import * as secp256k1 from "secp256k1";
-import { APP_SEED, models, defaultOptions } from './common'
+import { models, defaultOptions, PATH } from './common'
 
 
 describe('Standard', function () {
@@ -121,19 +121,18 @@ describe('Standard', function () {
       await sim.start({...defaultOptions, model: m.name,});
       const app = new FilecoinApp(sim.getTransport());
 
-      const path = "m/44'/461'/0'/0/1";
       const txBlob = Buffer.from(
         "8a0058310396a1a3e4ea7a14d49985e661b22401d44fed402d1d0925b243c923589c0fbc7e32cd04e29ed78d15d37d3aaa3fe6da3358310386b454258c589475f7d16f5aac018a79f6c1169d20fc33921dd8b5ce1cac6c348f90a3603624f6aeb91b64518c2e80950144000186a01961a8430009c44200000040",
         "hex",
       );
 
-      const pkResponse = await app.getAddressAndPubKey(path);
+      const pkResponse = await app.getAddressAndPubKey(PATH);
       console.log(pkResponse);
       expect(pkResponse.return_code).toEqual(0x9000);
       expect(pkResponse.error_message).toEqual("No errors");
 
       // do not wait here..
-      const signatureRequest = app.sign(path, txBlob);
+      const signatureRequest = app.sign(PATH, txBlob);
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
@@ -162,20 +161,19 @@ describe('Standard', function () {
       await sim.start({...defaultOptions, model: m.name,});
       const app = new FilecoinApp(sim.getTransport());
 
-      const path = "m/44'/461'/0'/0/1";
       let invalidMessage = Buffer.from(
         "890055026d21137eb4c4814269e894d296cf6500e43cd7145502e0c7c75f82d55e5ed55db28033630df4274a984f0144000186a0430009c41961a80040",
         "hex",
       );
       invalidMessage = Buffer.concat([invalidMessage, Buffer.from("1")]);
 
-      const pkResponse = await app.getAddressAndPubKey(path);
+      const pkResponse = await app.getAddressAndPubKey(PATH);
       console.log(pkResponse);
       expect(pkResponse.return_code).toEqual(0x9000);
       expect(pkResponse.error_message).toEqual("No errors");
 
       // do not wait here..
-      const signatureResponse = await app.sign(path, invalidMessage);
+      const signatureResponse = await app.sign(PATH, invalidMessage);
       console.log(signatureResponse);
 
       expect(signatureResponse.return_code).toEqual(0x6984);
@@ -192,20 +190,19 @@ describe('Standard', function () {
       await sim.start({...defaultOptions, model: m.name,});
       const app = new FilecoinApp(sim.getTransport());
 
-      const path = "m/44'/461'/0'/0/1";
       const txBlob = Buffer.from(
         "8a004300ec075501dfe49184d46adc8f89d44638beb45f78fcad259001401a000f4240430009c4430009c402581d845501dfe49184d46adc8f89d44638beb45f78fcad2590430003e80040",
         "hex",
       );
 
-      const pkResponse = await app.getAddressAndPubKey(path);
+      const pkResponse = await app.getAddressAndPubKey(PATH);
       console.log(pkResponse);
       expect(pkResponse.return_code).toEqual(0x9000);
       expect(pkResponse.error_message).toEqual("No errors");
       console.log("No errors retriving address")
 
       // do not wait here so we can get snapshots and interact with the app
-      const signatureRequest = app.sign(path, txBlob);
+      const signatureRequest = app.sign(PATH, txBlob);
 
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
@@ -217,6 +214,13 @@ describe('Standard', function () {
 
       expect(resp.return_code).toEqual(0x9000);
       expect(resp.error_message).toEqual("No errors");
+
+      // Verify signature
+      const pk = Uint8Array.from(pkResponse.compressed_pk)
+      const digest = getDigest(txBlob);
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signature_der));
+      const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
+      expect(signatureOk).toEqual(true);
     } finally {
       await sim.close();
     }
@@ -233,23 +237,21 @@ describe('Standard', function () {
       await sim.clickBoth();
       await sim.clickLeft();
 
-      const path = "m/44'/461'/0'/0/1";
       const txBlob = Buffer.from(
         "8a004300ec075501dfe49184d46adc8f89d44638beb45f78fcad259001401a000f4240430009c4430009c402581d845501dfe49184d46adc8f89d44638beb45f78fcad2590430003e80040",
         "hex",
       );
 
-      const pkResponse = await app.getAddressAndPubKey(path);
+      const pkResponse = await app.getAddressAndPubKey(PATH);
       console.log(pkResponse);
       expect(pkResponse.return_code).toEqual(0x9000);
       expect(pkResponse.error_message).toEqual("No errors");
 
       // do not wait here so we can get snapshots and interact with the app
-      const signatureRequest = app.sign(path, txBlob);
+      const signatureRequest = app.sign(PATH, txBlob);
 
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
-
       await sim.compareSnapshotsAndApprove(".", `${m.prefix.toLowerCase()}-sign_proposal_expert`)
 
       let resp = await signatureRequest;
@@ -257,6 +259,13 @@ describe('Standard', function () {
 
       expect(resp.return_code).toEqual(0x9000);
       expect(resp.error_message).toEqual("No errors");
+
+      // Verify signature
+      const pk = Uint8Array.from(pkResponse.compressed_pk)
+      const digest = getDigest(txBlob);
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signature_der));
+      const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
+      expect(signatureOk).toEqual(true);
     } finally {
       await sim.close();
     }
@@ -269,24 +278,18 @@ describe('Standard', function () {
       await sim.start({...defaultOptions, model: m.name,});
       const app = new FilecoinApp(sim.getTransport());
 
-      // Put the app in expert mode
-      await sim.clickRight();
-      await sim.clickBoth();
-      await sim.clickLeft();
-
-      const path = "m/44'/461'/0'/0/1";
       const invalidMessage = Buffer.from(
         "8a004300ec075501dfe49184d46adc8f89d44638beb45f78fcad259001401a000f4240430009c4430009c432581d845501dfe49184d46adc8f89d44638beb45f78fcad2590430003e80040",
         "hex",
       );
 
-      const pkResponse = await app.getAddressAndPubKey(path);
+      const pkResponse = await app.getAddressAndPubKey(PATH);
       console.log(pkResponse);
       expect(pkResponse.return_code).toEqual(0x9000);
       expect(pkResponse.error_message).toEqual("No errors");
 
       // do not wait here..
-      const signatureResponse = await app.sign(path, invalidMessage);
+      const signatureResponse = await app.sign(PATH, invalidMessage);
       console.log(signatureResponse);
 
       expect(signatureResponse.return_code).toEqual(0x6984);
@@ -328,67 +331,22 @@ describe('Standard', function () {
       await sim.start({ ...defaultOptions, model: m.name, });
       const app = new FilecoinApp(sim.getTransport());
 
-      // Put the app in expert mode
-      await sim.clickRight();
-      await sim.clickBoth();
-      await sim.clickLeft();
-
-      const path = "m/44'/461'/0'/0/1";
       const txBlob = Buffer.from(
         "8a0044008bcb534400f59c53004000404017454400f59c53",
         "hex",
       );
 
-      const pkResponse = await app.getAddressAndPubKey(path);
+      const pkResponse = await app.getAddressAndPubKey(PATH);
       console.log(pkResponse);
       expect(pkResponse.return_code).toEqual(0x9000);
       expect(pkResponse.error_message).toEqual("No errors");
 
       // do not wait here so we can get snapshots and interact with the app
-      const signatureRequest = app.sign(path, txBlob);
+      const signatureRequest = app.sign(PATH, txBlob);
 
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
-
-      const clicks = m.name === "nanos" ? 9 : 10;
-      for (let i = 0; i < clicks; i++) {
-        await sim.clickRight();
-      }
-
-      await sim.clickBoth();
-
-      let resp = await signatureRequest;
-      console.log(resp);
-
-      expect(resp.return_code).toEqual(0x9000);
-      expect(resp.error_message).toEqual("No errors");
-    } finally {
-      await sim.close();
-    }
-  });
-
-  test.each(models)('transfer using protocol 4 addresses', async function (m) {
-    const sim = new Zemu(m.path);
-    try {
-      await sim.start({...defaultOptions, model: m.name,});
-      const app = new FilecoinApp(sim.getTransport());
-
-      const path = "m/44'/461'/0'/0/1";
-      const txBlob = Buffer.from(
-        "8a0056040ad4224267c4ab4a184bd1aa066b3361e70efbbeaf56040ad4224267c4ab4a184bd1aa066b3361e70efbbeaf0144000186a01961a84200014200010040",
-        "hex",
-      );
-
-      const pkResponse = await app.getAddressAndPubKey(path);
-      console.log(pkResponse);
-      expect(pkResponse.return_code).toEqual(0x9000);
-      expect(pkResponse.error_message).toEqual("No errors");
-
-      // do not wait here..
-      const signatureRequest = app.sign(path, txBlob);
-
-      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
-      await sim.compareSnapshotsAndApprove(".", `${m.prefix.toLowerCase()}-sign_transfer_protocol4`)
+      await sim.compareSnapshotsAndApprove(".", `${m.prefix.toLowerCase()}-change_owner`)
 
       let resp = await signatureRequest;
       console.log(resp);
@@ -407,44 +365,40 @@ describe('Standard', function () {
     }
   });
 
-})
-
-describe('Standard', function () {
-  test.each(models)('sign_proposal_multisig_expert', async function (m) {
+  test.each(models)('transfer using protocol 4 addresses', async function (m) {
     const sim = new Zemu(m.path);
     try {
       await sim.start({...defaultOptions, model: m.name,});
       const app = new FilecoinApp(sim.getTransport());
 
-      // Put the app in expert mode
-      await sim.clickRight();
-      await sim.clickBoth();
-      await sim.clickLeft();
-
-      const path = "m/44'/461'/0'/0/1";
       const txBlob = Buffer.from(
-        "8a0042000155011eaf1c8a4bbfeeb0870b1745b1f57503470b711601430003e81a000f4240430009c4430009c402585f82d82a5827000155a0e402204eb19534c71ddafc0c89dfd7e8d9aea0eeebfd4d27c00da1c3fbe2dd56c74a035831848255011eaf1c8a4bbfeeb0870b1745b1f57503470b71165501dfe49184d46adc8f89d44638beb45f78fcad2590010000",
+        "8a0056040ad4224267c4ab4a184bd1aa066b3361e70efbbeaf56040ad4224267c4ab4a184bd1aa066b3361e70efbbeaf0144000186a01961a84200014200010040",
         "hex",
       );
 
-      const pkResponse = await app.getAddressAndPubKey(path);
+      const pkResponse = await app.getAddressAndPubKey(PATH);
       console.log(pkResponse);
       expect(pkResponse.return_code).toEqual(0x9000);
       expect(pkResponse.error_message).toEqual("No errors");
 
-      // do not wait here so we can get snapshots and interact with the app
-      const signatureRequest = app.sign(path, txBlob);
+      // do not wait here..
+      const signatureRequest = app.sign(PATH, txBlob);
 
-      // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
-
-      await sim.compareSnapshotsAndApprove(".", `${m.prefix.toLowerCase()}-sign_proposal_multisig_expert`)
+      await sim.compareSnapshotsAndApprove(".", `${m.prefix.toLowerCase()}-sign_transfer_protocol4`)
 
       let resp = await signatureRequest;
       console.log(resp);
 
       expect(resp.return_code).toEqual(0x9000);
       expect(resp.error_message).toEqual("No errors");
+
+      // Verify signature
+      const pk = Uint8Array.from(pkResponse.compressed_pk)
+      const digest = getDigest(txBlob);
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signature_der));
+      const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
+      expect(signatureOk).toEqual(true);
     } finally {
       await sim.close();
     }
