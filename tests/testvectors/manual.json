@@ -613,5 +613,68 @@
             "method": 0
         },
         "encoded_tx_hex": "8A0055050000000000000000000000000000000000000000550400000000000000000000000000000000000000000144000186A01961A84200014200010040"
+    },
+    {
+        "description": "Multisig propose",
+        "encoded_tx": "notAvailable",
+        "valid": true,
+        "error": "",
+        "testnet": true,
+        "message": {
+            "version": 0,
+            "to": "t01004",
+            "from": "t137sjdbgunloi7couiy4l5nc7pd6k2jmq32vizpy",
+            "nonce": 1,
+            "value": "0",
+            "gaslimit": 1000000,
+            "gasfeecap": "2500",
+            "gaspremium": "2500",
+            "method": 2,
+            "numparams": 1,
+            "params": ["01dfe49184d46adc8f89d44638beb45f78fcad2590", "0003e8", "0", ""]
+        },
+        "encoded_tx_hex": "8a004300ec075501dfe49184d46adc8f89d44638beb45f78fcad259001401a000f4240430009c4430009c402581d845501dfe49184d46adc8f89d44638beb45f78fcad2590430003e80040"
+    },
+    {
+        "description": "Multisig approve",
+        "encoded_tx": "notAvailable",
+        "valid": true,
+        "error": "",
+        "testnet": true,
+        "message": {
+            "version": 0,
+            "to": "t01004",
+            "from": "t1d2xrzcslx7xlbbylc5c3d5lvandqw4iwl6epxba",
+            "nonce": 1,
+            "value": "0",
+            "gaslimit": 1000000,
+            "gasfeecap": "2500",
+            "gaspremium": "2500",
+            "method": 3,
+            "numparams": 1,
+            "params": ["1234", "f8acf2652972f009aeaa1d9b61cfcd86702b3093c19c3049604f19db8cb378f3"]
+        },
+        "encoded_tx_hex": "8a004300ec0755011eaf1c8a4bbfeeb0870b1745b1f57503470b711601401a000f4240430009c4430009c4035826821904d25820f8acf2652972f009aeaa1d9b61cfcd86702b3093c19c3049604f19db8cb378f3"
+    },
+    {
+        "description": "Multisig cancel",
+        "encoded_tx": "notAvailable",
+        "valid": true,
+        "error": "",
+        "testnet": true,
+        "message": {
+            "version": 0,
+            "to": "t01004",
+            "from": "t1d2xrzcslx7xlbbylc5c3d5lvandqw4iwl6epxba",
+            "nonce": 1,
+            "value": "0",
+            "gaslimit": 1000000,
+            "gasfeecap": "2500",
+            "gaspremium": "2500",
+            "method": 4,
+            "numparams": 1,
+            "params": ["1234", "f8acf2652972f009aeaa1d9b61cfcd86702b3093c19c3049604f19db8cb378f3"]
+        },
+        "encoded_tx_hex": "8a004300ec0755011eaf1c8a4bbfeeb0870b1745b1f57503470b711601401a000f4240430009c4430009c4045826821904d25820f8acf2652972f009aeaa1d9b61cfcd86702b3093c19c3049604f19db8cb378f3"
     }
 ]
