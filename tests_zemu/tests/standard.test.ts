@@ -183,49 +183,6 @@ describe('Standard', function () {
     }
   });
 
-  test.each(models)('sign proposal', async function (m) {
-    const sim = new Zemu(m.path);
-    try {
-      console.log("model: ", m.name)
-      await sim.start({...defaultOptions, model: m.name,});
-      const app = new FilecoinApp(sim.getTransport());
-
-      const txBlob = Buffer.from(
-        "8a004300ec075501dfe49184d46adc8f89d44638beb45f78fcad259001401a000f4240430009c4430009c402581d845501dfe49184d46adc8f89d44638beb45f78fcad2590430003e80040",
-        "hex",
-      );
-
-      const pkResponse = await app.getAddressAndPubKey(PATH);
-      console.log(pkResponse);
-      expect(pkResponse.return_code).toEqual(0x9000);
-      expect(pkResponse.error_message).toEqual("No errors");
-      console.log("No errors retriving address")
-
-      // do not wait here so we can get snapshots and interact with the app
-      const signatureRequest = app.sign(PATH, txBlob);
-
-      // Wait until we are not in the main menu
-      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
-
-      await sim.compareSnapshotsAndApprove(".", `${m.prefix.toLowerCase()}-sign_proposal`)
-
-      let resp = await signatureRequest;
-      console.log(resp);
-
-      expect(resp.return_code).toEqual(0x9000);
-      expect(resp.error_message).toEqual("No errors");
-
-      // Verify signature
-      const pk = Uint8Array.from(pkResponse.compressed_pk)
-      const digest = getDigest(txBlob);
-      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signature_der));
-      const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
-      expect(signatureOk).toEqual(true);
-    } finally {
-      await sim.close();
-    }
-  });
-
   test.each(models)('sign proposal expert ', async function (m) {
     const sim = new Zemu(m.path);
     try {
