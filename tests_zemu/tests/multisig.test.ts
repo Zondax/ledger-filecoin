@@ -18,7 +18,7 @@ import Zemu from "@zondax/zemu";
 // @ts-ignore
 import FilecoinApp from "@zondax/ledger-filecoin";
 import * as secp256k1 from "secp256k1";
-import { models, defaultOptions } from './common'
+import { models, defaultOptions, PATH_TESTNET } from './common'
 import * as multisigData from "./multisig.json"
 import { getDigest } from "./utils";
 
@@ -57,21 +57,18 @@ describe.each(models)('Multisig', function (m) {
       await sim.clickBoth();
       await sim.clickLeft();
 
-      const path = "m/44'/461'/0'/0/1";
-
       const txBlob = Buffer.from(op, 'hex');
 
-      const pkResponse = await app.getAddressAndPubKey(path);
+      const pkResponse = await app.getAddressAndPubKey(PATH_TESTNET);
       console.log(pkResponse);
       expect(pkResponse.return_code).toEqual(0x9000);
       expect(pkResponse.error_message).toEqual("No errors");
 
       // do not wait here so we can get snapshots and interact with the app
-      const signatureRequest = app.sign(path, txBlob);
+      const signatureRequest = app.sign(PATH_TESTNET, txBlob);
 
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
-
       await sim.compareSnapshotsAndApprove(".", testcase)
 
       let resp = await signatureRequest;
