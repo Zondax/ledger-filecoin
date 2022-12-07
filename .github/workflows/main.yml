@@ -1,4 +1,4 @@
-name: "Test/Build"
+name: "Build"
 on:
   workflow_dispatch:
   push:
@@ -181,7 +181,7 @@ jobs:
       - name: Install deps
         run: pip install ledgerblue
 
-      - name: Build NanoSP XL
+      - name: Build NanoSP
         shell: bash -l {0}
         run: |
           source $HOME/.cargo/env

@@ -334,8 +334,12 @@ uint16_t formatProtocol(const uint8_t *addressBytes,
                 return 0;
             }
 
+            char actorId_str[25] = {0};
+            if (uint64_to_str(actorId_str, sizeof(actorId_str), actorId) != NULL) {
+                return 0;
+            }
             // Copy Actor ID
-            snprintf(formattedAddress + 2, formattedAddressSize - 2, "%df", actorId);
+            snprintf((char*)formattedAddress + 2, formattedAddressSize - 2, "%sf", actorId_str);
 
             payloadSize = addressSize - 1 - actorIdSize;
             break;

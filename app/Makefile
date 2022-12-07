@@ -27,8 +27,8 @@ all: bin/app.elf
 	@echo "APPNAME=\"${APPNAME}\"" >> $(OUTPUT_INSTALLER)
 	@echo "APPVERSION=\"${APPVERSION}\"" >> $(OUTPUT_INSTALLER)
 	@echo "APPPATH=\""${APPPATH}"\"" >> $(OUTPUT_INSTALLER)
-	@echo "LOAD_PARAMS=\"${COMMON_LOAD_PARAMS}\"" >> $(OUTPUT_INSTALLER)
-	@echo "DELETE_PARAMS=\"${COMMON_DELETE_PARAMS}\"" >> $(OUTPUT_INSTALLER)
+	@echo "LOAD_PARAMS=($$(echo "${APP_LOAD_PARAMS}" | sed -e "s|"${APPNAME}"|\""${APPNAME}"\"|"))" >> $(OUTPUT_INSTALLER)
+	@echo "DELETE_PARAMS=($$(echo "${COMMON_DELETE_PARAMS}" | sed -e "s|"${APPNAME}"|\""${APPNAME}"\"|"))" >> $(OUTPUT_INSTALLER)
 	@echo "APPHEX=\"" >> $(OUTPUT_INSTALLER)
 	@cat $(CURDIR)/bin/app.hex >> $(OUTPUT_INSTALLER)
 	@echo "\"" >> $(OUTPUT_INSTALLER)
@@ -71,7 +71,7 @@ endef
 $(error "$(error_message)")
 endif
 
-APP_LOAD_PARAMS = --delete $(COMMON_LOAD_PARAMS) --path ${APPPATH} --path "44'/1'"
+APP_LOAD_PARAMS = $(COMMON_LOAD_PARAMS) --path $(APPPATH)
 
 ifeq ($(TARGET_NAME),TARGET_NANOS)
 APP_LOAD_PARAMS += --appFlags 0x000
