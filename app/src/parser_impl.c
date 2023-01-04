@@ -21,6 +21,9 @@
 #include "app_mode.h"
 #include "zxformat.h"
 
+#define TAG_CID 42
+#define STR_BUF_LEN 200
+
 parser_tx_t parser_tx_obj;
 
 __Z_INLINE parser_error_t parser_mapCborError(CborError err);
@@ -163,6 +166,15 @@ __Z_INLINE parser_error_t readAddress(address_t *address, CborValue *value) {
             // protocol 3
             PARSER_ASSERT_OR_ERROR(address->len - 1 == ADDRESS_PROTOCOL_BLS_PAYLOAD_LEN, parser_invalid_address)
             break;
+        case ADDRESS_PROTOCOL_DELEGATED: {
+            // protocol 4
+            uint64_t actorId = 0;
+            const uint16_t actorIdSize = decompressLEB128(address->buffer + 1, address->len - 1, &actorId);
+            PARSER_ASSERT_OR_ERROR(actorIdSize > 0, parser_invalid_address)
+            // At least 1 byte in subaddress
+            PARSER_ASSERT_OR_ERROR(address->len > actorIdSize + 1, parser_invalid_address)
+            break;
+        }
         default:
             return parser_invalid_address;
     }
@@ -192,29 +204,41 @@ __Z_INLINE parser_error_t readBigInt(bigint_t *bigint, CborValue *value) {
     return parser_ok;
 }
 
+static parser_error_t renderByteString(uint8_t *in, uint16_t inLen,
+                          char *outVal, uint16_t outValLen,
+                          uint8_t pageIdx, uint8_t *pageCount) {
+    const uint32_t len = inLen * 2;
+
+    // check bounds
+    if (inLen > 0 && inLen <= STR_BUF_LEN) {
+        char hexStr[STR_BUF_LEN * 2 + 1] = {0};
+        const uint32_t count = array_to_hexstr(hexStr, sizeof(hexStr), in, inLen);
+        PARSER_ASSERT_OR_ERROR(count == len, parser_value_out_of_range)
+        CHECK_APP_CANARY()
+
+        pageString(outVal, outValLen, hexStr, pageIdx, pageCount);
+        CHECK_APP_CANARY()
+        return parser_ok;
+    }
+
+    return parser_value_out_of_range;
+}
+
 parser_error_t printValue(const struct CborValue *value,
                           char *outVal, uint16_t outValLen,
                           uint8_t pageIdx, uint8_t *pageCount) {
-    uint8_t buff[200];
+    uint8_t buff[STR_BUF_LEN];
     size_t buffLen = sizeof(buff);
     MEMZERO(buff, sizeof(buff));
 
     snprintf(outVal, outValLen, "-- EMPTY --");
-
     switch (value->type) {
         case CborByteStringType: {
             CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(value, buff, &buffLen, NULL /* next */))
             CHECK_APP_CANARY()
 
             if (buffLen > 0) {
-                char hexStr[401];
-                MEMZERO(hexStr, sizeof(hexStr));
-                size_t count = array_to_hexstr(hexStr, sizeof(hexStr), buff, buffLen);
-                PARSER_ASSERT_OR_ERROR(count == buffLen * 2, parser_value_out_of_range)
-                CHECK_APP_CANARY()
-
-                pageString(outVal, outValLen, hexStr, pageIdx, pageCount);
-                CHECK_APP_CANARY()
+                CHECK_PARSER_ERR(renderByteString(buff, buffLen, outVal, outValLen, pageIdx, pageCount))
             }
             break;
         }
@@ -233,8 +257,20 @@ parser_error_t printValue(const struct CborValue *value,
             int64_to_str(outVal, outValLen, paramValue);
             break;
         }
+        // Add support to render fields tagged as Tag(42) as described here: https://github.com/ipld/cid-cbor/
+        case CborTagType: {
+            CborTag tag;
+            CHECK_CBOR_MAP_ERR(cbor_value_get_tag(value, &tag))
+            if (tag == TAG_CID && buffLen > 0) {
+                CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(value, buff, &buffLen, NULL /* next */))
+                CHECK_APP_CANARY()
+                CHECK_PARSER_ERR(renderByteString(buff, buffLen, outVal, outValLen, pageIdx, pageCount))
+                break;
+            }
+        }
         default:
             snprintf(outVal, outValLen, "Type: %d", value->type);
+            return parser_unexpected_type;
     }
     return parser_ok;
 }

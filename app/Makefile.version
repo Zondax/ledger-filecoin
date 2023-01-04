@@ -1,0 +1,6 @@
+# This is the major version of this release
+APPVERSION_M=0
+# This is the minor version of this release
+APPVERSION_N=22
+# This is the patch version of this release
+APPVERSION_P=7
