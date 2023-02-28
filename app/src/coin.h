@@ -20,6 +20,7 @@ extern "C" {
 #endif
 
 #define CLA                             0x06
+#define CLA_ETH                         0xE0
 
 #include <stdint.h>
 #include <stddef.h>

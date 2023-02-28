@@ -57,7 +57,7 @@ ifeq ($(COIN),FIL)
 # Main app configuration
 DEFINES += APP_CONSUMER
 APPNAME = "Filecoin"
-APPPATH = "44'/461'"
+APPPATH = "44'/461'" --path "44'/60'"
 
 else ifeq ($(COIN),FIL_validator)
 else
