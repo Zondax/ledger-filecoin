@@ -19,7 +19,9 @@
 #include "coin.h"
 #include "zxerror.h"
 
-void tx_initialize();
+// transaction initializer for the buffer and transaction type.
+void tx_initialize_fil();
+void tx_initialize_eth();
 
 /// Clears the transaction buffer
 void tx_reset();
@@ -52,3 +54,5 @@ zxerr_t tx_getItem(int8_t displayIdx,
                    char *outKey, uint16_t outKeyLen,
                    char *outValue, uint16_t outValueLen,
                    uint8_t pageIdx, uint8_t *pageCount);
+
+zxerr_t tx_compute_eth_v(unsigned int info, uint8_t *v);

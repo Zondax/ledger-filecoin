@@ -18,7 +18,8 @@
 
 #include <stdbool.h>
 #include "apdu_codes.h"
-
+//                                             | transaction
+// e00400003f048000002c8000003c8000000080000001ed01856d6e2edc008252089428ee52a8f3d6e5d15f8b131996950d7f296c7952872bd72a248740008082a86a8080
 #define OFFSET_CLA                      0
 #define OFFSET_INS                      1  //< Instruction offset
 #define OFFSET_P1                       2  //< P1
@@ -43,8 +44,6 @@
 #define INS_GET_ADDR_SECP256K1          0x01
 #define INS_SIGN_SECP256K1              0x02
 #define INS_SIGN_ETH                    0x04
-
-#define OFFSET_PAYLOAD_TYPE OFFSET_P1
 
 void app_init();
 

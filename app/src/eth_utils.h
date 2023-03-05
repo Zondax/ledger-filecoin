@@ -27,10 +27,11 @@ extern "C" {
 
 typedef enum RlpError {
   rlp_ok = 0,
-  empty_buffer,
-  invalid_rlp_data,
-  no_rlp_data
+  rlp_no_data,
+  rlp_invalid_data,
 } rlp_error_t;
+
+
 
 // Add two numbers returning UINT64_MAX if overflows
 uint64_t saturating_add(uint64_t a, uint64_t b);
@@ -39,8 +40,13 @@ uint64_t saturating_add(uint64_t a, uint64_t b);
 // Gets the number of bytes read and the number of bytes to read
 //
 // Returns false if there is a error in the rlp encoded data, true otherwise.
-rlp_error_t get_tx_rlp_len(uint8_t *buffer, uint64_t len, uint64_t *read,
+rlp_error_t get_tx_rlp_len(uint8_t *buffer, uint32_t len, uint64_t *read,
                            uint64_t *to_read);
+
+// Use to decode rlp data pointed by data.
+// sets item to point to encoded data, and sets its len.
+// indicates amount of bytes read through read ptr
+rlp_error_t parse_rlp_item(uint8_t *bytes, uint32_t dataLen, uint8_t *item, uint32_t *item_len);
 
 // converts a big endian stream of bytes to an u64 number.
 // returns 0 on success, a negative number otherwise

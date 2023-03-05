@@ -29,6 +29,8 @@ extern "C" {
 
 #define MAX_SUPPORT_METHOD      50
 #define MAX_PARAMS_BUFFER_SIZE  200
+#define ETH_ADDRESS_LEN         20
+#define MAX_CHAIN_LEN           UINT64_MAX
 
 
 // https://github.com/filecoin-project/lotus/blob/65c669b0f2dfd8c28b96755e198b9cdaf0880df8/chain/address/address.go#L36
@@ -61,6 +63,71 @@ typedef struct {
     uint8_t numparams;
     uint8_t params[MAX_PARAMS_BUFFER_SIZE];
 } parser_tx_t;
+
+// simple struct that holds a bigint(256) 
+typedef struct {
+    uint8_t *num;
+    // although bigInts are defined in 
+    // ethereum as 256 bits,
+    // it is possible that it is smaller.
+    uint32_t len;
+} eth_big_int_t;
+
+// chain_id
+typedef struct {
+    uint8_t *chain;
+    uint32_t len;
+} chain_id_t;
+
+// // ripemd160(sha256(compress(secp256k1.publicKey()))
+// #[derive(Clone, Copy, PartialEq, Eq)]
+// #[cfg_attr(any(test, feature = "derive-debug"), derive(Debug))]
+// pub struct Address<'b>(&'b [u8; ADDRESS_LEN]);
+typedef struct {
+    uint8_t addr[ETH_ADDRESS_LEN];
+} eth_addr_t;
+
+// Type that holds the common fields 
+// for legacy and eip2930 transactions
+typedef struct {
+    eth_big_int_t nonce;
+    eth_big_int_t gas_price;
+    eth_big_int_t gas_limit;
+    eth_addr_t address;
+    eth_big_int_t value;
+    uint8_t *data;
+    uint32_t dataLen;
+} eth_base_t;
+
+typedef struct {
+    eth_base_t base_fields;
+    uint8_t *r;
+    uint32_t r_len;
+    uint8_t *s;
+    uint32_t s_len;
+} legacy_tx_t;
+
+// EIP 2718 TransactionType
+// Valid transaction types should be in [0x00, 0x7f]
+typedef enum eth_tx_type_t {
+  eip2930 = 0x01,
+  eip1559 = 0x02,
+  // Legacy tx type is greater than or equal to 0xc0.
+  legacy = 0xc0
+} eth_tx_type_t;
+
+typedef struct {
+    eth_tx_type_t tx_type;
+    chain_id_t chain_id;
+    // lets use an anonymous 
+    // union to hold the 3 possible types of transactions:
+    // legacy, eip2930, eip1559
+    union {
+        legacy_tx_t legacy;
+    };
+ 
+} eth_tx_t;
+
 
 #ifdef __cplusplus
 }
