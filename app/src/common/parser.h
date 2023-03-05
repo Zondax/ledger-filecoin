@@ -47,7 +47,7 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
                               char *outVal, uint16_t outValLen,
                               uint8_t pageIdx, uint8_t *pageCount);
 
-parser_error_t parser_compute_eth_v(unsigned int info, uint8_t *v);
+parser_error_t parser_compute_eth_v(parser_context_t *ctx, unsigned int info, uint8_t *v);
 #ifdef __cplusplus
 }
 #endif

@@ -41,7 +41,8 @@ uint8_t _getNumItemsEth(const parser_context_t *ctx);
 
 parser_error_t _validateTxEth(const parser_context_t *ctx);
 
-parser_error_t _computeV(unsigned int info, uint8_t *v);
+// parser_error_t _computeV(unsigned int info, uint8_t *v);
+parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int info, uint8_t *v);
 
 #ifdef __cplusplus
 }

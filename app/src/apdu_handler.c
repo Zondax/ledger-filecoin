@@ -17,7 +17,6 @@
 
 #include "app_main.h"
 
-// #include <cstdio>
 #include <os.h>
 #include <os_io_seproxyhal.h>
 #include <string.h>
@@ -45,9 +44,7 @@ void extractHDPath(uint32_t rx, uint32_t offset, uint32_t path_len) {
     hdPath_len = path_len;
 }
 
-void
-
-extract_fil_path(uint32_t rx, uint32_t offset)
+void extract_fil_path(uint32_t rx, uint32_t offset)
 {
     tx_initialized = false;
     extractHDPath(rx, offset, HDPATH_LEN_DEFAULT);
@@ -63,8 +60,7 @@ extract_fil_path(uint32_t rx, uint32_t offset)
     }
 }
 
-void
-extract_eth_path(uint32_t rx, uint32_t offset)
+void extract_eth_path(uint32_t rx, uint32_t offset)
 {
     char path_values[100] = {0};
 
@@ -81,8 +77,7 @@ extract_eth_path(uint32_t rx, uint32_t offset)
     }
 }
 
-bool
-process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
+bool process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
 {
 
     const uint8_t payloadType = G_io_apdu_buffer[OFFSET_PAYLOAD_TYPE];
@@ -130,11 +125,8 @@ process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
     THROW(APDU_CODE_INVALIDP1P2);
 }
 
-bool
-process_chunk_eth(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
+bool process_chunk_eth(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
 {
-    zemu_log_stack("process_chunk_eth***");
-
     const uint8_t payloadType = G_io_apdu_buffer[OFFSET_PAYLOAD_TYPE];
 
     if (G_io_apdu_buffer[OFFSET_P2] != 0) {
@@ -158,13 +150,9 @@ process_chunk_eth(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
             tx_initialize_eth();
             tx_reset();
             extract_eth_path(rx, OFFSET_DATA);
-            uint8_t m[100] = {0};
             // there is not warranties that the first chunk 
             // contains the serialized path only;
             // so we need to offset the data to point to the first transaction byte 
-            snprintf(m, 100, "offset_data: %X\n", *data);
-            zemu_log_stack(m);
-            MEMZERO(m, 100);
             uint32_t path_len = sizeof(uint32_t) * HDPATH_ETH_LEN_DEFAULT;
 
             data += path_len + 1;
@@ -174,29 +162,16 @@ process_chunk_eth(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
 
             // now process the chunk
             len -= path_len + 1;
-            snprintf(m, 100, "data_len: %d\n", len);
-            zemu_log_stack(m);
-            MEMZERO(m, 100);
             if (get_tx_rlp_len(data, len, &read, &to_read) != rlp_ok) {
-                zemu_log_stack("Error rlp_len***");
                 THROW(APDU_CODE_DATA_INVALID);
             }
 
             // get remaining data len
             max_len = saturating_add(read, to_read);
-            snprintf(m, 100, "read: %d\n", read);
-            zemu_log_stack(m);
-            MEMZERO(m, 100);
-            snprintf(m, 100, "to_read: %d\n", to_read);
-            zemu_log_stack(m);
-            MEMZERO(m, 100);
-
-            if (max_len > len)
-                max_len = len;
+            max_len = MIN(max_len, len);
 
             added = tx_append(data, max_len);
             if (added != max_len) {
-                zemu_log_stack("buffer_too_small");
                 THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
             }
 
@@ -205,12 +180,10 @@ process_chunk_eth(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
             // if the number of bytes read and the number of bytes to read
             //  is the same as what we read...
             if ((saturating_add(read, to_read) - len) == 0) {
-                zemu_log_stack("done_0!***");
                 return true;
             }
             return false;
         case P1_ETH_MORE:
-            zemu_log_stack("P1_ETH_MORE***");
             if (!tx_initialized) {
                 THROW(APDU_CODE_TX_NOT_INITIALIZED);
             }
@@ -242,7 +215,6 @@ process_chunk_eth(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
             // check if this chunk was the last one
             if (missing - len == 0) {
                 tx_initialized = false;
-                zemu_log_stack("done!***");
                 return true;
             }
 
@@ -251,8 +223,7 @@ process_chunk_eth(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
     THROW(APDU_CODE_INVALIDP1P2);
 }
 
-__Z_INLINE void
-handleGetAddr(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
+__Z_INLINE void handleGetAddr(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
 {
     extract_fil_path(rx, OFFSET_DATA);
 
@@ -273,8 +244,7 @@ handleGetAddr(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
     THROW(APDU_CODE_OK);
 }
 
-__Z_INLINE void
-handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
+__Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
 {
     if (!process_chunk(tx, rx)) {
         THROW(APDU_CODE_OK);
@@ -298,10 +268,8 @@ handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
     *flags |= IO_ASYNCH_REPLY;
 }
 
-__Z_INLINE void
-handleSignEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
+__Z_INLINE void handleSignEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
 {
-    zemu_log_stack("handleSignEth***");
     if (!process_chunk_eth(tx, rx)) {
         THROW(APDU_CODE_OK);
     }
@@ -324,8 +292,7 @@ handleSignEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
     *flags |= IO_ASYNCH_REPLY;
 }
 
-void
-handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
+void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
 {
     uint16_t sw = 0;
 

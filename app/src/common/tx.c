@@ -95,11 +95,9 @@ const char *tx_parse() {
     CHECK_APP_CANARY()
 
     if (err != parser_ok) {
-        zemu_log("parser_validate::failed\n");
         return parser_getErrorDescription(err);
     }
 
-    zemu_log("parser_validate::ok\n");
     return NULL;
 }
 
@@ -144,7 +142,7 @@ zxerr_t tx_getItem(int8_t displayIdx,
 }
 
 zxerr_t tx_compute_eth_v(unsigned int info, uint8_t *v) {
-    parser_error_t err = parser_compute_eth_v(info, v);
+    parser_error_t err = parser_compute_eth_v(&ctx_parsed_tx, info, v);
 
     if (err != parser_ok)
         return zxerr_unknown;

@@ -16,6 +16,7 @@
 
 #include "crypto.h"
 #include "coin.h"
+#include "tx.h"
 #include "zxmacros.h"
 #include "base32.h"
 #include "zxformat.h"
@@ -199,7 +200,7 @@ zxerr_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *me
 }
 
 // Sign an ethereum related transaction
-zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen, uint16_t *sigSize, unsigned int *info) {
+zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen, uint16_t *sigSize) {
     if (signatureMaxlen < sizeof(signature_t) ) {
         return zxerr_invalid_crypto_settings;
     }
@@ -207,17 +208,22 @@ zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t
     uint8_t message_digest[KECCAK_256_SIZE] = {0};
     keccak_digest(message, messageLen, message_digest, KECCAK_256_SIZE);
 
-    *info = 0;
+    unsigned int info = 0;
     
-    zxerr_t error = _sign(buffer, signatureMaxlen, message_digest, KECCAK_256_SIZE, sigSize, hdPath, HDPATH_ETH_LEN_DEFAULT, info);
+    zxerr_t error = _sign(buffer, signatureMaxlen, message_digest, KECCAK_256_SIZE, sigSize, hdPath, HDPATH_ETH_LEN_DEFAULT, &info);
     if (error != zxerr_ok){
         return zxerr_invalid_crypto_settings;
     }
 
+    signature_t *const signature = (signature_t *) buffer;
 
-    // TODO: we need more info from the transaction type to compute the 
-    // recovery component (V)
-    // signature_t *const signature = (signature_t *) buffer;
+    // we need to fix V 
+    zxerr_t err = tx_compute_eth_v(info, &(signature->v));
+
+    if (error != zxerr_ok){
+        return zxerr_invalid_crypto_settings;
+    }
+
     return zxerr_ok;
 }
 

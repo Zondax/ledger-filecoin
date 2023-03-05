@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include <zxmacros.h>
+#include "common/parser_common.h"
 #include "parser_impl.h"
 #include "parser_impl_eth.h"
 #include "bignum.h"
@@ -311,6 +312,6 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
           return parser_unsupported_tx;
     }
 }
-parser_error_t parser_compute_eth_v(unsigned int info, uint8_t *v) {
-    return _computeV( info, v);
+parser_error_t parser_compute_eth_v(parser_context_t *ctx, unsigned int info, uint8_t *v) {
+    return _computeV(ctx , &eth_tx_obj, info, v);
 }

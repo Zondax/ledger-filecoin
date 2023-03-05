@@ -36,6 +36,9 @@ typedef enum RlpError {
 // Add two numbers returning UINT64_MAX if overflows
 uint64_t saturating_add(uint64_t a, uint64_t b);
 
+// Add two numbers returning UINT32_MAX if overflows
+uint32_t saturating_add_u32(uint32_t a, uint32_t b);
+
 /// Returns the number of bytes read and the number of bytes to read
 // Gets the number of bytes read and the number of bytes to read
 //
@@ -44,9 +47,9 @@ rlp_error_t get_tx_rlp_len(uint8_t *buffer, uint32_t len, uint64_t *read,
                            uint64_t *to_read);
 
 // Use to decode rlp data pointed by data.
-// sets item to point to encoded data, and sets its len.
+// sets itemOffset to point to encoded data like item = data[itemOffset], and sets its len.
 // indicates amount of bytes read through read ptr
-rlp_error_t parse_rlp_item(uint8_t *bytes, uint32_t dataLen, uint8_t *item, uint32_t *item_len);
+rlp_error_t parse_rlp_item(uint8_t *data, uint32_t dataLen, uint32_t *read, uint32_t *item_len);
 
 // converts a big endian stream of bytes to an u64 number.
 // returns 0 on success, a negative number otherwise

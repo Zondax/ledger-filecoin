@@ -66,7 +66,7 @@ typedef struct {
 
 // simple struct that holds a bigint(256) 
 typedef struct {
-    uint8_t *num;
+    uint32_t offset;
     // although bigInts are defined in 
     // ethereum as 256 bits,
     // it is possible that it is smaller.
@@ -75,14 +75,11 @@ typedef struct {
 
 // chain_id
 typedef struct {
-    uint8_t *chain;
+    uint32_t offset;
     uint32_t len;
 } chain_id_t;
 
-// // ripemd160(sha256(compress(secp256k1.publicKey()))
-// #[derive(Clone, Copy, PartialEq, Eq)]
-// #[cfg_attr(any(test, feature = "derive-debug"), derive(Debug))]
-// pub struct Address<'b>(&'b [u8; ADDRESS_LEN]);
+// ripemd160(sha256(compress(secp256k1.publicKey()))
 typedef struct {
     uint8_t addr[ETH_ADDRESS_LEN];
 } eth_addr_t;
@@ -95,17 +92,9 @@ typedef struct {
     eth_big_int_t gas_limit;
     eth_addr_t address;
     eth_big_int_t value;
-    uint8_t *data;
+    uint32_t data_at;
     uint32_t dataLen;
 } eth_base_t;
-
-typedef struct {
-    eth_base_t base_fields;
-    uint8_t *r;
-    uint32_t r_len;
-    uint8_t *s;
-    uint32_t s_len;
-} legacy_tx_t;
 
 // EIP 2718 TransactionType
 // Valid transaction types should be in [0x00, 0x7f]
@@ -123,11 +112,10 @@ typedef struct {
     // union to hold the 3 possible types of transactions:
     // legacy, eip2930, eip1559
     union {
-        legacy_tx_t legacy;
+        eth_base_t legacy;
     };
  
 } eth_tx_t;
-
 
 #ifdef __cplusplus
 }
