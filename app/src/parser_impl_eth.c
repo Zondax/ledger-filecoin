@@ -241,6 +241,7 @@ parser_error_t _getItemEth(const parser_context_t *ctx,
             uint8_t pageIdx,
             uint8_t *pageCount)
 {
+    zemu_log_stack("_getItemEth");
 
     if (displayIdx != 0)
         return parser_unexpected_number_items;
@@ -253,6 +254,7 @@ parser_error_t _getItemEth(const parser_context_t *ctx,
     char hex[65] = { 0 };
     array_to_hexstr(hex, 65, hash, 32);
 
+    snprintf(outKey, outKeyLen, "Eth-Hash:");
 
     pageString(outVal, outValLen, hex, pageIdx, pageCount);
 
