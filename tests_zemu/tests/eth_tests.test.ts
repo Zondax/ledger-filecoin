@@ -108,9 +108,9 @@ describe.each(models)('EthereumTx [%s]; sign', function (m) {
       // do not wait here..
       const signatureRequest = app.signETHTransaction(ETH_PATH, msg, null);
       // Wait until we are not in the main menu
-      // await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
-      // await sim.compareSnapshotsAndApprove(".", `${m.prefix.toLowerCase()}-eth-${data.name}`)
+      await sim.compareSnapshotsAndApprove(".", `${m.prefix.toLowerCase()}-eth-${data.name}`)
 
       let resp = await signatureRequest;
       console.log(resp);
