@@ -241,8 +241,6 @@ parser_error_t _getItemEth(const parser_context_t *ctx,
             uint8_t pageIdx,
             uint8_t *pageCount)
 {
-    zemu_log_stack("_getItemEth");
-
     if (displayIdx != 0)
         return parser_unexpected_number_items;
 
@@ -271,13 +269,18 @@ uint8_t _getNumItemsEth(__Z_UNUSED const parser_context_t *ctx)
 }
 
 parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int info, uint8_t *v) {
+    uint8_t parity = 0;
+    if (info & CX_ECCINFO_PARITY_ODD) {
+        parity = 1;
+    }
     switch (eth_tx_obj.tx_type) {
         case eip2930:
         case eip1559: {
-            *v = info == 1;
+            *v = parity;
             break;
         }
         case legacy: {
+            uint8_t gtn = (info & CX_ECCINFO_xGTn) == 1;
             // we need chainID info
             if (tx_obj->chain_id.len == 0) {
                 // according to app-ethereum this is the legacy non eip155 conformant
@@ -287,7 +290,7 @@ parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int i
                 // see https://bitcoin.stackexchange.com/a/112489
                 //     https://ethereum.stackexchange.com/a/113505
                 //     https://eips.ethereum.org/EIPS/eip-155
-                *v = 27 + (info == 1);
+                *v = 27 + parity;
 
             } else {
                 // app-ethereum reads the first 4 bytes then cast it to an u8
@@ -296,17 +299,24 @@ parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int i
                 // which is returned with the signature
                 uint32_t len = MIN(UINT32_MAX, tx_obj->chain_id.len);
                 uint8_t *chain = ctx->buffer + tx_obj->chain_id.offset;
+
                 uint64_t id = 0;
+
                 if (be_bytes_to_u64(chain, len, &id) != rlp_ok) {
                     return parser_invalid_chain_id;
                 }
-                uint32_t cv = 35 + (info == 1);
-                cv = saturating_add_u32(cv, (uint32_t)id << 1);
+
+                uint32_t cv = 35 + parity;
+                cv = saturating_add_u32(cv, (uint32_t)id * 2);
                 *v = (uint8_t)cv;
             }
+            if (gtn) 
+                *v += 2;
+
             break;
         }
-
+        default:
+            return parser_unexepected_error;
     }
     return parser_ok;
 }

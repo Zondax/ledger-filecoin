@@ -19,6 +19,7 @@
 
 #include <os.h>
 #include <os_io_seproxyhal.h>
+#include <stdio.h>
 #include <string.h>
 #include <ux.h>
 
@@ -62,11 +63,21 @@ void extract_fil_path(uint32_t rx, uint32_t offset)
 
 void extract_eth_path(uint32_t rx, uint32_t offset)
 {
-    char path_values[100] = {0};
-
     tx_initialized = false;
 
-    extractHDPath(rx, offset, HDPATH_ETH_LEN_DEFAULT);
+    uint32_t path_len = *(G_io_apdu_buffer + offset);
+
+    if (path_len > MAX_BIP32_PATH || path_len < 1)
+        THROW(APDU_CODE_WRONG_LENGTH);
+
+    // first byte at OFFSET_DATA is the path len, so we skip this
+    uint8_t *path_data = G_io_apdu_buffer + offset + 1;
+
+    // hw-app-eth serializes path as BE numbers
+    for (uint8_t i = 0; i < path_len; i++) {
+        hdPath[i] = U4BE(path_data, 0);
+        path_data += sizeof(uint32_t);
+    }
 
     const bool mainnet =
       hdPath[0] == HDPATH_ETH_0_DEFAULT && hdPath[1] == HDPATH_ETH_1_DEFAULT;
@@ -75,6 +86,9 @@ void extract_eth_path(uint32_t rx, uint32_t offset)
     if (!mainnet) {
         THROW(APDU_CODE_DATA_INVALID);
     }
+
+    // set the hdPath len 
+    hdPath_len = path_len;
 }
 
 bool process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
@@ -153,8 +167,9 @@ bool process_chunk_eth(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
             // there is not warranties that the first chunk 
             // contains the serialized path only;
             // so we need to offset the data to point to the first transaction byte 
-            uint32_t path_len = sizeof(uint32_t) * HDPATH_ETH_LEN_DEFAULT;
+            uint32_t path_len = sizeof(uint32_t) * hdPath_len;
 
+            // plus the first offset data containing the path len
             data += path_len + 1;
             if (len < path_len ) {
                 THROW(APDU_CODE_WRONG_LENGTH);
@@ -270,6 +285,7 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
 
 __Z_INLINE void handleSignEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
 {
+    zemu_log_stack("handleSignEth");
     if (!process_chunk_eth(tx, rx)) {
         THROW(APDU_CODE_OK);
     }

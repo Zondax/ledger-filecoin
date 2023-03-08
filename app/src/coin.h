@@ -25,6 +25,7 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
+#define MAX_BIP32_PATH           10
 #define HDPATH_LEN_DEFAULT       5
 
 // Ethereum: path"m/44'/60'/0'/0'"
@@ -36,8 +37,9 @@ extern "C" {
 #define HDPATH_3_DEFAULT     (0u)
 #define HDPATH_4_DEFAULT     (0u)
 
-#define HDPATH_ETH_0_DEFAULT (0x8004u)
-#define HDPATH_ETH_1_DEFAULT (0x802Cu)
+// #define HDPATH_ETH_0_DEFAULT (0x8004u)
+#define HDPATH_ETH_0_DEFAULT (0x80000000u | 0x2cu)
+#define HDPATH_ETH_1_DEFAULT (0x80000000u | 0x3cu)
 
 #define HDPATH_0_TESTNET     (0x80000000u | 0x2cu)
 #define HDPATH_1_TESTNET     (0x80000000u | 0x1u)

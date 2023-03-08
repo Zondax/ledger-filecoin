@@ -21,7 +21,7 @@
 #include "base32.h"
 #include "zxformat.h"
 
-uint32_t hdPath[HDPATH_LEN_DEFAULT];
+uint32_t hdPath[MAX_BIP32_PATH];
 uint32_t hdPath_len;
 
 bool isTestnet() {
@@ -32,10 +32,11 @@ bool isTestnet() {
 #if defined(TARGET_NANOS) || defined(TARGET_NANOX) || defined(TARGET_NANOS2)
 #include "cx.h"
 
-zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *pubKey, uint16_t pubKeyLen) {
-    cx_ecfp_public_key_t cx_publicKey;
-    cx_ecfp_private_key_t cx_privateKey;
-    uint8_t privateKeyData[32];
+zxerr_t crypto_extractPublicKey(const uint32_t path[MAX_BIP32_PATH], uint8_t *pubKey, uint16_t pubKeyLen) {
+
+    cx_ecfp_public_key_t cx_publicKey = {0};
+    cx_ecfp_private_key_t cx_privateKey = {0};
+    uint8_t privateKeyData[32] = {0};
 
     if (pubKeyLen < SECP256K1_PK_LEN) {
         return zxerr_invalid_crypto_settings;
@@ -47,12 +48,13 @@ zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t
         TRY {
             os_perso_derive_node_bip32(CX_CURVE_256K1,
                                        path,
-                                       HDPATH_LEN_DEFAULT,
+                                       hdPath_len,
                                        privateKeyData, NULL);
 
             cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey);
             cx_ecfp_init_public_key(CX_CURVE_256K1, NULL, 0, &cx_publicKey);
             cx_ecfp_generate_pair(CX_CURVE_256K1, &cx_publicKey, &cx_privateKey, 1);
+
         }
         CATCH_OTHER(e) {
             error = zxerr_ledger_api_error;
@@ -69,7 +71,6 @@ zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t
     }
 
     memcpy(pubKey, cx_publicKey.W, SECP256K1_PK_LEN);
-
     return zxerr_ok;
 }
 
@@ -112,9 +113,9 @@ __Z_INLINE int blake_hash_cid(const unsigned char *in, unsigned int inLen,
 }
 
 typedef struct {
+    uint8_t v;
     uint8_t r[32];
     uint8_t s[32];
-    uint8_t v;
 
     // DER signature max size should be 73
     // https://bitcoin.stackexchange.com/questions/77191/what-is-the-maximum-size-of-a-der-encoded-ecdsa-signature#77192
@@ -122,12 +123,13 @@ typedef struct {
 
 } __attribute__((packed)) signature_t;
 
+unsigned int info = 0;
+
 
 zxerr_t _sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen, uint16_t *sigSize, const uint32_t *path, uint32_t pathLen, unsigned int *info) {
     if (signatureMaxlen < sizeof(signature_t) || pathLen == 0 ) {
         return zxerr_invalid_crypto_settings;
-    }
-    
+    } 
 
     cx_ecfp_private_key_t cx_privateKey;
     uint8_t privateKeyData[32];
@@ -201,24 +203,22 @@ zxerr_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *me
 
 // Sign an ethereum related transaction
 zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen, uint16_t *sigSize) {
+
     if (signatureMaxlen < sizeof(signature_t) ) {
         return zxerr_invalid_crypto_settings;
     }
 
     uint8_t message_digest[KECCAK_256_SIZE] = {0};
     keccak_digest(message, messageLen, message_digest, KECCAK_256_SIZE);
-
-    unsigned int info = 0;
     
-    zxerr_t error = _sign(buffer, signatureMaxlen, message_digest, KECCAK_256_SIZE, sigSize, hdPath, HDPATH_ETH_LEN_DEFAULT, &info);
+    zxerr_t error = _sign(buffer, signatureMaxlen, message_digest, KECCAK_256_SIZE, sigSize, hdPath, hdPath_len, &info);
     if (error != zxerr_ok){
         return zxerr_invalid_crypto_settings;
     }
 
-    signature_t *const signature = (signature_t *) buffer;
-
     // we need to fix V 
-    zxerr_t err = tx_compute_eth_v(info, &(signature->v));
+    zxerr_t err = tx_compute_eth_v(info, buffer);
+    *sigSize = sizeof_field(signature_t, r) + sizeof_field(signature_t, s) + 1;
 
     if (error != zxerr_ok){
         return zxerr_invalid_crypto_settings;
