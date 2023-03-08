@@ -71,7 +71,7 @@ parser_error_t readAddress(parser_context_t *ctx, eth_addr_t *addr) {
 
     MEMCPY(addr->addr, &ctx->buffer[offset], ETH_ADDRESS_LEN);
 
-    // update offset 
+    // update offset
     return parser_ok;
 }
 
@@ -92,13 +92,13 @@ parser_error_t parse_field(parser_context_t *ctx, uint32_t *fieldOffset, uint32_
     if (*fieldOffset > ctx->bufferLen)
         return parser_invalid_rlp_data;
 
-    ctx->offset += read + *len; 
+    ctx->offset += read + *len;
 
     return parser_ok;
 }
 
 parser_error_t parse_legacy_tx(parser_context_t *ctx, eth_tx_t *tx_obj) {
-    // parse nonce 
+    // parse nonce
     CHECK_PARSER_ERR(readBigInt(ctx, &(tx_obj->legacy.nonce)));
     // parse gas_price
     CHECK_PARSER_ERR(readBigInt(ctx, &(tx_obj->legacy.gas_price)));
@@ -114,7 +114,7 @@ parser_error_t parse_legacy_tx(parser_context_t *ctx, eth_tx_t *tx_obj) {
     // - legacy no EIP155 which means no chain_id
     // - legacy EIP155 in which case should come with empty r and s values
     if (ctx->bufferLen <= ctx->offset) {
-        // there is not more data no eip155 compliant tx 
+        // there is not more data no eip155 compliant tx
         tx_obj->chain_id.len = 0;
         return parser_ok;
     }
@@ -126,7 +126,7 @@ parser_error_t parse_legacy_tx(parser_context_t *ctx, eth_tx_t *tx_obj) {
         return parser_invalid_chain_id;
 
     // r and s if not empty, should contain only one value which must be zero.
-    // Usually for an eip155 transaction the last two bytes represent r and s and are 0x8080 
+    // Usually for an eip155 transaction the last two bytes represent r and s and are 0x8080
     uint32_t r_len = 0;
     uint32_t s_len = 0;
     uint32_t r_offset = 0;
@@ -191,7 +191,7 @@ parser_error_t _readEth(parser_context_t *ctx, eth_tx_t *tx_obj)
         return parser_unsupported_tx;
 
     if (marker == eip2930 || marker == eip1559)
-        ctx->offset += 1; 
+        ctx->offset += 1;
 
 
     // read the first byte, it indicates if transaction falls in one of the following:
@@ -239,8 +239,9 @@ parser_error_t _getItemEth(const parser_context_t *ctx,
             uint8_t pageIdx,
             uint8_t *pageCount)
 {
-    if (displayIdx != 0)
-        return parser_unexpected_number_items;
+    if (displayIdx != 0) {
+        return parser_display_idx_out_of_range;
+    }
 
     // we need to get keccak hash of the transaction data
     uint8_t hash[32] = { 0 };
