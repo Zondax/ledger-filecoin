@@ -184,8 +184,6 @@ parser_error_t parseEthTx(parser_context_t *ctx, eth_tx_t *tx_obj) {
 
 parser_error_t _readEth(parser_context_t *ctx, eth_tx_t *tx_obj)
 {
-    zemu_log_stack("_readEth");
-
     uint8_t marker = ctx->buffer[0];
     uint32_t start = ctx->offset;
 
@@ -269,54 +267,50 @@ uint8_t _getNumItemsEth(__Z_UNUSED const parser_context_t *ctx)
 }
 
 parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int info, uint8_t *v) {
-    uint8_t parity = 0;
-    if (info & CX_ECCINFO_PARITY_ODD) {
-        parity = 1;
+
+    uint32_t id_len = tx_obj->chain_id.len;
+    uint8_t type = eth_tx_obj.tx_type;
+
+    // uint8_t parity = 0;
+    uint8_t parity = (info & CX_ECCINFO_PARITY_ODD) == 1;
+
+    if (type == eip2930 || type == eip1559 ){
+        *v = parity;
+        return parser_ok;
     }
-    switch (eth_tx_obj.tx_type) {
-        case eip2930:
-        case eip1559: {
-            *v = parity;
-            break;
+
+    // This is the legacy case
+    uint8_t gtn = (info & CX_ECCINFO_xGTn) == 1;
+
+    // we need chainID info
+    if (id_len == 0) {
+        // according to app-ethereum this is the legacy non eip155 conformant
+        // so V should be made before EIP155 which had
+        // 27 + {0, 1}
+        // 27, decided by the parity of Y
+        // see https://bitcoin.stackexchange.com/a/112489
+        //     https://ethereum.stackexchange.com/a/113505
+        //     https://eips.ethereum.org/EIPS/eip-155
+        *v = 27 + parity;
+
+    } else {
+        // app-ethereum reads the first 4 bytes then cast it to an u8
+        // this is not good but it relies on hw-eth-app lib from ledger
+        // to recover the right chain_id from the V component being computed here, and
+        // which is returned with the signature
+        uint32_t len = MIN(UINT32_MAX, tx_obj->chain_id.len);
+        uint8_t *chain = ctx->buffer + tx_obj->chain_id.offset;
+
+        uint64_t id = 0;
+
+        if (be_bytes_to_u64(chain, len, &id) != rlp_ok) {
+            return parser_invalid_chain_id;
         }
-        case legacy: {
-            uint8_t gtn = (info & CX_ECCINFO_xGTn) == 1;
-            // we need chainID info
-            if (tx_obj->chain_id.len == 0) {
-                // according to app-ethereum this is the legacy non eip155 conformant
-                // so V should be made before EIP155 which had
-                // 27 + {0, 1}
-                // 27, decided by the parity of Y
-                // see https://bitcoin.stackexchange.com/a/112489
-                //     https://ethereum.stackexchange.com/a/113505
-                //     https://eips.ethereum.org/EIPS/eip-155
-                *v = 27 + parity;
 
-            } else {
-                // app-ethereum reads the first 4 bytes then cast it to an u8
-                // this is not good but it relies on hw-eth-app lib from ledger
-                // to recover the right chain_id from the V component being computed here, and
-                // which is returned with the signature
-                uint32_t len = MIN(UINT32_MAX, tx_obj->chain_id.len);
-                uint8_t *chain = ctx->buffer + tx_obj->chain_id.offset;
-
-                uint64_t id = 0;
-
-                if (be_bytes_to_u64(chain, len, &id) != rlp_ok) {
-                    return parser_invalid_chain_id;
-                }
-
-                uint32_t cv = 35 + parity;
-                cv = saturating_add_u32(cv, (uint32_t)id * 2);
-                *v = (uint8_t)cv;
-            }
-            if (gtn) 
-                *v += 2;
-
-            break;
-        }
-        default:
-            return parser_unexepected_error;
+        uint32_t cv = 35 + parity;
+        cv = saturating_add_u32(cv, (uint32_t)id * 2);
+        *v = (uint8_t)cv;
     }
+
     return parser_ok;
 }
