@@ -290,12 +290,14 @@ parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int i
         // this is not good but it relies on hw-eth-app lib from ledger
         // to recover the right chain_id from the V component being computed here, and
         // which is returned with the signature
-        uint32_t len = MIN(UINT32_MAX, tx_obj->chain_id.len);
+        if (id_len > UINT32_MAX)
+            id_len = UINT32_MAX;
+
         const uint8_t *chain = ctx->buffer + tx_obj->chain_id.offset;
 
         uint64_t id = 0;
 
-        if (be_bytes_to_u64(chain, len, &id) != rlp_ok) {
+        if (be_bytes_to_u64(chain, id_len, &id) != rlp_ok) {
             return parser_invalid_chain_id;
         }
 

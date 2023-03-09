@@ -255,15 +255,6 @@ zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t
     return zxerr_ok;
 }
 
-__Z_INLINE int keccak_hash(const unsigned char *in, unsigned int inLen,
-                          unsigned char *out, unsigned int outLen) {
-    keccak_state s;
-    keccak_init(&s, outLen);
-    keccak_update(&s, in, inLen);
-    keccak_final(&s, out, outLen);
-    return 0;
-}
-
 __Z_INLINE int blake_hash(const unsigned char *in, unsigned int inLen,
                           unsigned char *out, unsigned int outLen) {
     blake2b_state s;
@@ -285,23 +276,6 @@ __Z_INLINE int blake_hash_cid(const unsigned char *in, unsigned int inLen,
     blake2b_final(&s, out, outLen);
 
     return 0;
-}
-
-__Z_INLINE int keccak_hash(const unsigned char *in, unsigned int inLen,
-                          unsigned char *out, unsigned int outLen) {
-    // place holder
-    // empty as it is not used by any c++ 
-    // tests so far
-
-    return 0;
-}
-
-int keccak_digest(const unsigned char *in, unsigned int inLen,
-                          unsigned char *out, unsigned int outLen) {
-    // place holder
-    // empty as it is not used by any c++ 
-    // tests so far
-    return keccak_hash(in, inLen, out, outLen);
 }
 
 int prepareDigestToSign(const unsigned char *in, unsigned int inLen,
@@ -326,6 +300,11 @@ zxerr_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen,
     blake_hash_cid(tmp, BLAKE2B_256_SIZE, message_digest, BLAKE2B_256_SIZE);
 
     return zxerr_ok;
+}
+
+int keccak_digest(const unsigned char *in, unsigned int inLen,
+                          unsigned char *out, unsigned int outLen) {
+    return 0;
 }
 
 #endif
