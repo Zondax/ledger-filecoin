@@ -24,6 +24,8 @@
 #include <stdio.h>
 #include <zxmacros.h>
 
+#define ZXMIN(x, y) ((x) < (y) ? (x) : (y))
+
 eth_tx_t eth_tx_obj;
 
 parser_error_t readBigInt(parser_context_t *ctx, eth_big_int_t *big_int);
@@ -117,8 +119,9 @@ parser_error_t parse_legacy_tx(parser_context_t *ctx, eth_tx_t *tx_obj) {
     // Transaction comes with a chainID so it is EIP155 compliant
     CHECK_PARSER_ERR(readChainID(ctx, &(tx_obj->chain_id)));
 
-    if (tx_obj->chain_id.len == 0 || tx_obj->chain_id.len > MAX_CHAIN_LEN)
+    if (tx_obj->chain_id.len == 0) {
         return parser_invalid_chain_id;
+    }
 
     // r and s if not empty, should contain only one value which must be zero.
     // Usually for an eip155 transaction the last two bytes represent r and s and are 0x8080
@@ -290,7 +293,7 @@ parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int i
         // this is not good but it relies on hw-eth-app lib from ledger
         // to recover the right chain_id from the V component being computed here, and
         // which is returned with the signature
-        uint32_t len = MIN(UINT32_MAX, tx_obj->chain_id.len);
+        uint32_t len = ZXMIN(UINT32_MAX, tx_obj->chain_id.len);
         const uint8_t *chain = ctx->buffer + tx_obj->chain_id.offset;
 
         uint64_t id = 0;

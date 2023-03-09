@@ -129,7 +129,7 @@ unsigned int info = 0;
 zxerr_t _sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen, uint16_t *sigSize, const uint32_t *path, uint32_t pathLen, unsigned int *info) {
     if (signatureMaxlen < sizeof(signature_t) || pathLen == 0 ) {
         return zxerr_invalid_crypto_settings;
-    } 
+    }
 
     cx_ecfp_private_key_t cx_privateKey;
     uint8_t privateKeyData[32];
@@ -196,7 +196,7 @@ zxerr_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *me
     blake_hash_cid(tmp, BLAKE2B_256_SIZE, message_digest, BLAKE2B_256_SIZE);
 
     unsigned int info = 0;
-    
+
     zxerr_t ret = _sign(buffer, signatureMaxlen, message_digest, BLAKE2B_256_SIZE, sigSize, hdPath, HDPATH_LEN_DEFAULT, &info);
     return ret;
 }
@@ -210,13 +210,13 @@ zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t
 
     uint8_t message_digest[KECCAK_256_SIZE] = {0};
     keccak_digest(message, messageLen, message_digest, KECCAK_256_SIZE);
-    
+
     zxerr_t error = _sign(buffer, signatureMaxlen, message_digest, KECCAK_256_SIZE, sigSize, hdPath, hdPath_len, &info);
     if (error != zxerr_ok){
         return zxerr_invalid_crypto_settings;
     }
 
-    // we need to fix V 
+    // we need to fix V
     zxerr_t err = tx_compute_eth_v(info, buffer);
     if (err != zxerr_ok)
         return zxerr_invalid_crypto_settings;
@@ -255,15 +255,6 @@ zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t
     return zxerr_ok;
 }
 
-__Z_INLINE int keccak_hash(const unsigned char *in, unsigned int inLen,
-                          unsigned char *out, unsigned int outLen) {
-    keccak_state s;
-    keccak_init(&s, outLen);
-    keccak_update(&s, in, inLen);
-    keccak_final(&s, out, outLen);
-    return 0;
-}
-
 __Z_INLINE int blake_hash(const unsigned char *in, unsigned int inLen,
                           unsigned char *out, unsigned int outLen) {
     blake2b_state s;
@@ -290,7 +281,7 @@ __Z_INLINE int blake_hash_cid(const unsigned char *in, unsigned int inLen,
 __Z_INLINE int keccak_hash(const unsigned char *in, unsigned int inLen,
                           unsigned char *out, unsigned int outLen) {
     // place holder
-    // empty as it is not used by any c++ 
+    // empty as it is not used by any c++
     // tests so far
 
     return 0;
@@ -299,7 +290,7 @@ __Z_INLINE int keccak_hash(const unsigned char *in, unsigned int inLen,
 int keccak_digest(const unsigned char *in, unsigned int inLen,
                           unsigned char *out, unsigned int outLen) {
     // place holder
-    // empty as it is not used by any c++ 
+    // empty as it is not used by any c++
     // tests so far
     return keccak_hash(in, inLen, out, outLen);
 }

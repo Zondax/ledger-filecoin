@@ -70,7 +70,7 @@ be_bytes_to_u64(const uint8_t *bytes, uint8_t len, uint64_t *num)
 
     uint8_t *num_ptr = (uint8_t *)num;
 
-    for (int i = len; i--; i > 0) {
+    for (int i = len; i > 0; i-- ) {
         *num_ptr = bytes[i];
         num_ptr += 1;
     }
