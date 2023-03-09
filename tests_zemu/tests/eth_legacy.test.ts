@@ -16,12 +16,11 @@
 
 import Zemu from '@zondax/zemu'
 import { models, defaultOptions, ETH_PATH, EXPECTED_PUBLIC_KEY} from './common'
-import Eth from '@ledgerhq/hw-app-eth'
 // @ts-ignore
 import FilecoinApp from "@zondax/ledger-filecoin";
-import { Transaction, FeeMarketEIP1559Transaction } from "@ethereumjs/tx"; 
+import { Transaction } from "@ethereumjs/tx";
 import Common from '@ethereumjs/common'
-import { bnToRlp, rlp, bufArrToArr} from "ethereumjs-util";
+import { rlp, bufArrToArr} from "ethereumjs-util";
 import { ec } from 'elliptic'
 const BN = require('bn.js');
 
@@ -36,7 +35,7 @@ const SIGN_TEST_DATA = [
     op: {
         value: 'abcdef00',
         to: 'df073477da421520cf03af261b782282c304ad66',
-    }, 
+    },
     chainId: 9867,
   },
   {
@@ -115,8 +114,8 @@ function check_legacy_signature(hexTx: string, signature: any, chainId: number |
   return ethTxObj.verifySignature()
 }
 
-describe.each(models)('EthereumLegacy [%s]; sign', function (m) {
-  test.each(SIGN_TEST_DATA)('sign legacy:  $name', async function (data) {
+describe.each(models)('ETH_Legacy', function (m) {
+  test.concurrent.each(SIGN_TEST_DATA)('sign legacy:  $name', async function (data) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...defaultOptions, model: m.name })
