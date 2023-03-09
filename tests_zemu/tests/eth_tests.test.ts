@@ -17,9 +17,7 @@
 import Zemu from "@zondax/zemu";
 // @ts-ignore
 import FilecoinApp from "@zondax/ledger-filecoin";
-import {getDigest} from "./utils";
-import * as secp256k1 from "secp256k1";
-import { models, defaultOptions, PATH, ETH_PATH} from './common'
+import { models, defaultOptions, ETH_PATH} from './common'
 import { ec } from 'elliptic'
 import Eth from '@ledgerhq/hw-app-eth'
 
@@ -90,8 +88,8 @@ const SIGN_TEST_DATA = [
 ]
 
 
-describe.each(models)('EthereumTx [%s]; sign', function (m) {
-  test.each(SIGN_TEST_DATA)('sign transaction:  $name', async function (data) {
+describe.each(models)('ETH', function (m) {
+  test.concurrent.each(SIGN_TEST_DATA)('sign transaction:  $name', async function (data) {
     const sim = new Zemu(m.path);
     try {
       await sim.start({...defaultOptions, model: m.name,});
