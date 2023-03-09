@@ -43,17 +43,17 @@ uint32_t saturating_add_u32(uint32_t a, uint32_t b);
 // Gets the number of bytes read and the number of bytes to read
 //
 // Returns false if there is a error in the rlp encoded data, true otherwise.
-rlp_error_t get_tx_rlp_len(uint8_t *buffer, uint32_t len, uint64_t *read,
+rlp_error_t get_tx_rlp_len(const uint8_t *buffer, uint32_t len, uint64_t *read,
                            uint64_t *to_read);
 
 // Use to decode rlp data pointed by data.
 // sets itemOffset to point to encoded data like item = data[itemOffset], and sets its len.
 // indicates amount of bytes read through read ptr
-rlp_error_t parse_rlp_item(uint8_t *data, uint32_t dataLen, uint32_t *read, uint32_t *item_len);
+rlp_error_t parse_rlp_item(const uint8_t *data, uint32_t dataLen, uint32_t *read, uint32_t *item_len);
 
 // converts a big endian stream of bytes to an u64 number.
 // returns 0 on success, a negative number otherwise
-int be_bytes_to_u64(uint8_t *bytes, uint8_t len, uint64_t *num);
+int be_bytes_to_u64(const uint8_t *bytes, uint8_t len, uint64_t *num);
 
 #ifdef __cplusplus
 }

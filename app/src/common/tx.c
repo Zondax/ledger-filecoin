@@ -146,4 +146,6 @@ zxerr_t tx_compute_eth_v(unsigned int info, uint8_t *v) {
 
     if (err != parser_ok)
         return zxerr_unknown;
+
+    return zxerr_ok;
 }

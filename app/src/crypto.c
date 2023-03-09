@@ -218,6 +218,9 @@ zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t
 
     // we need to fix V 
     zxerr_t err = tx_compute_eth_v(info, buffer);
+    if (err != zxerr_ok)
+        return zxerr_invalid_crypto_settings;
+
     *sigSize = sizeof_field(signature_t, r) + sizeof_field(signature_t, s) + 1;
 
     if (error != zxerr_ok){
@@ -282,6 +285,23 @@ __Z_INLINE int blake_hash_cid(const unsigned char *in, unsigned int inLen,
     blake2b_final(&s, out, outLen);
 
     return 0;
+}
+
+__Z_INLINE int keccak_hash(const unsigned char *in, unsigned int inLen,
+                          unsigned char *out, unsigned int outLen) {
+    // place holder
+    // empty as it is not used by any c++ 
+    // tests so far
+
+    return 0;
+}
+
+int keccak_digest(const unsigned char *in, unsigned int inLen,
+                          unsigned char *out, unsigned int outLen) {
+    // place holder
+    // empty as it is not used by any c++ 
+    // tests so far
+    return keccak_hash(in, inLen, out, outLen);
 }
 
 int prepareDigestToSign(const unsigned char *in, unsigned int inLen,

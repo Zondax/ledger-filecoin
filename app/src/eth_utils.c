@@ -50,7 +50,7 @@ saturating_add_u32(uint32_t a, uint32_t b)
 }
 
 int
-be_bytes_to_u64(uint8_t *bytes, uint8_t len, uint64_t *num)
+be_bytes_to_u64(const uint8_t *bytes, uint8_t len, uint64_t *num)
 {
     uint64_t u64_size = sizeof(uint64_t);
 
@@ -79,7 +79,7 @@ be_bytes_to_u64(uint8_t *bytes, uint8_t len, uint64_t *num)
 }
 
 rlp_error_t
-get_tx_rlp_len(uint8_t *buffer, uint32_t len, uint64_t *read, uint64_t *to_read)
+get_tx_rlp_len(const uint8_t *buffer, uint32_t len, uint64_t *read, uint64_t *to_read)
 {
     if (buffer == NULL || len == 0)
         return rlp_no_data;
@@ -88,7 +88,7 @@ get_tx_rlp_len(uint8_t *buffer, uint32_t len, uint64_t *read, uint64_t *to_read)
         return rlp_no_data;
 
     // get alias
-    uint8_t *data = buffer;
+    const uint8_t *data = buffer;
     uint64_t offset = 0;
 
     *read = 0;
@@ -139,7 +139,7 @@ get_tx_rlp_len(uint8_t *buffer, uint32_t len, uint64_t *read, uint64_t *to_read)
 }
 
 rlp_error_t
-parse_rlp_item(uint8_t *data,
+parse_rlp_item(const uint8_t *data,
                uint32_t dataLen,
                uint32_t *read,
                uint32_t *item_len)

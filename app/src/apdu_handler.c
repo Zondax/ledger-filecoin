@@ -70,6 +70,10 @@ void extract_eth_path(uint32_t rx, uint32_t offset)
     if (path_len > MAX_BIP32_PATH || path_len < 1)
         THROW(APDU_CODE_WRONG_LENGTH);
 
+    if ((rx - offset - 1) < sizeof(uint32_t) * path_len) {
+        THROW(APDU_CODE_WRONG_LENGTH);
+    }
+
     // first byte at OFFSET_DATA is the path len, so we skip this
     uint8_t *path_data = G_io_apdu_buffer + offset + 1;
 

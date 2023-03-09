@@ -43,13 +43,8 @@ parser_error_t readChainID(parser_context_t *ctx, chain_id_t *chain_id) {
 }
 
 parser_error_t readBigInt(parser_context_t *ctx, eth_big_int_t *big_int) {
-    uint32_t offset;
-    uint32_t len = 0;
-
     if ( parse_field(ctx, &(big_int->offset), &(big_int->len)) != rlp_ok)
         return parser_invalid_rlp_data;
-
-    big_int->offset = offset;
 
     return parser_ok;
 }
@@ -82,7 +77,7 @@ parser_error_t parse_field(parser_context_t *ctx, uint32_t *fieldOffset, uint32_
 
     uint32_t read = 0;
 
-    uint8_t *data = &ctx->buffer[ctx->offset];
+    const uint8_t *data = &ctx->buffer[ctx->offset];
 
     if ( parse_rlp_item(data, ctx->bufferLen - ctx->offset, &read, len) != rlp_ok)
         return parser_invalid_rlp_data;
@@ -279,9 +274,6 @@ parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int i
         return parser_ok;
     }
 
-    // This is the legacy case
-    uint8_t gtn = (info & CX_ECCINFO_xGTn) == 1;
-
     // we need chainID info
     if (id_len == 0) {
         // according to app-ethereum this is the legacy non eip155 conformant
@@ -299,7 +291,7 @@ parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int i
         // to recover the right chain_id from the V component being computed here, and
         // which is returned with the signature
         uint32_t len = MIN(UINT32_MAX, tx_obj->chain_id.len);
-        uint8_t *chain = ctx->buffer + tx_obj->chain_id.offset;
+        const uint8_t *chain = ctx->buffer + tx_obj->chain_id.offset;
 
         uint64_t id = 0;
 
