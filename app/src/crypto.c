@@ -113,15 +113,21 @@ __Z_INLINE int blake_hash_cid(const unsigned char *in, unsigned int inLen,
 }
 
 typedef struct {
-    uint8_t v;
     uint8_t r[32];
     uint8_t s[32];
+    uint8_t v;
 
     // DER signature max size should be 73
     // https://bitcoin.stackexchange.com/questions/77191/what-is-the-maximum-size-of-a-der-encoded-ecdsa-signature#77192
     uint8_t der_signature[73];
 
 } __attribute__((packed)) signature_t;
+
+typedef struct {
+    uint8_t v;
+    uint8_t r[32];
+    uint8_t s[32];
+} __attribute__((packed)) eth_signature_t;
 
 unsigned int info = 0;
 
@@ -217,11 +223,19 @@ zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t
     }
 
     // we need to fix V 
-    zxerr_t err = tx_compute_eth_v(info, buffer);
+    uint8_t v = 0;
+    zxerr_t err = tx_compute_eth_v(info, &v);
+
     if (err != zxerr_ok)
         return zxerr_invalid_crypto_settings;
 
-    *sigSize = sizeof_field(signature_t, r) + sizeof_field(signature_t, s) + 1;
+    // need to reorder signature as hw-eth-app expects v at the beginning.
+    // so rsv -> vrs  
+    uint8_t vrs_size = sizeof_field(signature_t, r) + sizeof_field(signature_t, s) + 1; 
+    memmove(buffer + 1, buffer, vrs_size);
+    buffer[0] = v;
+
+    *sigSize = vrs_size; 
 
     if (error != zxerr_ok){
         return zxerr_invalid_crypto_settings;
