@@ -18,8 +18,7 @@
 
 #include <stdbool.h>
 #include "apdu_codes.h"
-//                                             | transaction
-// e00400003f048000002c8000003c8000000080000001ed01856d6e2edc008252089428ee52a8f3d6e5d15f8b131996950d7f296c7952872bd72a248740008082a86a8080
+
 #define OFFSET_CLA                      0
 #define OFFSET_INS                      1  //< Instruction offset
 #define OFFSET_P1                       2  //< P1

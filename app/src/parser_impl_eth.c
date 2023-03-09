@@ -272,7 +272,6 @@ parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int i
     uint32_t id_len = tx_obj->chain_id.len;
     uint8_t type = eth_tx_obj.tx_type;
 
-    // uint8_t parity = 0;
     uint8_t parity = (info & CX_ECCINFO_PARITY_ODD) == 1;
 
     if (type == eip2930 || type == eip1559 ){
