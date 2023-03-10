@@ -52,13 +52,9 @@ saturating_add_u32(uint32_t a, uint32_t b)
 int
 be_bytes_to_u64(const uint8_t *bytes, uint8_t len, uint64_t *num)
 {
-    uint64_t u64_size = sizeof(uint64_t);
-
-    if (bytes == NULL || len == 0 || num == NULL)
+    if (bytes == NULL || num == NULL || len == 0 || len > sizeof(uint64_t)) {
         return -1;
-
-    if (len > u64_size)
-        return -1;
+    }
 
     *num = 0;
 
@@ -69,8 +65,7 @@ be_bytes_to_u64(const uint8_t *bytes, uint8_t len, uint64_t *num)
     }
 
     uint8_t *num_ptr = (uint8_t *)num;
-
-    for (int i = len; i--; i > 0) {
+    for (int i = len; i--;) {
         *num_ptr = bytes[i];
         num_ptr += 1;
     }

@@ -117,8 +117,9 @@ parser_error_t parse_legacy_tx(parser_context_t *ctx, eth_tx_t *tx_obj) {
     // Transaction comes with a chainID so it is EIP155 compliant
     CHECK_PARSER_ERR(readChainID(ctx, &(tx_obj->chain_id)));
 
-    if (tx_obj->chain_id.len == 0 || tx_obj->chain_id.len > MAX_CHAIN_LEN)
+    if (tx_obj->chain_id.len == 0) {
         return parser_invalid_chain_id;
+    }
 
     // r and s if not empty, should contain only one value which must be zero.
     // Usually for an eip155 transaction the last two bytes represent r and s and are 0x8080
