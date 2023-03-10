@@ -18,6 +18,7 @@
 #include "apdu_codes.h"
 #include "buffering.h"
 #include "parser.h"
+#include "parser_common.h"
 #include <string.h>
 #include "zxmacros.h"
 
@@ -43,14 +44,25 @@ storage_t NV_CONST N_appdata_impl __attribute__ ((aligned(64)));
 #endif
 
 parser_context_t ctx_parsed_tx;
+void _initialize_tx_buffer();
 
-void tx_initialize() {
+void _initialize_tx_buffer() {
     buffering_init(
             ram_buffer,
             sizeof(ram_buffer),
             (uint8_t *) N_appdata.buffer,
             sizeof(N_appdata.buffer)
     );
+}
+
+void tx_initialize_fil() {
+  ctx_parsed_tx.tx_type = fil_tx;
+  _initialize_tx_buffer();
+}
+
+void tx_initialize_eth() {
+  ctx_parsed_tx.tx_type = eth_tx;
+  _initialize_tx_buffer();
 }
 
 void tx_reset() {
@@ -83,11 +95,9 @@ const char *tx_parse() {
     CHECK_APP_CANARY()
 
     if (err != parser_ok) {
-        zemu_log("parser_validate::failed\n");
         return parser_getErrorDescription(err);
     }
 
-    zemu_log("parser_validate::ok\n");
     return NULL;
 }
 
@@ -124,6 +134,15 @@ zxerr_t tx_getItem(int8_t displayIdx,
         err == parser_display_idx_out_of_range ||
         err == parser_display_page_out_of_range)
         return zxerr_no_data;
+
+    if (err != parser_ok)
+        return zxerr_unknown;
+
+    return zxerr_ok;
+}
+
+zxerr_t tx_compute_eth_v(unsigned int info, uint8_t *v) {
+    parser_error_t err = parser_compute_eth_v(&ctx_parsed_tx, info, v);
 
     if (err != parser_ok)
         return zxerr_unknown;

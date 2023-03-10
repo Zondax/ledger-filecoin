@@ -58,12 +58,27 @@ typedef enum {
     // Required fields
     parser_required_nonce,
     parser_required_method,
+    parser_unsupported_tx,
+    parser_invalid_rlp_data,
+    parser_invalid_chain_id,
+    parser_invalid_rs_values,
 } parser_error_t;
+
+// Define the two types 
+// of supported transactions.
+// there are other sub-categories for each
+// that can be handled by their respective parser.
+// this type helps defining which parser to call
+typedef enum {
+  fil_tx = 0,
+  eth_tx,
+}tx_type_t; 
 
 typedef struct {
     const uint8_t *buffer;
     uint16_t bufferLen;
     uint16_t offset;
+    tx_type_t tx_type;
 } parser_context_t;
 
 #ifdef __cplusplus
