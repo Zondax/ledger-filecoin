@@ -23,6 +23,7 @@
 
 uint32_t hdPath[MAX_BIP32_PATH];
 uint32_t hdPath_len;
+uint8_t chain_code;
 
 bool isTestnet() {
     return hdPath[0] == HDPATH_0_TESTNET &&
@@ -32,7 +33,7 @@ bool isTestnet() {
 #if defined(TARGET_NANOS) || defined(TARGET_NANOX) || defined(TARGET_NANOS2)
 #include "cx.h"
 
-zxerr_t crypto_extractPublicKey(const uint32_t path[MAX_BIP32_PATH], uint8_t *pubKey, uint16_t pubKeyLen) {
+zxerr_t crypto_extractPublicKey(const uint32_t path[MAX_BIP32_PATH], uint8_t *pubKey, uint16_t pubKeyLen, uint8_t *chainCode) {
 
     cx_ecfp_public_key_t cx_publicKey = {0};
     cx_ecfp_private_key_t cx_privateKey = {0};
@@ -49,7 +50,7 @@ zxerr_t crypto_extractPublicKey(const uint32_t path[MAX_BIP32_PATH], uint8_t *pu
             os_perso_derive_node_bip32(CX_CURVE_256K1,
                                        path,
                                        hdPath_len,
-                                       privateKeyData, NULL);
+                                       privateKeyData, chainCode );
 
             cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey);
             cx_ecfp_init_public_key(CX_CURVE_256K1, NULL, 0, &cx_publicKey);
@@ -229,21 +230,17 @@ zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t
     memmove(buffer + 1, buffer, rs_size);
     buffer[0] = v;
 
-    if (error != zxerr_ok){
-        return zxerr_invalid_crypto_settings;
-    }
-
     return zxerr_ok;
 }
 
-#else
+#else // ******************************
 
 #include <hexutils.h>
 #include "blake2.h"
 
 char *crypto_testPubKey;
 
-zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *pubKey, uint16_t pubKeyLen) {
+zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *pubKey, uint16_t pubKeyLen, uint8_t *chainCode) {
     ///////////////////////////////////////
     // THIS IS ONLY USED FOR TEST PURPOSES
     ///////////////////////////////////////
@@ -313,7 +310,7 @@ int keccak_digest(const unsigned char *in, unsigned int inLen,
     return 0;
 }
 
-#endif
+#endif // **************************** endif
 
 uint16_t decompressLEB128(const uint8_t *input, uint16_t inputSize, uint64_t *v) {
     uint16_t  i = 0;
@@ -454,6 +451,17 @@ typedef struct {
 
 } __attribute__((packed)) answer_t;
 
+typedef struct {
+    // plus 1-bytes to write pubkey len
+    uint8_t publicKey[SECP256K1_PK_LEN + 1];
+    // hex of the ethereum address plus 1-bytes
+    // to write the address len
+    uint8_t address[(ETH_ADDR_LEN * 2) + 1];  // 41 = because (20+1+4)*8/5 (32 base encoded size)
+    // place holder for further dev
+    uint8_t chainCode[32];
+
+} __attribute__((packed)) answer_eth_t;
+
 zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrLen) {
     if (buffer_len < sizeof(answer_t)) {
         return 0;
@@ -461,7 +469,7 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrL
     MEMZERO(buffer, buffer_len);
     answer_t *const answer = (answer_t *) buffer;
 
-    CHECK_ZXERR(crypto_extractPublicKey(hdPath, answer->publicKey, sizeof_field(answer_t, publicKey)))
+    CHECK_ZXERR(crypto_extractPublicKey(hdPath, answer->publicKey, sizeof_field(answer_t, publicKey), NULL))
 
     // addr bytes
     answer->addrBytesLen = sizeof_field(answer_t, addrBytes);
@@ -477,5 +485,35 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrL
     }
 
     *addrLen = sizeof(answer_t);
+    return zxerr_ok;
+}
+
+zxerr_t crypto_fillEthAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrLen) {
+
+    if (buffer_len < sizeof(answer_eth_t)) {
+        return 0;
+    }
+    MEMZERO(buffer, buffer_len);
+    answer_eth_t *const answer = (answer_eth_t *) buffer;
+
+    CHECK_ZXERR(crypto_extractPublicKey(hdPath, &answer->publicKey[1], sizeof_field(answer_eth_t, publicKey) - 1, &chain_code))
+
+    answer->publicKey[0] = SECP256K1_PK_LEN;
+
+    uint8_t hash[KECCAK_256_SIZE] = {0};
+
+    keccak_digest(&answer->publicKey[2], SECP256K1_PK_LEN - 1, hash, KECCAK_256_SIZE);
+
+    answer->address[0] = ETH_ADDR_LEN * 2;
+
+    // get hex of the eth address(last 20 bytes of pubkey hash)
+    char str[41] = {0};
+
+    // take the last 20-bytes of the hash, they are the ethereum address
+    array_to_hexstr(str, 41, hash + 12 , ETH_ADDR_LEN);
+    MEMCPY(answer->address+1, str, 40);
+
+    *addrLen = sizeof_field(answer_eth_t, publicKey) + sizeof_field(answer_eth_t, address);
+
     return zxerr_ok;
 }

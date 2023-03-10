@@ -35,6 +35,9 @@
 // transaction is sent as a blob of rlp encoded bytes,
 #define P1_ETH_FIRST                    0x00
 #define P1_ETH_MORE                     0x80
+// eth address chain_code allowed valuec
+#define P2_NO_CHAINCODE                 0x00
+#define P2_CHAINCODE                    0x01
 
 
 #define OFFSET_PAYLOAD_TYPE             OFFSET_P1
@@ -43,6 +46,7 @@
 #define INS_GET_ADDR_SECP256K1          0x01
 #define INS_SIGN_SECP256K1              0x02
 #define INS_SIGN_ETH                    0x04
+#define INS_GET_ADDR_ETH                0x02
 
 void app_init();
 

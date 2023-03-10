@@ -30,6 +30,7 @@ extern "C" {
 
 extern uint32_t hdPath[MAX_BIP32_PATH];
 extern uint32_t hdPath_len;
+extern uint8_t chain_code;
 
 #define ADDRESS_PROTOCOL_LEN        1
 
@@ -64,9 +65,10 @@ int prepareDigestToSign(const unsigned char *in, unsigned int inLen,
 int keccak_digest(const unsigned char *in, unsigned int inLen,
                         unsigned char *out, unsigned int outLen);
 
-zxerr_t crypto_extractPublicKey(const uint32_t path[MAX_BIP32_PATH], uint8_t *pubKey, uint16_t pubKeyLen);
+zxerr_t crypto_extractPublicKey(const uint32_t path[MAX_BIP32_PATH], uint8_t *pubKey, uint16_t pubKeyLen, uint8_t *chainCode);
 
 zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t bufferLen, uint16_t *addrLen);
+zxerr_t crypto_fillEthAddress(uint8_t *buffer, uint16_t bufferLen, uint16_t *addrLen);
 
 zxerr_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen,
                     uint16_t *sigSize);
