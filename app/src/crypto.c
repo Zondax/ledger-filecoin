@@ -123,12 +123,6 @@ typedef struct {
 
 } __attribute__((packed)) signature_t;
 
-typedef struct {
-    uint8_t v;
-    uint8_t r[32];
-    uint8_t s[32];
-} __attribute__((packed)) eth_signature_t;
-
 unsigned int info = 0;
 
 
