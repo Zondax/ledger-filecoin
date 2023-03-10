@@ -17,7 +17,7 @@
 import Zemu from "@zondax/zemu";
 // @ts-ignore
 import FilecoinApp from "@zondax/ledger-filecoin";
-import { models, defaultOptions, ETH_PATH} from './common'
+import { models, defaultOptions, ETH_PATH, EXPECTED_ETH_ADDRESS, EXPECTED_ETH_PK} from './common'
 import { ec } from 'elliptic'
 import Eth from '@ledgerhq/hw-app-eth'
 
@@ -87,7 +87,6 @@ const SIGN_TEST_DATA = [
    },
 ]
 
-
 describe.each(models)('ETH', function (m) {
   test.concurrent.each(SIGN_TEST_DATA)('sign transaction:  $name', async function (data) {
     const sim = new Zemu(m.path);
@@ -131,6 +130,48 @@ describe.each(models)('ETH', function (m) {
       // Verify signature
       const signatureOK = EC.verify(msgHash, signature_obj, pubKey, 'hex')
       expect(signatureOK).toEqual(true)
+
+    } finally {
+      await sim.close();
+    }
+  });
+})
+
+describe('EthAddress', function () {
+  test.concurrent.each(models)('get address', async function (m) {
+    const sim = new Zemu(m.path);
+    try {
+      await sim.start({...defaultOptions, model: m.name,});
+      const app = new FilecoinApp(sim.getTransport());
+
+      const resp = await app.getETHAddress(ETH_PATH, false, true)
+
+      console.log(resp)
+
+      console.log(resp.publicKey.toString('hex'))
+      console.log(resp.address)
+
+      expect(resp.publicKey.toString('hex')).toEqual(EXPECTED_ETH_PK);
+      expect(resp.address.toString('hex')).toEqual(EXPECTED_ETH_ADDRESS);
+
+    } finally {
+      await sim.close();
+    }
+  });
+
+  test.concurrent.each(models)('show address', async function (m) {
+    const sim = new Zemu(m.path);
+    try {
+      await sim.start({...defaultOptions, model: m.name,});
+      const app = new FilecoinApp(sim.getTransport());
+
+      const resp = app.getETHAddress(ETH_PATH, true)
+
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
+
+      await sim.compareSnapshotsAndApprove(".", `${m.prefix.toLowerCase()}-show_eth_address`)
+
+      console.log(resp)
 
     } finally {
       await sim.close();

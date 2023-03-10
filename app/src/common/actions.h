@@ -79,6 +79,22 @@ __Z_INLINE zxerr_t app_fill_address() {
     return zxerr_ok;
 }
 
+__Z_INLINE zxerr_t app_fill_eth_address() {
+
+    // Put data directly in the apdu buffer
+    MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
+
+    action_addrResponseLen = 0;
+    zxerr_t err = crypto_fillEthAddress(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE - 2, &action_addrResponseLen);
+
+    if (err != zxerr_ok || action_addrResponseLen == 0) {
+        THROW(APDU_CODE_EXECUTION_ERROR);
+    }
+
+    return zxerr_ok;
+}
+
+
 __Z_INLINE void app_reply_address() {
     set_code(G_io_apdu_buffer, action_addrResponseLen, APDU_CODE_OK);
     io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, action_addrResponseLen + 2);
