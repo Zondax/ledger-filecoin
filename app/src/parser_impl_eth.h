@@ -14,40 +14,36 @@
 *  limitations under the License.
 ********************************************************************************/
 
+
 #pragma once
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "parser_impl.h"
-#include "base32.h"
-#include "crypto.h"
+#include "parser_common.h"
+#include "parser_txdef.h"
 
-// Set the transaction type in the parser_context.
-// this defines what parse_impl to use
-void parser_init_fil();
-void parser_init_eth();
+extern eth_tx_t eth_tx_obj;
 
-const char *parser_getErrorDescription(parser_error_t err);
+parser_error_t _readEth(parser_context_t *ctx, eth_tx_t *eth_tx_obj);
 
-//// parses a tx buffer
-parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data, size_t dataLen);
-
-//// verifies tx fields
-parser_error_t parser_validate(const parser_context_t *ctx);
-
-//// returns the number of items in the current parsing context
-parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_items);
-
-// retrieves a readable output for each field / page
-parser_error_t parser_getItem(const parser_context_t *ctx,
+parser_error_t _getItemEth(const parser_context_t *ctx,
                               uint8_t displayIdx,
                               char *outKey, uint16_t outKeyLen,
                               char *outVal, uint16_t outValLen,
                               uint8_t pageIdx, uint8_t *pageCount);
 
-parser_error_t parser_compute_eth_v(parser_context_t *ctx, unsigned int info, uint8_t *v);
+// returns the number of items to display on the screen.
+// Note: we might need to add a transaction state object,
+// Defined with one parameter for now.
+uint8_t _getNumItemsEth(const parser_context_t *ctx);
+
+parser_error_t _validateTxEth(const parser_context_t *ctx);
+
+// parser_error_t _computeV(unsigned int info, uint8_t *v);
+parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int info, uint8_t *v);
+
 #ifdef __cplusplus
 }
 #endif

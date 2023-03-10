@@ -20,17 +20,22 @@ extern "C" {
 #endif
 
 #define CLA                             0x06
+#define CLA_ETH                         0xE0
 
 #include <stdint.h>
 #include <stddef.h>
 
-#define HDPATH_LEN_DEFAULT   5
+#define MAX_BIP32_PATH           10
+#define HDPATH_LEN_DEFAULT       5
 
 #define HDPATH_0_DEFAULT     (0x80000000u | 0x2cu)
 #define HDPATH_1_DEFAULT     (0x80000000u | 0x1cdu)
 #define HDPATH_2_DEFAULT     (0x80000000u | 0u)
 #define HDPATH_3_DEFAULT     (0u)
 #define HDPATH_4_DEFAULT     (0u)
+
+#define HDPATH_ETH_0_DEFAULT (0x80000000u | 0x2cu)
+#define HDPATH_ETH_1_DEFAULT (0x80000000u | 0x3cu)
 
 #define HDPATH_0_TESTNET     (0x80000000u | 0x2cu)
 #define HDPATH_1_TESTNET     (0x80000000u | 0x1u)

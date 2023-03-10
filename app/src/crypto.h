@@ -28,11 +28,13 @@ extern "C" {
 
 #define CHECKSUM_LENGTH             4
 
-extern uint32_t hdPath[HDPATH_LEN_DEFAULT];
+extern uint32_t hdPath[MAX_BIP32_PATH];
+extern uint32_t hdPath_len;
 
 #define ADDRESS_PROTOCOL_LEN        1
 
 #define BLAKE2B_256_SIZE            32
+#define KECCAK_256_SIZE             32
 
 #define PREFIX {0x01, 0x71, 0xa0, 0xe4, 0x02, 0x20}
 
@@ -59,12 +61,17 @@ bool isTestnet();
 int prepareDigestToSign(const unsigned char *in, unsigned int inLen,
                         unsigned char *out, unsigned int outLen);
 
-zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *pubKey, uint16_t pubKeyLen);
+int keccak_digest(const unsigned char *in, unsigned int inLen,
+                        unsigned char *out, unsigned int outLen);
+
+zxerr_t crypto_extractPublicKey(const uint32_t path[MAX_BIP32_PATH], uint8_t *pubKey, uint16_t pubKeyLen);
 
 zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t bufferLen, uint16_t *addrLen);
 
 zxerr_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen,
                     uint16_t *sigSize);
+
+zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen, uint16_t *sigSize);
 
 #ifdef __cplusplus
 }

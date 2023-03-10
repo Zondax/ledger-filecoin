@@ -40,28 +40,6 @@ __Z_INLINE parser_error_t parser_mapCborError(CborError err);
     CborParser parser;           \
     CHECK_CBOR_MAP_ERR(cbor_parser_init((c)->buffer + (c)->offset, (c)->bufferLen - (c)->offset, 0, &parser, &(it)))
 
-parser_error_t parser_init_context(parser_context_t *ctx,
-                                   const uint8_t *buffer,
-                                   uint16_t bufferSize) {
-    ctx->offset = 0;
-    ctx->buffer = NULL;
-    ctx->bufferLen = 0;
-
-    if (bufferSize == 0 || buffer == NULL) {
-        // Not available, use defaults
-        return parser_init_context_empty;
-    }
-
-    ctx->buffer = buffer;
-    ctx->bufferLen = bufferSize;
-    return parser_ok;
-}
-
-parser_error_t parser_init(parser_context_t *ctx, const uint8_t *buffer, uint16_t bufferSize) {
-    CHECK_PARSER_ERR(parser_init_context(ctx, buffer, bufferSize))
-    return parser_ok;
-}
-
 __Z_INLINE parser_error_t parser_mapCborError(CborError err) {
     switch (err) {
         case CborErrorUnexpectedEOF:
@@ -130,6 +108,14 @@ const char *parser_getErrorDescription(parser_error_t err) {
             return "Required field nonce";
         case parser_required_method:
             return "Required field method";
+        case parser_unsupported_tx:
+            return "Usupported transaction type";
+        case parser_invalid_rlp_data:
+            return "Invalid rlp data";
+        case parser_invalid_chain_id:
+            return "Invalid eth chainId";
+        case parser_invalid_rs_values:
+            return "Invalid rs values";
         default:
             return "Unrecognized error code";
     }
