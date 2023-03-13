@@ -16,7 +16,9 @@
 
 #include <stdio.h>
 #include <zxmacros.h>
+#include "common/parser_common.h"
 #include "parser_impl.h"
+#include "parser_impl_eth.h"
 #include "bignum.h"
 #include "parser.h"
 #include "parser_txdef.h"
@@ -31,14 +33,64 @@ void __assert_fail(__Z_UNUSED const char * assertion, __Z_UNUSED const char * fi
 }
 #endif
 
+parser_error_t parser_init(parser_context_t *ctx,
+                                   const uint8_t *buffer,
+                                   uint16_t bufferSize);
+
+static parser_error_t parser_init_context(parser_context_t *ctx,
+                                   const uint8_t *buffer,
+                                   uint16_t bufferSize) {
+    ctx->offset = 0;
+    ctx->buffer = NULL;
+    ctx->bufferLen = 0;
+
+    if (bufferSize == 0 || buffer == NULL) {
+        // Not available, use defaults
+        return parser_init_context_empty;
+    }
+
+    ctx->buffer = buffer;
+    ctx->bufferLen = bufferSize;
+    return parser_ok;
+}
+
+parser_error_t parser_init(parser_context_t *ctx, const uint8_t *buffer, uint16_t bufferSize) {
+    CHECK_PARSER_ERR(parser_init_context(ctx, buffer, bufferSize))
+    return parser_ok;
+}
+
+
 parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data, size_t dataLen) {
+    // common context init
     CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
-    return _read(ctx, &parser_tx_obj);
+
+    if (ctx->tx_type == fil_tx) {
+        return _read(ctx, &parser_tx_obj);
+    }
+    // place holder for when full eth parsing is supported
+    if (ctx->tx_type == eth_tx)
+      return _readEth(ctx, &eth_tx_obj);
+
+    return parser_unsupported_tx;
 }
 
 parser_error_t parser_validate(const parser_context_t *ctx) {
     zemu_log("parser_validate\n");
-    CHECK_PARSER_ERR(_validateTx(ctx, &parser_tx_obj))
+
+    // Call especific fil transaction implementation for data validation
+    switch (ctx->tx_type) {
+      case fil_tx:{
+          CHECK_PARSER_ERR(_validateTx(ctx, &parser_tx_obj))
+          break;
+      }
+      case eth_tx:{
+          CHECK_PARSER_ERR(_validateTxEth(ctx))
+          break;
+      }
+      default:
+          return parser_unsupported_tx;
+    }
+
     zemu_log("parser_validate::validated\n");
 
     // Iterate through all items to check that all can be shown and are valid
@@ -63,7 +115,19 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
 
 parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_items) {
     zemu_log("parser_getNumItems\n");
-    *num_items = _getNumItems(ctx, &parser_tx_obj);
+
+    switch (ctx->tx_type) {
+      case fil_tx:{
+          *num_items = _getNumItems(ctx, &parser_tx_obj);
+          break;
+      }
+      case eth_tx:{
+          *num_items = _getNumItemsEth(ctx);
+          break;
+      }
+      default:
+          return parser_unsupported_tx;
+    }
     return parser_ok;
 }
 
@@ -114,7 +178,7 @@ __Z_INLINE parser_error_t parser_printBigIntFixedPoint(const bigint_t *b,
     return parser_ok;
 }
 
-parser_error_t parser_getItem(const parser_context_t *ctx,
+parser_error_t _getItemFil(const parser_context_t *ctx,
                               uint8_t displayIdx,
                               char *outKey, uint16_t outKeyLen,
                               char *outVal, uint16_t outValLen,
@@ -222,4 +286,28 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
 
     zemu_log_stack(outKey);
     return parser_printParam(&parser_tx_obj, paramIdx, outVal, outValLen, pageIdx, pageCount);
+}
+
+parser_error_t parser_getItem(const parser_context_t *ctx,
+                              uint8_t displayIdx,
+                              char *outKey, uint16_t outKeyLen,
+                              char *outVal, uint16_t outValLen,
+                              uint8_t pageIdx, uint8_t *pageCount) {
+
+    switch (ctx->tx_type) {
+      case fil_tx:{
+          return _getItemFil(ctx, displayIdx, outKey, outKeyLen,
+                              outVal, outValLen, pageIdx, pageCount);
+      }
+      case eth_tx:{
+          // for now just display the hash
+          return _getItemEth(ctx, displayIdx, outKey, outKeyLen,
+                              outVal, outValLen, pageIdx, pageCount);
+      }
+      default:
+          return parser_unsupported_tx;
+    }
+}
+parser_error_t parser_compute_eth_v(parser_context_t *ctx, unsigned int info, uint8_t *v) {
+    return _computeV(ctx , &eth_tx_obj, info, v);
 }

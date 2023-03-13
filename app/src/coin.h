@@ -20,11 +20,13 @@ extern "C" {
 #endif
 
 #define CLA                             0x06
+#define CLA_ETH                         0xE0
 
 #include <stdint.h>
 #include <stddef.h>
 
-#define HDPATH_LEN_DEFAULT   5
+#define MAX_BIP32_PATH           10
+#define HDPATH_LEN_DEFAULT       5
 
 #define HDPATH_0_DEFAULT     (0x80000000u | 0x2cu)
 #define HDPATH_1_DEFAULT     (0x80000000u | 0x1cdu)
@@ -32,16 +34,22 @@ extern "C" {
 #define HDPATH_3_DEFAULT     (0u)
 #define HDPATH_4_DEFAULT     (0u)
 
+#define HDPATH_ETH_0_DEFAULT (0x80000000u | 0x2cu)
+#define HDPATH_ETH_1_DEFAULT (0x80000000u | 0x3cu)
+
 #define HDPATH_0_TESTNET     (0x80000000u | 0x2cu)
 #define HDPATH_1_TESTNET     (0x80000000u | 0x1u)
 
 #define SECP256K1_PK_LEN            65u
+#define ETH_ADDR_LEN                20u
 
 typedef enum {
     addr_secp256k1 = 0,
 } address_kind_e;
 
 #define VIEW_ADDRESS_OFFSET_SECP256K1       (SECP256K1_PK_LEN + ADDRESS_PROTOCOL_SECP256K1_PAYLOAD_LEN + ADDRESS_PROTOCOL_LEN + 2)
+// omit the pubkey + 1-byte pubkey len + 1-byte address len
+#define VIEW_ADDRESS_OFFSET_ETH             (SECP256K1_PK_LEN + 1 + 1)
 
 #define COIN_AMOUNT_DECIMAL_PLACES 18
 

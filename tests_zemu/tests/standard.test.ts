@@ -23,7 +23,7 @@ import { models, defaultOptions, PATH } from './common'
 
 
 describe('Standard', function () {
-  test.each(models)('can start and stop container', async function (m) {
+  test.concurrent.each(models)('can start and stop container', async function (m) {
     const sim = new Zemu(m.path);
     try {
       console.log("model: ", m.name)
@@ -33,7 +33,7 @@ describe('Standard', function () {
     }
   });
 
-  test.each(models)('main menu', async function (m) {
+  test.concurrent.each(models)('main menu', async function (m) {
     const sim = new Zemu(m.path);
     try {
       await sim.start({...defaultOptions, model: m.name,});
@@ -43,7 +43,7 @@ describe('Standard', function () {
     }
   });
 
-  test.each(models)('get app version', async function (m) {
+  test.concurrent.each(models)('get app version', async function (m) {
     const sim = new Zemu(m.path);
     try {
       await sim.start({...defaultOptions, model: m.name,});
@@ -63,7 +63,7 @@ describe('Standard', function () {
     }
   });
 
-  test.each(models)('get address', async function (m) {
+  test.concurrent.each(models)('get address', async function (m) {
     const sim = new Zemu(m.path);
     try {
       await sim.start({...defaultOptions, model: m.name,});
@@ -87,7 +87,7 @@ describe('Standard', function () {
     }
   });
 
-  test.each(models)('show address', async function (m) {
+  test.concurrent.each(models)('show address', async function (m) {
     const sim = new Zemu(m.path);
     try {
       await sim.start({...defaultOptions, model: m.name,});
@@ -115,7 +115,7 @@ describe('Standard', function () {
     }
   });
 
-  test.each(models)('sign basic & verify', async function (m) {
+  test.concurrent.each(models)('sign basic & verify', async function (m) {
     const sim = new Zemu(m.path);
     try {
       await sim.start({...defaultOptions, model: m.name,});
@@ -155,7 +155,7 @@ describe('Standard', function () {
     }
   });
 
-  test.each(models)('sign basic - invalid', async function (m) {
+  test.concurrent.each(models)('sign basic - invalid', async function (m) {
     const sim = new Zemu(m.path);
     try {
       await sim.start({...defaultOptions, model: m.name,});
@@ -183,7 +183,7 @@ describe('Standard', function () {
     }
   });
 
-  test.each(models)('sign proposal expert ', async function (m) {
+  test.concurrent.each(models)('sign proposal expert ', async function (m) {
     const sim = new Zemu(m.path);
     try {
       await sim.start({...defaultOptions, model: m.name,});
@@ -229,7 +229,7 @@ describe('Standard', function () {
   });
 
 
-  test.each(models)('sign proposal -- unsupported method', async function (m) {
+  test.concurrent.each(models)('sign proposal -- unsupported method', async function (m) {
     const sim = new Zemu(m.path);
     try {
       await sim.start({...defaultOptions, model: m.name,});
@@ -259,7 +259,7 @@ describe('Standard', function () {
 
 /*
   Should reject BLS signature
-  test.each(models)('try signing using BLS - fail', async function (m) {
+  test.concurrent.each(models)('try signing using BLS - fail', async function (m) {
     const sim = new Zemu(m.path);
     try {
       await sim.start({...defaultOptions, model: m.name,});
@@ -282,7 +282,7 @@ describe('Standard', function () {
     }
   });*/
 
-  test.each(models)('test change owner', async function (m) {
+  test.concurrent.each(models)('test change owner', async function (m) {
     const sim = new Zemu(m.path);
     try {
       await sim.start({ ...defaultOptions, model: m.name, });
@@ -322,7 +322,7 @@ describe('Standard', function () {
     }
   });
 
-  test.each(models)('transfer using protocol 4 addresses', async function (m) {
+  test.concurrent.each(models)('transfer using protocol 4 addresses', async function (m) {
     const sim = new Zemu(m.path);
     try {
       await sim.start({...defaultOptions, model: m.name,});

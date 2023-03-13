@@ -24,6 +24,11 @@ extern "C" {
 #include "base32.h"
 #include "crypto.h"
 
+// Set the transaction type in the parser_context.
+// this defines what parse_impl to use
+void parser_init_fil();
+void parser_init_eth();
+
 const char *parser_getErrorDescription(parser_error_t err);
 
 //// parses a tx buffer
@@ -42,6 +47,7 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
                               char *outVal, uint16_t outValLen,
                               uint8_t pageIdx, uint8_t *pageCount);
 
+parser_error_t parser_compute_eth_v(parser_context_t *ctx, unsigned int info, uint8_t *v);
 #ifdef __cplusplus
 }
 #endif
