@@ -52,7 +52,7 @@ endef
 $(error "$(error_message)")
 endif
 
-APP_LOAD_PARAMS =  --curve secp256k1 --delete $(COMMON_LOAD_PARAMS) --path $(APPPATH)
+APP_LOAD_PARAMS =  --curve secp256k1 $(COMMON_LOAD_PARAMS) --path $(APPPATH)
 
 NANOS_STACK_SIZE := 1892
 include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.devices
