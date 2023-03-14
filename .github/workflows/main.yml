@@ -1,9 +1,11 @@
-name: "Build"
+name: Build
 on:
   workflow_dispatch:
   push:
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
+      - develop
 
 jobs:
   configure:
@@ -25,6 +27,7 @@ jobs:
         run: |
           sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10
           make deps
+          pip install -U conan~=1.59
       - run: cmake -DCMAKE_BUILD_TYPE=Debug . && make
       - run: GTEST_COLOR=1 ASAN_OPTIONS=detect_leaks=0 ctest -VV
 
