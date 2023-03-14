@@ -27,7 +27,7 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
-#define MAX_SUPPORT_METHOD      50
+#define MAX_SUPPORT_METHOD      UINT64_MAX
 #define MAX_PARAMS_BUFFER_SIZE  200
 
 
