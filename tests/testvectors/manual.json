@@ -676,5 +676,24 @@
             "params": ["1234", "f8acf2652972f009aeaa1d9b61cfcd86702b3093c19c3049604f19db8cb378f3"]
         },
         "encoded_tx_hex": "8a004300ec0755011eaf1c8a4bbfeeb0870b1745b1f57503470b711601401a000f4240430009c4430009c4045826821904d25820f8acf2652972f009aeaa1d9b61cfcd86702b3093c19c3049604f19db8cb378f3"
+    },
+    {
+        "description": "Invoke EVM",
+        "encoded_tx": "notAvailable",
+        "valid": true,
+        "error": "",
+        "testnet": true,
+        "message": {
+            "version": 0,
+            "to": "t410f5jy7rxaem4l3rmkmdaafdbwqgsk2bzess6wu5qq",
+            "from": "t1d2xrzcslx7xlbbylc5c3d5lvandqw4iwl6epxba",
+            "nonce": 3,
+            "value": "1000000000000000000",
+            "gaslimit": 2291443,
+            "gasfeecap": "101021",
+            "gaspremium": "99967",
+            "method": 3844450837
+        },
+        "encoded_tx_hex": "8A0056040AEA71F8DC046717B8B14C18005186D03495A0E49255011EAF1C8A4BBFEEB0870B1745B1F57503470B71160349000DE0B6B3A76400001A0022F6F34400018A9D440001867F1AE525AA1540"
     }
 ]
