@@ -29,6 +29,7 @@
 #include "crypto.h"
 #include "coin.h"
 #include "zxmacros.h"
+#include "view_internal.h"
 
 static bool tx_initialized = false;
 
@@ -109,7 +110,7 @@ __Z_INLINE void handleGetAddr(volatile uint32_t *flags, volatile uint32_t *tx, u
     }
     if (requireConfirmation) {
         view_review_init(addr_getItem, addr_getNumItems, app_reply_address);
-        view_review_show();
+        view_review_show(REVIEW_ADDRESS);
         *flags |= IO_ASYNCH_REPLY;
         return;
     }
@@ -136,7 +137,7 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
 
     CHECK_APP_CANARY()
     view_review_init(tx_getItem, tx_getNumItems, app_sign);
-    view_review_show();
+    view_review_show(REVIEW_TXN);
     *flags |= IO_ASYNCH_REPLY;
 }
 
