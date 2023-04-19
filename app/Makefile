@@ -38,16 +38,12 @@ $(info COIN  = [$(COIN)])
 ifeq ($(COIN),FIL)
 # Main app configuration
 APPNAME = "Filecoin"
-APPPATH = "44'/461'" --path "44'/60'"
-
+# Add Legacy Glif / Testnet path
+APPPATH = "44'/461'" --path "44'/1'" --path "44'/60'"
 else ifeq ($(COIN),FIL_validator)
 else
 define error_message
-
-
 COIN value not supported: [$(COIN)]
-
-
 endef
 $(error "$(error_message)")
 endif
@@ -71,36 +67,21 @@ DEFINES       += UNUSED\(x\)=\(void\)x
 # App specific
 DEFINES += CBOR_NO_FLOATING_POINT
 
-CFLAGS += -Wvla
-
 # NanoX SDK does not allow += in APP_SOURCE_PATH or INCLUDES_PATH
 CFLAGS += -I$(MY_DIR)/../deps/tinycbor/src
 APP_SOURCE_PATH += $(MY_DIR)/../deps/tinycbor-ledger
 
-
 .PHONY: rust
 rust:
 	@echo "No rust code"
-#	cd rust && CARGO_HOME="$(CURDIR)/rust/.cargo" cargo build --target thumbv6m-none-eabi --release
-
-# Before linking, we need to be sure rust lib is there
-bin/app.elf: rust
 
 .PHONY: rust_clean
 rust_clean:
 	@echo "No rust code"
-#	cd rust && CARGO_HOME="$(CURDIR)/rust/.cargo" cargo clean
 
 clean: rust_clean
 
-# load, delete and listvariants are provided to comply with Ledger requirements
-.PHONY: load
-load:
-	python3 -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
-
-.PHONY: delete
-delete:
-	python3 -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)
+include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.side_loading
 
 # Import generic rules from the SDK
 include $(BOLOS_SDK)/Makefile.rules
