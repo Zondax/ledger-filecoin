@@ -253,6 +253,7 @@ parser_error_t printValue(const struct CborValue *value,
                 CHECK_PARSER_ERR(renderByteString(buff, buffLen, outVal, outValLen, pageIdx, pageCount))
                 break;
             }
+            return parser_unexepected_error;
         }
         default:
             snprintf(outVal, outValLen, "Type: %d", value->type);
@@ -297,7 +298,10 @@ parser_error_t _printParam(const parser_tx_t *tx, uint8_t paramIdx,
         case  CborByteStringType: {
             address_t tmpAddr;
             MEMZERO(&tmpAddr, sizeof(address_t));
-            CHECK_PARSER_ERR(readAddress(&tmpAddr, &itContainer))
+            if (readAddress(&tmpAddr, &itContainer) != parser_ok) {
+                // Non addresses string will be printed as hexstring
+                return printValue(&itParams, outVal, outValLen, pageIdx, pageCount);
+            }
             PARSER_ASSERT_OR_ERROR(itContainer.type != CborInvalidType, parser_unexpected_type)
             //Not every ByteStringType must be interpreted as address. Depends on method number and actor.
             CHECK_PARSER_ERR(_printAddress(&tmpAddr, outVal, outValLen, pageIdx, pageCount));

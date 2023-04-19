@@ -27,7 +27,7 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
-#define MAX_SUPPORT_METHOD      50
+#define MAX_SUPPORT_METHOD      UINT64_MAX
 #define MAX_PARAMS_BUFFER_SIZE  200
 #define ETH_ADDRESS_LEN         20
 #define MAX_CHAIN_LEN           UINT64_MAX
