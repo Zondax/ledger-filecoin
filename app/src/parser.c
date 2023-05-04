@@ -19,12 +19,14 @@
 #include "common/parser_common.h"
 #include "parser_impl.h"
 #include "parser_impl_eth.h"
+#include "parser_data_cap.h"
 #include "bignum.h"
 #include "parser.h"
 #include "parser_txdef.h"
 #include "coin.h"
 #include "zxformat.h"
 #include "app_mode.h"
+#include "fil_utils.h"
 
 #if defined(TARGET_NANOX) || defined(TARGET_NANOS2)
 // For some reason NanoX requires this function
@@ -64,27 +66,36 @@ parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data, size_t d
     // common context init
     CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
 
-    if (ctx->tx_type == fil_tx) {
-        return _read(ctx, &parser_tx_obj);
+    switch (ctx->tx_type) {
+        case fil_tx: {
+            return _read(ctx, &(parser_tx_obj.base_tx));
+        }
+        case eth_tx: {
+            return _readEth(ctx, &eth_tx_obj);
+        }
+        case datacap_tx : {
+            return _readDataCap(ctx, &parser_tx_obj.rem_datacap_tx);
+        }
+        default:
+            return parser_unsupported_tx;
     }
-    // place holder for when full eth parsing is supported
-    if (ctx->tx_type == eth_tx)
-      return _readEth(ctx, &eth_tx_obj);
-
-    return parser_unsupported_tx;
 }
 
 parser_error_t parser_validate(const parser_context_t *ctx) {
-    zemu_log("parser_validate\n");
+    zemu_log_stack("parser_validate\n");
 
     // Call especific fil transaction implementation for data validation
     switch (ctx->tx_type) {
       case fil_tx:{
-          CHECK_PARSER_ERR(_validateTx(ctx, &parser_tx_obj))
+          CHECK_PARSER_ERR(_validateTx(ctx, &parser_tx_obj.base_tx))
           break;
       }
       case eth_tx:{
           CHECK_PARSER_ERR(_validateTxEth(ctx))
+          break;
+      }
+      case datacap_tx:{
+          CHECK_PARSER_ERR(_validateDataCap(ctx))
           break;
       }
       default:
@@ -106,6 +117,7 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
 
     for (uint8_t idx = 0; idx < numItems; idx++) {
         uint8_t pageCount = 0;
+        zemu_log_stack("item");
         CHECK_PARSER_ERR(parser_getItem(ctx, idx, tmpKey, sizeof(tmpKey), tmpVal, sizeof(tmpVal), 0, &pageCount))
     }
 
@@ -118,11 +130,15 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_item
 
     switch (ctx->tx_type) {
       case fil_tx:{
-          *num_items = _getNumItems(ctx, &parser_tx_obj);
+          *num_items = _getNumItems(ctx, &parser_tx_obj.base_tx);
           break;
       }
       case eth_tx:{
           *num_items = _getNumItemsEth(ctx);
+          break;
+      }
+      case datacap_tx:{
+          *num_items = _getNumItemsDataCap(ctx);
           break;
       }
       default:
@@ -131,23 +147,7 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_item
     return parser_ok;
 }
 
-#define LESS_THAN_64_DIGIT(num_digit) if (num_digit > 64) return parser_value_out_of_range;
-
-__Z_INLINE bool format_quantity(const bigint_t *b,
-                                uint8_t *bcd, uint16_t bcdSize,
-                                char *bignum, uint16_t bignumSize) {
-
-    if (b->len < 2) {
-        snprintf(bignum, bignumSize, "0");
-        return true;
-    }
-
-    // first byte of b is the sign byte so we can remove this one
-    bignumBigEndian_to_bcd(bcd, bcdSize, b->buffer + 1, b->len - 1);
-    return bignumBigEndian_bcdprint(bignum, bignumSize, bcd, bcdSize);
-}
-
-parser_error_t parser_printParam(const parser_tx_t *tx, uint8_t paramIdx,
+parser_error_t parser_printParam(const fil_base_tx_t *tx, uint8_t paramIdx,
                                  char *outVal, uint16_t outValLen,
                                  uint8_t pageIdx, uint8_t *pageCount) {
     return _printParam(tx, paramIdx, outVal, outValLen, pageIdx, pageCount);
@@ -204,24 +204,24 @@ parser_error_t _getItemFil(const parser_context_t *ctx,
 
     if (displayIdx == 0) {
         snprintf(outKey, outKeyLen, "To ");
-        return _printAddress(&parser_tx_obj.to,
+        return printAddress(&parser_tx_obj.base_tx.to,
                              outVal, outValLen, pageIdx, pageCount);
     }
 
     if (displayIdx == 1) {
         snprintf(outKey, outKeyLen, "From ");
-        return _printAddress(&parser_tx_obj.from,
+        return printAddress(&parser_tx_obj.base_tx.from,
                              outVal, outValLen, pageIdx, pageCount);
     }
 
     if (displayIdx == 2) {
         snprintf(outKey, outKeyLen, "Value ");
-        return parser_printBigIntFixedPoint(&parser_tx_obj.value, outVal, outValLen, pageIdx, pageCount);
+        return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.value, outVal, outValLen, pageIdx, pageCount);
     }
 
     if (displayIdx == 3) {
         snprintf(outKey, outKeyLen, "Gas Limit ");
-        if (int64_to_str(outVal, outValLen, parser_tx_obj.gaslimit) != NULL) {
+        if (int64_to_str(outVal, outValLen, parser_tx_obj.base_tx.gaslimit) != NULL) {
             return parser_unexepected_error;
         }
         *pageCount = 1;
@@ -230,18 +230,18 @@ parser_error_t _getItemFil(const parser_context_t *ctx,
 
     if (displayIdx == 4) {
         snprintf(outKey, outKeyLen, "Gas Fee Cap ");
-        return parser_printBigIntFixedPoint(&parser_tx_obj.gasfeecap, outVal, outValLen, pageIdx, pageCount);
+        return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.gasfeecap, outVal, outValLen, pageIdx, pageCount);
     }
 
     if (expert_mode){
         if (displayIdx == 5) {
             snprintf(outKey, outKeyLen, "Gas Premium ");
-            return parser_printBigIntFixedPoint(&parser_tx_obj.gaspremium, outVal, outValLen, pageIdx, pageCount);
+            return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.gaspremium, outVal, outValLen, pageIdx, pageCount);
         }
 
         if (displayIdx == 6) {
             snprintf(outKey, outKeyLen, "Nonce ");
-            if (uint64_to_str(outVal, outValLen, parser_tx_obj.nonce) != NULL) {
+            if (uint64_to_str(outVal, outValLen, parser_tx_obj.base_tx.nonce) != NULL) {
                 return parser_unexepected_error;
             }
             *pageCount = 1;
@@ -253,30 +253,30 @@ parser_error_t _getItemFil(const parser_context_t *ctx,
         snprintf(outKey, outKeyLen, "Method ");
         *pageCount = 1;
 
-        CHECK_PARSER_ERR(checkMethod(parser_tx_obj.method));
-        if (parser_tx_obj.method == 0) {
+        CHECK_PARSER_ERR(checkMethod(parser_tx_obj.base_tx.method));
+        if (parser_tx_obj.base_tx.method == 0) {
             snprintf(outVal, outValLen, "Transfer ");
             return parser_ok;
         } else {
             char buffer[100];
             MEMZERO(buffer, sizeof(buffer));
-            fpuint64_to_str(buffer, sizeof(buffer), parser_tx_obj.method, 0);
+            fpuint64_to_str(buffer, sizeof(buffer), parser_tx_obj.base_tx.method, 0);
             pageString(outVal, outValLen, buffer, pageIdx, pageCount);
             return parser_ok;
         }
     }
 
-    if (parser_tx_obj.numparams == 0) {
+    if (parser_tx_obj.base_tx.numparams == 0) {
         snprintf(outKey, outKeyLen, "Params ");
         snprintf(outVal, outValLen, "- NONE -");
         return parser_ok;
     }
 
     // remaining display pages show the params
-    int32_t paramIdxSigned = displayIdx - (numItems - parser_tx_obj.numparams);
+    int32_t paramIdxSigned = displayIdx - (numItems - parser_tx_obj.base_tx.numparams);
 
     // end of params
-    if (paramIdxSigned < 0 || paramIdxSigned >= parser_tx_obj.numparams) {
+    if (paramIdxSigned < 0 || paramIdxSigned >= parser_tx_obj.base_tx.numparams) {
         return parser_unexpected_field;
     }
 
@@ -285,7 +285,7 @@ parser_error_t _getItemFil(const parser_context_t *ctx,
     snprintf(outKey, outKeyLen, "Params |%d| ", paramIdx + 1);
 
     zemu_log_stack(outKey);
-    return parser_printParam(&parser_tx_obj, paramIdx, outVal, outValLen, pageIdx, pageCount);
+    return parser_printParam(&parser_tx_obj.base_tx, paramIdx, outVal, outValLen, pageIdx, pageCount);
 }
 
 parser_error_t parser_getItem(const parser_context_t *ctx,
@@ -304,10 +304,16 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
           return _getItemEth(ctx, displayIdx, outKey, outKeyLen,
                               outVal, outValLen, pageIdx, pageCount);
       }
+     case datacap_tx : {
+         return _getItemDataCap(ctx, displayIdx, outKey, outKeyLen,
+                              outVal, outValLen, pageIdx, pageCount);
+     }
+
       default:
           return parser_unsupported_tx;
     }
 }
+
 parser_error_t parser_compute_eth_v(parser_context_t *ctx, unsigned int info, uint8_t *v) {
     return _computeV(ctx , &eth_tx_obj, info, v);
 }

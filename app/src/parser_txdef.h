@@ -48,6 +48,15 @@ typedef struct {
     size_t len;
 } bigint_t;
 
+// To hold information
+// about the Remove DataCap
+// command.
+typedef struct {
+    uint64_t proposal_id;
+    bigint_t amount;
+    address_t client;
+} remove_datacap_t;
+
 // https://github.com/filecoin-project/lotus/blob/eb4f4675a5a765e4898ec6b005ba2e80da8e7e1a/chain/types/message.go#L24-L39
 typedef struct {
     int64_t version;
@@ -62,12 +71,19 @@ typedef struct {
 
     uint8_t numparams;
     uint8_t params[MAX_PARAMS_BUFFER_SIZE];
+} fil_base_tx_t;
+
+typedef struct {
+    union {
+        fil_base_tx_t base_tx;
+        remove_datacap_t rem_datacap_tx;
+    };
 } parser_tx_t;
 
-// simple struct that holds a bigint(256) 
+// simple struct that holds a bigint(256)
 typedef struct {
     uint32_t offset;
-    // although bigInts are defined in 
+    // although bigInts are defined in
     // ethereum as 256 bits,
     // it is possible that it is smaller.
     uint32_t len;
@@ -84,7 +100,7 @@ typedef struct {
     uint8_t addr[ETH_ADDRESS_LEN];
 } eth_addr_t;
 
-// Type that holds the common fields 
+// Type that holds the common fields
 // for legacy and eip2930 transactions
 typedef struct {
     eth_big_int_t nonce;
@@ -108,13 +124,13 @@ typedef enum eth_tx_type_t {
 typedef struct {
     eth_tx_type_t tx_type;
     chain_id_t chain_id;
-    // lets use an anonymous 
+    // lets use an anonymous
     // union to hold the 3 possible types of transactions:
     // legacy, eip2930, eip1559
     union {
         eth_base_t legacy;
     };
- 
+
 } eth_tx_t;
 
 #ifdef __cplusplus

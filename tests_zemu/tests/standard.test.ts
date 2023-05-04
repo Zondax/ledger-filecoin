@@ -360,4 +360,46 @@ describe('Standard', function () {
       await sim.close();
     }
   });
+
+  test.concurrent.each(models)('RemoveDataCap', async function (m) {
+    const sim = new Zemu(m.path);
+    try {
+      await sim.start({...defaultOptions, model: m.name,});
+      const app = new FilecoinApp(sim.getTransport());
+
+      // The data to sign for this transaction is:
+      // proposalID = 256
+      // allowance_to_remove = 15_000_000
+      // cliens_address = t1d2xrzcslx7xlbbylc5c3d5lvandqw4iwl6epxba
+      const txBlob = Buffer.from("8319010058200000000000000000000000000000000000000000000000000000000000e4e1c055011eaf1c8a4bbfeeb0870b1745b1f57503470b7116", 'hex')
+
+      const pkResponse = await app.getAddressAndPubKey(PATH);
+      console.log(pkResponse);
+      expect(pkResponse.return_code).toEqual(0x9000);
+      expect(pkResponse.error_message).toEqual("No errors");
+
+      // do not wait here..
+      const signatureRequest = app.signRemoveDataCap(PATH, txBlob);
+
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
+      await sim.compareSnapshotsAndApprove(".", `${m.prefix.toLowerCase()}-sign_remove_datacap`)
+
+      let resp = await signatureRequest;
+      console.log(resp);
+
+      expect(resp.return_code).toEqual(0x9000);
+      expect(resp.error_message).toEqual("No errors");
+
+      // Verify signature
+      const pk = Uint8Array.from(pkResponse.compressed_pk)
+      const digest = getDigest(txBlob);
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signature_der));
+      const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
+      expect(signatureOk).toEqual(true);
+    } finally {
+      await sim.close();
+    }
+  });
 })
+
+

@@ -65,6 +65,9 @@ int prepareDigestToSign(const unsigned char *in, unsigned int inLen,
 int keccak_digest(const unsigned char *in, unsigned int inLen,
                         unsigned char *out, unsigned int outLen);
 
+int blake_hash(const unsigned char *in, unsigned int inLen,
+               unsigned char *out, unsigned int outLen);
+
 zxerr_t crypto_extractPublicKey(const uint32_t path[MAX_BIP32_PATH], uint8_t *pubKey, uint16_t pubKeyLen, uint8_t *chainCode);
 
 zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t bufferLen, uint16_t *addrLen);

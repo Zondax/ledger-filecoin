@@ -19,8 +19,11 @@
 #include "zxerror.h"
 
 // transaction initializer for the buffer and transaction type.
-void tx_initialize_fil();
-void tx_initialize_eth();
+void tx_context_fil();
+void tx_context_eth();
+void tx_context_datacap();
+
+void initialize_tx_buffer();
 
 /// Clears the transaction buffer
 void tx_reset();

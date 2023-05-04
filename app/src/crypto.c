@@ -90,7 +90,7 @@ int keccak_digest(const unsigned char *in, unsigned int inLen,
     return keccak_hash(in, inLen, out, outLen);
 }
 
-__Z_INLINE int blake_hash(const unsigned char *in, unsigned int inLen,
+int blake_hash(const unsigned char *in, unsigned int inLen,
                unsigned char *out, unsigned int outLen) {
 
     cx_blake2b_t ctx;
@@ -256,7 +256,7 @@ zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t
     return zxerr_ok;
 }
 
-__Z_INLINE int blake_hash(const unsigned char *in, unsigned int inLen,
+int blake_hash(const unsigned char *in, unsigned int inLen,
                           unsigned char *out, unsigned int outLen) {
     blake2b_state s;
     blake2b_init(&s, outLen);
@@ -439,7 +439,7 @@ uint16_t formatProtocol(const uint8_t *addressBytes,
 typedef struct {
     uint8_t publicKey[SECP256K1_PK_LEN];
 
-    // payload as described in https://filecoin-project.github.io/specs/#protocol-1-libsecpk1-elliptic-curve-public-keys
+    // payload as described in https://filecoin-projectegithub.io/specs/#protocol-1-libsecpk1-elliptic-curve-public-keys
     // payload [prot][hashed(pk)]       // 1 + 20
     uint8_t addrBytesLen;
     uint8_t addrBytes[21];
