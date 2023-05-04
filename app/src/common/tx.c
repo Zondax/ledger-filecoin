@@ -44,9 +44,8 @@ storage_t NV_CONST N_appdata_impl __attribute__ ((aligned(64)));
 #endif
 
 parser_context_t ctx_parsed_tx;
-void _initialize_tx_buffer();
 
-void _initialize_tx_buffer() {
+void initialize_tx_buffer() {
     buffering_init(
             ram_buffer,
             sizeof(ram_buffer),
@@ -55,14 +54,16 @@ void _initialize_tx_buffer() {
     );
 }
 
-void tx_initialize_fil() {
+void tx_context_fil() {
   ctx_parsed_tx.tx_type = fil_tx;
-  _initialize_tx_buffer();
 }
 
-void tx_initialize_eth() {
+void tx_context_eth() {
   ctx_parsed_tx.tx_type = eth_tx;
-  _initialize_tx_buffer();
+}
+
+void tx_context_datacap() {
+  ctx_parsed_tx.tx_type = datacap_tx;
 }
 
 void tx_reset() {
@@ -87,16 +88,14 @@ const char *tx_parse() {
             tx_get_buffer(),
             tx_get_buffer_length());
 
-    if (err != parser_ok) {
+    if (err != parser_ok)
         return parser_getErrorDescription(err);
-    }
 
     err = parser_validate(&ctx_parsed_tx);
     CHECK_APP_CANARY()
 
-    if (err != parser_ok) {
+    if (err != parser_ok)
         return parser_getErrorDescription(err);
-    }
 
     return NULL;
 }

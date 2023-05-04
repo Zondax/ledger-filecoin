@@ -1,5 +1,5 @@
 /*******************************************************************************
-*  (c) 2019 Zondax GmbH
+*  (c) 2023 Zondax AG
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -15,26 +15,25 @@
 ********************************************************************************/
 #pragma once
 
+#include "common/parser_common.h"
 #include "parser_common.h"
 #include "parser_txdef.h"
-#include "crypto.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-extern parser_tx_t parser_tx_obj;
+parser_error_t _readDataCap(const parser_context_t *ctx, remove_datacap_t *tx);
 
-parser_error_t _read(const parser_context_t *c, fil_base_tx_t *v);
+parser_error_t _validateDataCap(const parser_context_t *c);
 
-parser_error_t _validateTx(const parser_context_t *c, const fil_base_tx_t *v);
+uint8_t _getNumItemsDataCap(const parser_context_t *c);
 
-parser_error_t _printParam(const fil_base_tx_t *tx, uint8_t paramIdx,
-                           char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount);
-
-uint8_t _getNumItems(const parser_context_t *c, const fil_base_tx_t *v);
-
-parser_error_t checkMethod(uint64_t methodValue);
+parser_error_t _getItemDataCap(const parser_context_t *ctx,
+                              uint8_t displayIdx,
+                              char *outKey, uint16_t outKeyLen,
+                              char *outVal, uint16_t outValLen,
+                              uint8_t pageIdx, uint8_t *pageCount);
 
 #ifdef __cplusplus
 }

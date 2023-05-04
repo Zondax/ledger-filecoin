@@ -95,6 +95,8 @@ file(GLOB_RECURSE LIB_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser_impl.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser_impl_eth.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser_data_cap.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/fil_utils.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/eth_utils.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/crypto.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/base32.c
