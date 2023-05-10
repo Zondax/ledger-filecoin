@@ -66,6 +66,10 @@ void tx_context_datacap() {
   ctx_parsed_tx.tx_type = datacap_tx;
 }
 
+void tx_context_client_deal() {
+  ctx_parsed_tx.tx_type = clientdeal_tx;
+}
+
 void tx_reset() {
     buffering_reset();
 }

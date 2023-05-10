@@ -357,6 +357,35 @@ handleSignDataCap(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
 }
 
 __Z_INLINE void
+handleSignClientDeal(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
+{
+    zemu_log_stack("handleSignClientDeal");
+
+    if (!process_chunk(tx, rx)) {
+        THROW(APDU_CODE_OK);
+    }
+
+    tx_context_client_deal();
+
+    CHECK_APP_CANARY()
+
+    const char *error_msg = tx_parse();
+    CHECK_APP_CANARY()
+
+    if (error_msg != NULL) {
+        int error_msg_length = strlen(error_msg);
+        MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
+        *tx += (error_msg_length);
+        THROW(APDU_CODE_DATA_INVALID);
+    }
+
+    CHECK_APP_CANARY()
+    view_review_init(tx_getItem, tx_getNumItems, app_sign);
+    view_review_show(REVIEW_TXN);
+    *flags |= IO_ASYNCH_REPLY;
+}
+
+__Z_INLINE void
 handleSignEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
 {
     zemu_log_stack("handleSignEth");
@@ -448,6 +477,11 @@ handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
                 case INS_SIGN_DATACAP: {
                     CHECK_PIN_VALIDATED()
                     handleSignDataCap(flags, tx, rx);
+                    break;
+                }
+                case INS_CLIENT_DEAL: {
+                    CHECK_PIN_VALIDATED()
+                    handleSignClientDeal(flags, tx, rx);
                     break;
                 }
                 case INS_SIGN_ETH: {

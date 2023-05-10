@@ -13,6 +13,7 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
+
 #include "fil_utils.h"
 
 parser_error_t parser_mapCborError(CborError err) {
@@ -125,4 +126,49 @@ bool format_quantity(const bigint_t *b,
     // first byte of b is the sign byte so we can remove this one
     bignumBigEndian_to_bcd(bcd, bcdSize, b->buffer + 1, b->len - 1);
     return bignumBigEndian_bcdprint(bignum, bignumSize, bcd, bcdSize);
+}
+
+parser_error_t parser_printBigIntFixedPoint(const bigint_t *b,
+                                                       char *outVal, uint16_t outValLen,
+                                                       uint8_t pageIdx, uint8_t *pageCount, uint16_t decimals) {
+
+    LESS_THAN_64_DIGIT(b->len)
+
+    char bignum[160];
+    union {
+        // overlapping arrays to avoid excessive stack usage. Do not use at the same time
+        uint8_t bcd[80];
+        char output[160];
+    } overlapped;
+
+    MEMZERO(overlapped.bcd, sizeof(overlapped.bcd));
+    MEMZERO(bignum, sizeof(bignum));
+
+    if (!format_quantity(b, overlapped.bcd, sizeof(overlapped.bcd), bignum, sizeof(bignum))) {
+        return parser_unexpected_value;
+    }
+
+    fpstr_to_str(overlapped.output, sizeof(overlapped.output), bignum, decimals);
+    pageString(outVal, outValLen, overlapped.output, pageIdx, pageCount);
+    return parser_ok;
+}
+
+parser_error_t renderByteString(uint8_t *in, uint16_t inLen,
+                          char *outVal, uint16_t outValLen,
+                          uint8_t pageIdx, uint8_t *pageCount) {
+    const uint32_t len = inLen * 2;
+
+    // check bounds
+    if (inLen > 0 && inLen <= STR_BUF_LEN) {
+        char hexStr[STR_BUF_LEN * 2 + 1] = {0};
+        const uint32_t count = array_to_hexstr(hexStr, sizeof(hexStr), in, inLen);
+        PARSER_ASSERT_OR_ERROR(count == len, parser_value_out_of_range)
+        CHECK_APP_CANARY()
+
+        pageString(outVal, outValLen, hexStr, pageIdx, pageCount);
+        CHECK_APP_CANARY()
+        return parser_ok;
+    }
+
+    return parser_value_out_of_range;
 }

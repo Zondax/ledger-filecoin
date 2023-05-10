@@ -63,7 +63,7 @@ typedef enum {
     parser_invalid_chain_id,
     parser_invalid_rs_values,
     parser_invalid_datacap_tx,
-    parser_wrong_verifier,
+    parser_invalid_cid,
 } parser_error_t;
 
 // Define the three types
@@ -75,6 +75,7 @@ typedef enum {
   fil_tx = 0,
   eth_tx,
   datacap_tx,
+  clientdeal_tx,
 }tx_type_t;
 
 typedef struct {

@@ -20,6 +20,7 @@
 #include "parser_impl.h"
 #include "parser_impl_eth.h"
 #include "parser_data_cap.h"
+#include "parser_client_deal.h"
 #include "bignum.h"
 #include "parser.h"
 #include "parser_txdef.h"
@@ -63,6 +64,7 @@ parser_error_t parser_init(parser_context_t *ctx, const uint8_t *buffer, uint16_
 
 
 parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data, size_t dataLen) {
+    zemu_log_stack("parser_parse");
     // common context init
     CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
 
@@ -75,6 +77,10 @@ parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data, size_t d
         }
         case datacap_tx : {
             return _readDataCap(ctx, &parser_tx_obj.rem_datacap_tx);
+        }
+        case clientdeal_tx : {
+            zemu_log_stack("callint clientdeal parser");
+            return _readClientDeal(ctx, &parser_tx_obj.client_deal_tx);
         }
         default:
             return parser_unsupported_tx;
@@ -98,6 +104,9 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
           CHECK_PARSER_ERR(_validateDataCap(ctx))
           break;
       }
+      case clientdeal_tx : {
+          return _validateClientDeal(ctx);
+      }
       default:
           return parser_unsupported_tx;
     }
@@ -113,12 +122,16 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
     zemu_log(log_tmp);
 
     char tmpKey[40];
-    char tmpVal[40];
+    char tmpVal[90];
 
     for (uint8_t idx = 0; idx < numItems; idx++) {
         uint8_t pageCount = 0;
-        zemu_log_stack("item");
+        // zemu_log_stack("item");
         CHECK_PARSER_ERR(parser_getItem(ctx, idx, tmpKey, sizeof(tmpKey), tmpVal, sizeof(tmpVal), 0, &pageCount))
+        zemu_log_stack(tmpKey);
+        zemu_log_stack(tmpVal);
+        MEMZERO(tmpKey, 40);
+        MEMZERO(tmpVal, 90);
     }
 
     zemu_log("parser_validate::ok\n");
@@ -141,6 +154,10 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_item
           *num_items = _getNumItemsDataCap(ctx);
           break;
       }
+      case clientdeal_tx : {
+          *num_items = _getNumItemsClientDeal(ctx);
+            break;
+      }
       default:
           return parser_unsupported_tx;
     }
@@ -153,30 +170,6 @@ parser_error_t parser_printParam(const fil_base_tx_t *tx, uint8_t paramIdx,
     return _printParam(tx, paramIdx, outVal, outValLen, pageIdx, pageCount);
 }
 
-__Z_INLINE parser_error_t parser_printBigIntFixedPoint(const bigint_t *b,
-                                                       char *outVal, uint16_t outValLen,
-                                                       uint8_t pageIdx, uint8_t *pageCount) {
-
-    LESS_THAN_64_DIGIT(b->len)
-
-    char bignum[160];
-    union {
-        // overlapping arrays to avoid excessive stack usage. Do not use at the same time
-        uint8_t bcd[80];
-        char output[160];
-    } overlapped;
-
-    MEMZERO(overlapped.bcd, sizeof(overlapped.bcd));
-    MEMZERO(bignum, sizeof(bignum));
-
-    if (!format_quantity(b, overlapped.bcd, sizeof(overlapped.bcd), bignum, sizeof(bignum))) {
-        return parser_unexpected_value;
-    }
-
-    fpstr_to_str(overlapped.output, sizeof(overlapped.output), bignum, COIN_AMOUNT_DECIMAL_PLACES);
-    pageString(outVal, outValLen, overlapped.output, pageIdx, pageCount);
-    return parser_ok;
-}
 
 parser_error_t _getItemFil(const parser_context_t *ctx,
                               uint8_t displayIdx,
@@ -216,7 +209,7 @@ parser_error_t _getItemFil(const parser_context_t *ctx,
 
     if (displayIdx == 2) {
         snprintf(outKey, outKeyLen, "Value ");
-        return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.value, outVal, outValLen, pageIdx, pageCount);
+        return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.value, outVal, outValLen, pageIdx, pageCount, COIN_AMOUNT_DECIMAL_PLACES);
     }
 
     if (displayIdx == 3) {
@@ -230,13 +223,13 @@ parser_error_t _getItemFil(const parser_context_t *ctx,
 
     if (displayIdx == 4) {
         snprintf(outKey, outKeyLen, "Gas Fee Cap ");
-        return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.gasfeecap, outVal, outValLen, pageIdx, pageCount);
+        return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.gasfeecap, outVal, outValLen, pageIdx, pageCount, COIN_AMOUNT_DECIMAL_PLACES);
     }
 
     if (expert_mode){
         if (displayIdx == 5) {
             snprintf(outKey, outKeyLen, "Gas Premium ");
-            return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.gaspremium, outVal, outValLen, pageIdx, pageCount);
+            return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.gaspremium, outVal, outValLen, pageIdx, pageCount, COIN_AMOUNT_DECIMAL_PLACES);
         }
 
         if (displayIdx == 6) {
@@ -306,6 +299,10 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
       }
      case datacap_tx : {
          return _getItemDataCap(ctx, displayIdx, outKey, outKeyLen,
+                              outVal, outValLen, pageIdx, pageCount);
+     }
+     case clientdeal_tx : {
+         return _getItemClientDeal(ctx, displayIdx, outKey, outKeyLen,
                               outVal, outValLen, pageIdx, pageCount);
      }
 

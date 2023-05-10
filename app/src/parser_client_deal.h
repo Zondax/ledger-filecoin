@@ -14,4 +14,26 @@
 *  limitations under the License.
 ********************************************************************************/
 
+#include "common/parser_common.h"
+#include "parser_common.h"
+#include "parser_txdef.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+parser_error_t _readClientDeal(const parser_context_t *ctx, client_deal_t *tx);
+
+parser_error_t _validateClientDeal(const parser_context_t *c);
+
+uint8_t _getNumItemsClientDeal(const parser_context_t *c);
+
+parser_error_t _getItemClientDeal(const parser_context_t *ctx,
+                              uint8_t displayIdx,
+                              char *outKey, uint16_t outKeyLen,
+                              char *outVal, uint16_t outValLen,
+                              uint8_t pageIdx, uint8_t *pageCount);
+
+#ifdef __cplusplus
+}
+#endif
