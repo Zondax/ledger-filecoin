@@ -47,6 +47,7 @@
 #define INS_SIGN_SECP256K1              0x02
 #define INS_SIGN_ETH                    0x04
 #define INS_SIGN_DATACAP                0x05
+#define INS_CLIENT_DEAL                 0x06
 #define INS_GET_ADDR_ETH                0x02
 
 void app_init();

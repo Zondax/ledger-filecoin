@@ -22,6 +22,7 @@
 void tx_context_fil();
 void tx_context_eth();
 void tx_context_datacap();
+void tx_context_client_deal();
 
 void initialize_tx_buffer();
 

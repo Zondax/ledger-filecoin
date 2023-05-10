@@ -400,6 +400,47 @@ describe('Standard', function () {
       await sim.close();
     }
   });
+
+  test.concurrent.each(models)('ClientDeal', async function (m) {
+    const sim = new Zemu(m.path);
+    try {
+      await sim.start({...defaultOptions, model: m.name,});
+      const app = new FilecoinApp(sim.getTransport());
+
+      // Put the app in expert mode
+      await sim.clickRight();
+      await sim.clickBoth();
+      await sim.clickLeft();
+
+      const txBlob = Buffer.from("8b782f516d53377965365269324d66467a436b63554a374651367a78444b754a364a3642386b35504e37777a53523973580a1a000186a055011eaf1c8a4bbfeeb0870b1745b1f57503470b71165501dfe49184d46adc8f89d44638beb45f78fcad2590826a6465616c5f6c6162656cf51a663fa3b51a6668823558200000000000000000000000000000000000000000000000000000000000015f905820000000000000000000000000000000000000000000000000000000000000c35058200000000000000000000000000000000000000000000000000000000000013880f5", 'hex')
+
+      const pkResponse = await app.getAddressAndPubKey(PATH);
+      console.log(pkResponse);
+      expect(pkResponse.return_code).toEqual(0x9000);
+      expect(pkResponse.error_message).toEqual("No errors");
+
+      // do not wait here..
+      const signatureRequest = app.signClientDeal(PATH, txBlob);
+
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
+      await sim.compareSnapshotsAndApprove(".", `${m.prefix.toLowerCase()}-sign_client_deal`)
+
+      let resp = await signatureRequest;
+      console.log(resp);
+
+      expect(resp.return_code).toEqual(0x9000);
+      expect(resp.error_message).toEqual("No errors");
+
+      // Verify signature
+      const pk = Uint8Array.from(pkResponse.compressed_pk)
+      const digest = getDigest(txBlob);
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signature_der));
+      const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
+      expect(signatureOk).toEqual(true);
+    } finally {
+      await sim.close();
+    }
+  });
 })
 
 

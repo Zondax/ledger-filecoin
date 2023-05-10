@@ -32,6 +32,12 @@ extern "C" {
 #define ETH_ADDRESS_LEN         20
 #define MAX_CHAIN_LEN           UINT64_MAX
 
+// https://github.com/filecoin-project/go-state-types/blob/master/builtin/v9/market/policy.go#L30
+#define MAX_DEAL_LABEL_SIZE     256
+
+// This limit is not part of lotus but our restriction
+#define MAX_CID_LEN             200
+
 
 // https://github.com/filecoin-project/lotus/blob/65c669b0f2dfd8c28b96755e198b9cdaf0880df8/chain/address/address.go#L36
 // https://github.com/filecoin-project/lotus/blob/65c669b0f2dfd8c28b96755e198b9cdaf0880df8/chain/address/address.go#L371-L373
@@ -57,6 +63,37 @@ typedef struct {
     address_t client;
 } remove_datacap_t;
 
+// https://github.com/filecoin-project/go-state-types/blob/master/builtin/v9/market/deal.go#L40
+typedef struct {
+    // add 1-byte for the null terminated string
+    // TODO: check if it is actually necessary
+    uint8_t data[MAX_DEAL_LABEL_SIZE + 1];
+    size_t len;
+    uint8_t is_string;
+} deal_label_t;
+
+// https://github.com/ipfs/go-cid/blob/master/cid.go#L173
+typedef struct {
+    // plus null
+    char str[MAX_CID_LEN + 1];
+    size_t len;
+} cid_t;
+
+// https://github.com/filecoin-project/lotus/blob/master/node/impl/client/client.go#L238-L265
+typedef struct {
+    cid_t cid;
+    int64_t piece_size;
+    address_t client;
+    address_t provider;
+    deal_label_t label;
+    int64_t start_epoch;
+    int64_t end_epoch;
+    bigint_t storage_price_x_epoch;
+    bigint_t provider_collateral;
+    bigint_t client_collateral;
+    uint8_t verified_deal;
+} client_deal_t;
+
 // https://github.com/filecoin-project/lotus/blob/eb4f4675a5a765e4898ec6b005ba2e80da8e7e1a/chain/types/message.go#L24-L39
 typedef struct {
     int64_t version;
@@ -77,6 +114,7 @@ typedef struct {
     union {
         fil_base_tx_t base_tx;
         remove_datacap_t rem_datacap_tx;
+        client_deal_t client_deal_tx;
     };
 } parser_tx_t;
 

@@ -13,6 +13,7 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
+
 #include <zxmacros.h>
 #include "common/parser_common.h"
 #include "cbor.h"
@@ -20,6 +21,8 @@
 #include "zxformat.h"
 #include "crypto.h"
 #include "parser_txdef.h"
+
+#define STR_BUF_LEN 200
 
 #define PARSER_ASSERT_OR_ERROR(CALL, ERROR) if (!(CALL)) return ERROR;
 
@@ -45,6 +48,14 @@ parser_error_t printAddress(const address_t *a,char *outVal, uint16_t outValLen,
 
 parser_error_t readBigInt(bigint_t *bigint, CborValue *value);
 
+parser_error_t parser_printBigIntFixedPoint(const bigint_t *b,
+                                                       char *outVal, uint16_t outValLen,
+                                                       uint8_t pageIdx, uint8_t *pageCount, uint16_t decimal_place);
+
 bool format_quantity(const bigint_t *b,
                                 uint8_t *bcd, uint16_t bcdSize,
                                 char *bignum, uint16_t bignumSize);
+
+parser_error_t renderByteString(uint8_t *in, uint16_t inLen,
+                          char *outVal, uint16_t outValLen,
+                          uint8_t pageIdx, uint8_t *pageCount);

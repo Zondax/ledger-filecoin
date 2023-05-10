@@ -30,32 +30,6 @@
 
 #define MB_DECIMAL_PLACES 6
 
-__Z_INLINE parser_error_t _printBigIntFixedPoint(const bigint_t *b,
-                                                       char *outVal, uint16_t outValLen,
-                                                       uint8_t pageIdx, uint8_t *pageCount) {
-
-    LESS_THAN_64_DIGIT(b->len)
-
-    char bignum[160];
-    union {
-        // overlapping arrays to avoid excessive stack usage. Do not use at the same time
-        uint8_t bcd[80];
-        char output[160];
-    } overlapped;
-
-    MEMZERO(overlapped.bcd, sizeof(overlapped.bcd));
-    MEMZERO(bignum, sizeof(bignum));
-
-    if (!format_quantity(b, overlapped.bcd, sizeof(overlapped.bcd), bignum, sizeof(bignum))) {
-        return parser_unexpected_value;
-    }
-
-    // amount units are bytes, lets represent it as MB
-    fpstr_to_str(overlapped.output, sizeof(overlapped.output), bignum, MB_DECIMAL_PLACES);
-    pageString(outVal, outValLen, overlapped.output, pageIdx, pageCount);
-    return parser_ok;
-}
-
 parser_error_t _readDataCap(const parser_context_t *ctx, remove_datacap_t *tx) {
     CborValue it;
     INIT_CBOR_PARSER(ctx, it)
@@ -151,7 +125,7 @@ parser_error_t _getItemDataCap(__Z_UNUSED const parser_context_t *ctx,
 
     if (displayIdx == 2) {
         snprintf(outKey, outKeyLen, "allowanceToRem(MB) ");
-        return _printBigIntFixedPoint(&parser_tx_obj.rem_datacap_tx.amount, outVal, outValLen, pageIdx, pageCount);
+        return parser_printBigIntFixedPoint(&parser_tx_obj.rem_datacap_tx.amount, outVal, outValLen, pageIdx, pageCount, MB_DECIMAL_PLACES);
     }
 
     return parser_no_data;
