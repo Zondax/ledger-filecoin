@@ -29,6 +29,8 @@
 #include "coin.h"
 #include "parser_client_deal.h"
 
+#define MIN_DEAL_DURATION 518400
+
 __Z_INLINE parser_error_t _readCid(cid_t *cid, CborValue *value) {
 
     // according to docs, cid is a string
@@ -153,6 +155,14 @@ parser_error_t _readClientDeal(const parser_context_t *ctx, client_deal_t *tx) {
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
+    // lotus Docs defines that the minimal duration is 518400 blocks(~6 months)
+    // so we add that check here. this might be subject to changes.
+    if (tx->end_epoch < tx->start_epoch)
+        return parser_unexpected_value;
+
+    int64_t duration = tx->end_epoch - tx->start_epoch;
+    if (duration < MIN_DEAL_DURATION)
+        return parser_invalid_deal_duration;
 
     // "storage_price" field
     CHECK_PARSER_ERR(readBigInt(&tx->storage_price_x_epoch, &arrayContainer))
