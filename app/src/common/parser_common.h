@@ -64,6 +64,7 @@ typedef enum {
     parser_invalid_rs_values,
     parser_invalid_datacap_tx,
     parser_invalid_cid,
+    parser_invalid_deal_duration,
 } parser_error_t;
 
 // Define the three types

@@ -412,6 +412,17 @@ describe('Standard', function () {
       await sim.clickBoth();
       await sim.clickLeft();
 
+      // cid: "QmS7ye6Ri2MfFzCkcUJ7FQ6zxDKuJ6J6B8k5PN7wzSR9sX\n"
+      // piece_size = 100000
+      // client := "t1d2xrzcslx7xlbbylc5c3d5lvandqw4iwl6epxba"
+      // provider := "t137sjdbgunloi7couiy4l5nc7pd6k2jmq32vizpy"
+      // label: ["deal_label", true]
+      // const start_epoch = 1715446709
+      // const end_epoch = 1718125109
+      // storage_price = 90000
+      // provider_collateral = 50000
+      // client_collateral = 80000"
+      // verified_deal = true
       const txBlob = Buffer.from("8b782f516d53377965365269324d66467a436b63554a374651367a78444b754a364a3642386b35504e37777a53523973580a1a000186a055011eaf1c8a4bbfeeb0870b1745b1f57503470b71165501dfe49184d46adc8f89d44638beb45f78fcad2590826a6465616c5f6c6162656cf51a663fa3b51a6668823558200000000000000000000000000000000000000000000000000000000000015f905820000000000000000000000000000000000000000000000000000000000000c35058200000000000000000000000000000000000000000000000000000000000013880f5", 'hex')
 
       const pkResponse = await app.getAddressAndPubKey(PATH);

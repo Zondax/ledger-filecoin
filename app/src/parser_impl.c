@@ -94,6 +94,8 @@ const char *parser_getErrorDescription(parser_error_t err) {
             return "Invalid remove allowance tx";
         case parser_invalid_cid:
             return "Invalid CID";
+        case parser_invalid_deal_duration:
+            return "Client deal duration must be >= 518400";
         default:
             return "Unrecognized error code";
     }
