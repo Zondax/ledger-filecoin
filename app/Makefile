@@ -71,6 +71,8 @@ DEFINES       += UNUSED\(x\)=\(void\)x
 
 # App specific
 DEFINES += CBOR_NO_FLOATING_POINT
+DEFINES += HAVE_HASH HAVE_BLAKE2
+INCLUDES_PATH += $(BOLOS_SDK)/lib_cxng/src
 
 CFLAGS += -Wvla
 

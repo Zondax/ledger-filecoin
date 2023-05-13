@@ -21,6 +21,7 @@
 #include "parser_impl_eth.h"
 #include "parser_data_cap.h"
 #include "parser_client_deal.h"
+#include "parser_raw_bytes.h"
 #include "bignum.h"
 #include "parser.h"
 #include "parser_txdef.h"
@@ -65,22 +66,26 @@ parser_error_t parser_init(parser_context_t *ctx, const uint8_t *buffer, uint16_
 
 parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data, size_t dataLen) {
     zemu_log_stack("parser_parse");
-    // common context init
-    CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
 
     switch (ctx->tx_type) {
         case fil_tx: {
+            CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
             return _read(ctx, &(parser_tx_obj.base_tx));
         }
         case eth_tx: {
+            CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
             return _readEth(ctx, &eth_tx_obj);
         }
         case datacap_tx : {
+            CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
             return _readDataCap(ctx, &parser_tx_obj.rem_datacap_tx);
         }
         case clientdeal_tx : {
-            zemu_log_stack("callint clientdeal parser");
+            CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
             return _readClientDeal(ctx, &parser_tx_obj.client_deal_tx);
+        }
+        case raw_bytes: {
+            return _readRawBytes(ctx, &parser_tx_obj.raw_bytes_tx);
         }
         default:
             return parser_unsupported_tx;
@@ -107,6 +112,10 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
       case clientdeal_tx : {
           return _validateClientDeal(ctx);
       }
+      case raw_bytes:{
+          CHECK_PARSER_ERR(_validateRawBytes(ctx))
+          break;
+      }
       default:
           return parser_unsupported_tx;
     }
@@ -122,16 +131,12 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
     zemu_log(log_tmp);
 
     char tmpKey[40];
-    char tmpVal[90];
+    char tmpVal[40];
 
     for (uint8_t idx = 0; idx < numItems; idx++) {
         uint8_t pageCount = 0;
-        // zemu_log_stack("item");
+        zemu_log_stack("item");
         CHECK_PARSER_ERR(parser_getItem(ctx, idx, tmpKey, sizeof(tmpKey), tmpVal, sizeof(tmpVal), 0, &pageCount))
-        zemu_log_stack(tmpKey);
-        zemu_log_stack(tmpVal);
-        MEMZERO(tmpKey, 40);
-        MEMZERO(tmpVal, 90);
     }
 
     zemu_log("parser_validate::ok\n");
@@ -157,6 +162,10 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_item
       case clientdeal_tx : {
           *num_items = _getNumItemsClientDeal(ctx);
             break;
+      }
+      case raw_bytes:{
+          *num_items = _getNumItemsRawBytes(ctx);
+          break;
       }
       default:
           return parser_unsupported_tx;
@@ -305,7 +314,11 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
          return _getItemClientDeal(ctx, displayIdx, outKey, outKeyLen,
                               outVal, outValLen, pageIdx, pageCount);
      }
-
+      case raw_bytes:{
+          // for now just display the hash
+          return _getItemRawBytes(ctx, displayIdx, outKey, outKeyLen,
+                              outVal, outValLen, pageIdx, pageCount);
+      }
       default:
           return parser_unsupported_tx;
     }
@@ -313,4 +326,18 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
 
 parser_error_t parser_compute_eth_v(parser_context_t *ctx, unsigned int info, uint8_t *v) {
     return _computeV(ctx , &eth_tx_obj, info, v);
+}
+
+parser_error_t parser_rawbytes_init(uint8_t *buf, size_t buf_len) {
+
+    return raw_bytes_init(buf, buf_len);
+}
+parser_error_t parser_rawbytes_update(uint8_t *buf, size_t buf_len) {
+    return raw_bytes_update(buf, buf_len);
+}
+uint8_t *parser_rawbytes_hash() {
+    return parser_tx_obj.raw_bytes_tx.digest;
+}
+size_t parser_rawbytes_hash_len() {
+    return sizeof(parser_tx_obj.raw_bytes_tx.digest);
 }

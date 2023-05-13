@@ -15,6 +15,7 @@
 ********************************************************************************/
 #pragma once
 
+#include "crypto.h"
 #define CBOR_PARSER_MAX_RECURSIONS 4
 
 #include <coin.h>
@@ -111,10 +112,18 @@ typedef struct {
 } fil_base_tx_t;
 
 typedef struct {
+    cx_blake2b_t ctx;
+    uint8_t digest[BLAKE2B_256_SIZE];
+    size_t total;
+    size_t current;
+} raw_bytes_state_t;
+
+typedef struct {
     union {
         fil_base_tx_t base_tx;
         remove_datacap_t rem_datacap_tx;
         client_deal_t client_deal_tx;
+        raw_bytes_state_t raw_bytes_tx;
     };
 } parser_tx_t;
 

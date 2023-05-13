@@ -65,6 +65,7 @@ typedef enum {
     parser_invalid_datacap_tx,
     parser_invalid_cid,
     parser_invalid_deal_duration,
+    parser_invalid_prefix,
 } parser_error_t;
 
 // Define the three types
@@ -77,6 +78,7 @@ typedef enum {
   eth_tx,
   datacap_tx,
   clientdeal_tx,
+  raw_bytes,
 }tx_type_t;
 
 typedef struct {

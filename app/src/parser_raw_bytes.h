@@ -18,6 +18,7 @@
 #include "common/parser_common.h"
 #include "parser_common.h"
 #include "parser_txdef.h"
+#include "crypto.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,13 +26,16 @@ extern "C" {
 
 extern parser_tx_t parser_tx_obj;
 
-parser_error_t _readDataCap(const parser_context_t *ctx, remove_datacap_t *tx);
+parser_error_t raw_bytes_init(uint8_t *buf, size_t buf_len);
+parser_error_t raw_bytes_update(uint8_t *buf, size_t buf_len);
 
-parser_error_t _validateDataCap(const parser_context_t *c);
+parser_error_t _readRawBytes(const parser_context_t *ctx, raw_bytes_state_t *tx);
 
-uint8_t _getNumItemsDataCap(const parser_context_t *c);
+parser_error_t _validateRawBytes(const parser_context_t *ctx);
 
-parser_error_t _getItemDataCap(const parser_context_t *ctx,
+uint8_t _getNumItemsRawBytes(const parser_context_t *ctx);
+
+parser_error_t _getItemRawBytes(const parser_context_t *ctx,
                               uint8_t displayIdx,
                               char *outKey, uint16_t outKeyLen,
                               char *outVal, uint16_t outValLen,

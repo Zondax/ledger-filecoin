@@ -15,6 +15,7 @@
 ********************************************************************************/
 
 #include "crypto.h"
+#include <stdio.h>
 #include "coin.h"
 #include "tx.h"
 #include "zxmacros.h"
@@ -32,6 +33,7 @@ bool isTestnet() {
 
 #if defined(TARGET_NANOS) || defined(TARGET_NANOX) || defined(TARGET_NANOS2)
 #include "cx.h"
+#include "cx_blake2b.h"
 
 zxerr_t crypto_extractPublicKey(const uint32_t path[MAX_BIP32_PATH], uint8_t *pubKey, uint16_t pubKeyLen, uint8_t *chainCode) {
 
@@ -90,6 +92,24 @@ int keccak_digest(const unsigned char *in, unsigned int inLen,
     return keccak_hash(in, inLen, out, outLen);
 }
 
+int blake_hash_init(cx_blake2b_t *ctx, size_t size) {
+    cx_blake2b_init(ctx, size * 8);
+    return 0;
+}
+
+int blake_hash_update(cx_blake2b_t *ctx, uint8_t *in, unsigned int len) {
+
+    if (cx_blake2b_update(ctx, in, len) != CX_OK)
+        return -1;
+
+    return 0;
+}
+
+int blake_hash_finish(cx_blake2b_t *ctx, uint8_t *out) {
+    cx_blake2b_final(ctx, out);
+    return 0;
+}
+
 int blake_hash(const unsigned char *in, unsigned int inLen,
                unsigned char *out, unsigned int outLen) {
 
@@ -100,7 +120,7 @@ int blake_hash(const unsigned char *in, unsigned int inLen,
     return 0;
 }
 
-__Z_INLINE int blake_hash_cid(const unsigned char *in, unsigned int inLen,
+int blake_hash_cid(const unsigned char *in, unsigned int inLen,
                unsigned char *out, unsigned int outLen) {
 
     uint8_t prefix[] = PREFIX;
@@ -202,6 +222,16 @@ zxerr_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *me
     return ret;
 }
 
+zxerr_t crypto_sign_raw_bytes(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *digest, uint16_t messageLen, uint16_t *sigSize) {
+    unsigned int info = 0;
+
+    if (messageLen != BLAKE2B_256_SIZE)
+        return zxerr_invalid_crypto_settings;
+
+    zxerr_t ret = _sign(buffer, signatureMaxlen, digest, BLAKE2B_256_SIZE, sigSize, hdPath, HDPATH_LEN_DEFAULT, &info);
+    return ret;
+}
+
 // Sign an ethereum related transaction
 zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen, uint16_t *sigSize) {
 
@@ -267,7 +297,7 @@ int blake_hash(const unsigned char *in, unsigned int inLen,
     return 0;
 }
 
-__Z_INLINE int blake_hash_cid(const unsigned char *in, unsigned int inLen,
+int blake_hash_cid(const unsigned char *in, unsigned int inLen,
                               unsigned char *out, unsigned int outLen) {
 
     uint8_t prefix[] = PREFIX;
@@ -305,10 +335,28 @@ zxerr_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen,
     return zxerr_ok;
 }
 
+zxerr_t crypto_sign_raw_bytes(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *digest, uint16_t messageLen, uint16_t *sigSize) {
+    return zxerr_ok;
+}
+
 int keccak_digest(const unsigned char *in, unsigned int inLen,
                           unsigned char *out, unsigned int outLen) {
     return 0;
 }
+
+int blake_hash_init(cx_blake2b_t *ctx, size_t size) {
+    return 0;
+}
+
+int blake_hash_update(cx_blake2b_t *ctx, uint8_t *in, size_t len) {
+
+    return 0;
+}
+
+int blake_hash_finish(cx_blake2b_t *ctx, uint8_t *out) {
+    return 0;
+}
+
 
 #endif // **************************** endif
 

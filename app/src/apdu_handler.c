@@ -36,6 +36,7 @@
 #include "zxmacros.h"
 
 static bool tx_initialized = false;
+static uint32_t msg_counter = 0;
 
 void
 extractHDPath(uint32_t rx, uint32_t offset, uint32_t path_len)
@@ -146,6 +147,64 @@ process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
             return true;
     }
 
+    THROW(APDU_CODE_INVALIDP1P2);
+}
+
+bool
+process_rawbytes_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
+{
+    const uint8_t payloadType = G_io_apdu_buffer[OFFSET_PAYLOAD_TYPE];
+
+    if (G_io_apdu_buffer[OFFSET_P2] != 0) {
+        THROW(APDU_CODE_INVALIDP1P2);
+    }
+
+    if (rx < OFFSET_DATA) {
+        THROW(APDU_CODE_WRONG_LENGTH);
+    }
+
+    switch (payloadType) {
+        case P1_INIT:
+            // TODO: check if we need this
+            initialize_tx_buffer();
+            tx_reset();
+            extract_fil_path(rx, OFFSET_DATA);
+            tx_initialized = true;
+            msg_counter = 0;
+            return false;
+        case P1_ADD:
+        case P1_LAST: {
+
+            size_t msg_len = rx - OFFSET_DATA;
+            uint8_t *buf = G_io_apdu_buffer + OFFSET_DATA;
+
+            if (!tx_initialized) {
+                THROW(APDU_CODE_TX_NOT_INITIALIZED);
+            }
+
+            // initialize if this is the first message, as P1_INIT is the first chunk containing only the PATH
+            // if this is not the first message, then, just update our state with this data
+            if (msg_counter == 1) {
+                if (tx_rawbytes_init_state(buf, msg_len) != zxerr_ok) {
+                    tx_initialized = false;
+                    THROW(APDU_CODE_DATA_INVALID);
+                }
+            } else {
+                if (tx_rawbytes_update(buf, msg_len) != zxerr_ok) {
+                    tx_initialized = false;
+                    THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
+                }
+            }
+
+            if (payloadType == P1_LAST){
+                return true;
+            }
+
+            return false;
+        }
+    }
+
+    tx_initialized = false;
     THROW(APDU_CODE_INVALIDP1P2);
 }
 
@@ -385,6 +444,49 @@ handleSignClientDeal(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t r
     *flags |= IO_ASYNCH_REPLY;
 }
 
+
+__Z_INLINE void
+handleSignRawBytes(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
+{
+    zemu_log_stack("handleSignRawBytes");
+
+    msg_counter += 1;
+
+    if (!process_rawbytes_chunk(tx, rx)) {
+        char message[100] = {0};
+        snprintf(message, sizeof(message), "Chunk %d\n", msg_counter);
+        if ((msg_counter % 5) == 0) {
+            char *prompt = "RawBytes:";
+            view_message_show(prompt, message);
+            #if !defined(TARGET_STAX)
+            UX_WAIT_DISPLAYED();
+            #endif
+        }
+        THROW(APDU_CODE_OK);
+    }
+
+    tx_context_raw_bytes();
+
+    view_idle_show(0, NULL);
+
+    CHECK_APP_CANARY()
+
+    const char *error_msg = tx_parse();
+    CHECK_APP_CANARY()
+
+    if (error_msg != NULL) {
+        int error_msg_length = strlen(error_msg);
+        MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
+        *tx += (error_msg_length);
+        THROW(APDU_CODE_DATA_INVALID);
+    }
+
+    CHECK_APP_CANARY()
+    view_review_init(tx_getItem, tx_getNumItems, app_sign);
+    view_review_show(REVIEW_TXN);
+    *flags |= IO_ASYNCH_REPLY;
+}
+
 __Z_INLINE void
 handleSignEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
 {
@@ -482,6 +584,11 @@ handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
                 case INS_CLIENT_DEAL: {
                     CHECK_PIN_VALIDATED()
                     handleSignClientDeal(flags, tx, rx);
+                    break;
+                }
+                case INS_SIGN_RAW_BYTES: {
+                    CHECK_PIN_VALIDATED()
+                    handleSignRawBytes(flags, tx, rx);
                     break;
                 }
                 case INS_SIGN_ETH: {

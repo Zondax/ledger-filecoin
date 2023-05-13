@@ -96,6 +96,8 @@ const char *parser_getErrorDescription(parser_error_t err) {
             return "Invalid CID";
         case parser_invalid_deal_duration:
             return "Client deal duration must be >= 518400";
+        case parser_invalid_prefix:
+            return "Invalid raw-bytes prefix";
         default:
             return "Unrecognized error code";
     }
