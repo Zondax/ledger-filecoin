@@ -216,14 +216,14 @@ zxerr_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *me
     blake_hash(message, messageLen, tmp, BLAKE2B_256_SIZE);
     blake_hash_cid(tmp, BLAKE2B_256_SIZE, message_digest, BLAKE2B_256_SIZE);
 
-    unsigned int info = 0;
+    info = 0;
 
     zxerr_t ret = _sign(buffer, signatureMaxlen, message_digest, BLAKE2B_256_SIZE, sigSize, hdPath, HDPATH_LEN_DEFAULT, &info);
     return ret;
 }
 
 zxerr_t crypto_sign_raw_bytes(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *digest, uint16_t messageLen, uint16_t *sigSize) {
-    unsigned int info = 0;
+    info = 0;
 
     if (messageLen != BLAKE2B_256_SIZE)
         return zxerr_invalid_crypto_settings;
@@ -266,7 +266,7 @@ zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t
 #else // ******************************
 
 #include <hexutils.h>
-#include "blake2.h"
+// #include "blake2.h"
 
 char *crypto_testPubKey;
 
@@ -311,6 +311,20 @@ int blake_hash_cid(const unsigned char *in, unsigned int inLen,
     return 0;
 }
 
+int blake_hash_init(cx_blake2b_t *ctx, size_t size) {
+    blake2b_init(&ctx->state, size);
+}
+
+int blake_hash_update(cx_blake2b_t *ctx, uint8_t *in, size_t len) {
+    blake2b_update(&ctx->state, in, len);
+    return 0;
+}
+
+int blake_hash_finish(cx_blake2b_t *ctx, uint8_t *out) {
+    blake2b_final(&ctx->state, out, BLAKE2B_256_SIZE);
+    return 0;
+}
+
 int prepareDigestToSign(const unsigned char *in, unsigned int inLen,
                         unsigned char *out, unsigned int outLen) {
 
@@ -341,19 +355,6 @@ zxerr_t crypto_sign_raw_bytes(uint8_t *buffer, uint16_t signatureMaxlen, const u
 
 int keccak_digest(const unsigned char *in, unsigned int inLen,
                           unsigned char *out, unsigned int outLen) {
-    return 0;
-}
-
-int blake_hash_init(cx_blake2b_t *ctx, size_t size) {
-    return 0;
-}
-
-int blake_hash_update(cx_blake2b_t *ctx, uint8_t *in, size_t len) {
-
-    return 0;
-}
-
-int blake_hash_finish(cx_blake2b_t *ctx, uint8_t *out) {
     return 0;
 }
 

@@ -76,8 +76,9 @@ int blake_hash_init(cx_blake2b_t *ctx, size_t size);
 int blake_hash_update(cx_blake2b_t *ctx, uint8_t *in, size_t len);
 int blake_hash_finish(cx_blake2b_t *ctx, uint8_t *out);
 #else
+#include "blake2.h"
 typedef struct {
-    void *_unused;
+    blake2b_state state;
 } cx_blake2b_t;
 
 int blake_hash_init(cx_blake2b_t *ctx, size_t size);

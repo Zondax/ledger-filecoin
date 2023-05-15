@@ -81,7 +81,7 @@ parser_error_t raw_bytes_init(uint8_t *buf, size_t buf_len) {
     if (memcmp(messagePrefix, (const char *)msg, prefix_len))
         return parser_invalid_prefix;
 
-    // update the other fields of the raw_bytes state.
+    // Initialize the other fields of the raw_bytes state.
     parser_tx_obj.raw_bytes_tx.total = total;
     parser_tx_obj.raw_bytes_tx.current = 0;
     MEMZERO(parser_tx_obj.raw_bytes_tx.digest, BLAKE2B_256_SIZE);
@@ -143,7 +143,7 @@ parser_error_t _getItemRawBytes(__Z_UNUSED const parser_context_t *ctx,
     // get hash
     array_to_hexstr((char*)hex, 65, parser_tx_obj.raw_bytes_tx.digest, BLAKE2B_256_SIZE);
 
-    snprintf(outKey, outKeyLen, "RawBytes Hash:");
+    snprintf(outKey, outKeyLen, "BytesHash:");
 
     pageString(outVal, outValLen, (const char*)hex, pageIdx, pageCount);
 

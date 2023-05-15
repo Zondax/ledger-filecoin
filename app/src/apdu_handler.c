@@ -192,7 +192,7 @@ process_rawbytes_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
             } else {
                 if (tx_rawbytes_update(buf, msg_len) != zxerr_ok) {
                     tx_initialized = false;
-                    THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
+                    THROW(APDU_CODE_EXECUTION_ERROR);
                 }
             }
 

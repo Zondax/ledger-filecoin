@@ -55,6 +55,9 @@ static parser_error_t parser_init_context(parser_context_t *ctx,
 
     ctx->buffer = buffer;
     ctx->bufferLen = bufferSize;
+
+    memset(&parser_tx_obj, 0, sizeof(parser_tx_obj));
+
     return parser_ok;
 }
 
