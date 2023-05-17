@@ -76,14 +76,14 @@ typedef struct {
 // https://github.com/ipfs/go-cid/blob/master/cid.go#L173
 typedef struct {
     // plus null
-    char str[MAX_CID_LEN + 1];
+    uint8_t str[MAX_CID_LEN + 1];
     size_t len;
 } cid_t;
 
 // https://github.com/filecoin-project/lotus/blob/master/node/impl/client/client.go#L238-L265
 typedef struct {
     cid_t cid;
-    int64_t piece_size;
+    uint64_t piece_size;
     address_t client;
     address_t provider;
     deal_label_t label;
@@ -106,7 +106,6 @@ typedef struct {
     bigint_t gaspremium;
     bigint_t gasfeecap;
     uint64_t method;
-
     uint8_t numparams;
     uint8_t params[MAX_PARAMS_BUFFER_SIZE];
 } fil_base_tx_t;

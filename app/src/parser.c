@@ -113,7 +113,8 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
           break;
       }
       case clientdeal_tx : {
-          return _validateClientDeal(ctx);
+          CHECK_PARSER_ERR(_validateClientDeal(ctx))
+          break;
       }
       case raw_bytes:{
           CHECK_PARSER_ERR(_validateRawBytes(ctx))
@@ -133,12 +134,11 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
     snprintf(log_tmp, sizeof(log_tmp), "parser_validate %d\n", numItems);
     zemu_log(log_tmp);
 
-    char tmpKey[40];
-    char tmpVal[40];
+    char tmpKey[40] = {0};
+    char tmpVal[40] = {0};
 
     for (uint8_t idx = 0; idx < numItems; idx++) {
         uint8_t pageCount = 0;
-        zemu_log_stack("item");
         CHECK_PARSER_ERR(parser_getItem(ctx, idx, tmpKey, sizeof(tmpKey), tmpVal, sizeof(tmpVal), 0, &pageCount))
     }
 

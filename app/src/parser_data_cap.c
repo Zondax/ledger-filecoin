@@ -14,6 +14,7 @@
 *  limitations under the License.
 ********************************************************************************/
 
+#include <stdio.h>
 #include <string.h>
 #include <zxmacros.h>
 #include "common/parser_common.h"
@@ -30,6 +31,53 @@
 
 #define MB_DECIMAL_PLACES 6
 
+__Z_INLINE parser_error_t parse_proposal_id(uint64_t *proposal_id, CborValue *value) {
+    CborValue internal = *value;
+    CborValue container;
+
+    CborType tpy = cbor_value_get_type(value);
+    switch (tpy) {
+        case CborIntegerType: {
+            PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(value), parser_unexpected_type)
+            CHECK_CBOR_MAP_ERR(cbor_value_get_int64_checked(value, proposal_id))
+            return parser_ok;
+        }
+
+        case CborArrayType: {
+            zemu_log_stack("is_array_type");
+            size_t arraySize;
+            CHECK_CBOR_MAP_ERR(cbor_value_get_array_length(&internal, &arraySize))
+            PARSER_ASSERT_OR_ERROR(arraySize == 1, parser_unexpected_number_items)
+            zemu_log_stack("array_1_element");
+
+
+            PARSER_ASSERT_OR_ERROR(cbor_value_is_container(&internal), parser_unexpected_type)
+            CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&internal, &container))
+            PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(&container), parser_unexpected_type)
+            zemu_log_stack("is_integer");
+            CHECK_CBOR_MAP_ERR(cbor_value_get_int64_checked(&container, proposal_id))
+            zemu_log_stack("read_integer");
+            return parser_ok;
+        }
+
+        default:
+            return parser_unexpected_type;
+
+    }
+}
+
+__Z_INLINE parser_error_t parse_address(address_t *addr, CborValue *value) {
+
+    CHECK_PARSER_ERR(readAddress(addr, value))
+
+    // SignRemoveDataCap proposal require addresses to be of type ID
+    // https://github.com/filecoin-project/go-state-types/blob/master/builtin/v9/verifreg/verifreg_types.go#L16
+    if (addr->buffer[0] != ADDRESS_PROTOCOL_ID)
+        return parser_invalid_address;
+
+    return parser_ok;
+}
+
 parser_error_t _readDataCap(const parser_context_t *ctx, remove_datacap_t *tx) {
     CborValue it;
     INIT_CBOR_PARSER(ctx, it)
@@ -40,25 +88,15 @@ parser_error_t _readDataCap(const parser_context_t *ctx, remove_datacap_t *tx) {
     size_t arraySize;
     CHECK_CBOR_MAP_ERR(cbor_value_get_array_length(&it, &arraySize))
 
-    // We expect [verifier_addr, client_addr, number]
-    // We expect [proposal_id, allowance/amount,  client_addr]
     PARSER_ASSERT_OR_ERROR(arraySize == 3, parser_unexpected_number_items)
 
     CborValue arrayContainer;
     PARSER_ASSERT_OR_ERROR(cbor_value_is_container(&it), parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&it, &arrayContainer))
 
-    // "verifier" field
-    // CHECK_PARSER_ERR(readAddress(&tx->verifier, &arrayContainer))
-    // PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
-    // CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
-    // Assert we are listed as a verifier in this tx
-    // PARSER_ASSERT_OR_ERROR(check_verifier(&tx->verifier) == true, parser_wrong_verifier)
-
-    // proposal_id
-    PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(&arrayContainer), parser_unexpected_type)
-    CHECK_CBOR_MAP_ERR(cbor_value_get_int64_checked(&arrayContainer, (int64_t *)&tx->proposal_id))
+    // "client" field
+    CHECK_PARSER_ERR(parse_address(&tx->client, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
@@ -67,8 +105,8 @@ parser_error_t _readDataCap(const parser_context_t *ctx, remove_datacap_t *tx) {
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
-    // "client" field
-    CHECK_PARSER_ERR(readAddress(&tx->client, &arrayContainer))
+    // proposal_id
+    CHECK_PARSER_ERR(parse_proposal_id(&tx->proposal_id, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
@@ -88,9 +126,9 @@ parser_error_t _validateDataCap(__Z_UNUSED const parser_context_t *c) {
 }
 
 uint8_t _getNumItemsDataCap(__Z_UNUSED const parser_context_t *c) {
-    // from address(the signer)
     // client
     // allowance to be removed
+    // proposal_id
     return 3;
 }
 

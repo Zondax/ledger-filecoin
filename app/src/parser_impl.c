@@ -23,8 +23,6 @@
 #include "app_mode.h"
 #include "zxformat.h"
 
-#define TAG_CID 42
-
 parser_tx_t parser_tx_obj;
 
 const char *parser_getErrorDescription(parser_error_t err) {

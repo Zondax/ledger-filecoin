@@ -21,31 +21,13 @@
 #include "parser_impl.h"
 #include "parser_raw_bytes.h"
 #include "parser_txdef.h"
+#include "fil_utils.h"
 #include "cbor.h"
 #include "app_mode.h"
 #include "zxformat.h"
 #include "crypto.h"
 
 static const char messagePrefix[] = "Filecoin Sign Bytes:\n";
-
-__Z_INLINE uint64_t parse_varint(uint8_t *buf, size_t buf_len, size_t *bytes_read) {
-    uint64_t result = 0;
-    uint8_t shift = 0;
-    uint8_t b;
-    size_t i;
-
-    for (i = 0; i < buf_len; i++) {
-        b = buf[i];
-        result |= (uint64_t)(b & 0x7F) << shift;
-        shift += 7;
-        if ((b & 0x80) == 0) {
-            break;
-        }
-    }
-    *bytes_read = i + 1;
-
-    return result;
-}
 
 // at init we need to initializae our hasher ctx,
 // then, get the data lenght by parsing the varint that comes at
@@ -60,8 +42,8 @@ parser_error_t raw_bytes_init(uint8_t *buf, size_t buf_len) {
     blake_hash_init(&parser_tx_obj.raw_bytes_tx.ctx, BLAKE2B_256_SIZE);
 
     // get message len in bytes
-    size_t bytes_read = 0;
-    uint64_t total = parse_varint(buf, buf_len, &bytes_read);
+    uint64_t total = 0;
+    size_t bytes_read = parse_varint(buf, buf_len, &total);
 
     if (total == 0 || bytes_read == buf_len)
         return parser_unexpected_buffer_end;

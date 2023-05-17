@@ -31,72 +31,30 @@
 
 #define MIN_DEAL_DURATION 518400
 
-__Z_INLINE parser_error_t _readCid(cid_t *cid, CborValue *value) {
-
-    // according to docs, cid is a string
-    CHECK_CBOR_TYPE(cbor_value_get_type(value), CborTextStringType)
-
-    // omit null
-    size_t cid_len = sizeof(cid->str) - 1;
-    MEMZERO(cid->str, cid_len);
-
-    CHECK_CBOR_MAP_ERR(cbor_value_copy_text_string(value, cid->str, &cid_len, NULL))
-
-    cid->len = cid_len;
-
-    return parser_ok;
-}
-
 __Z_INLINE parser_error_t _readLabel(deal_label_t *label, CborValue *value) {
-    CborValue container;
-    // Label is an array {data, is_string}
-    PARSER_ASSERT_OR_ERROR(cbor_value_is_array(value), parser_unexpected_type)
+    CborType tpy = cbor_value_get_type(value);
 
-    size_t arraySize;
-    PARSER_ASSERT_OR_ERROR(cbor_value_is_array(value), parser_unexpected_type)
-    CHECK_CBOR_MAP_ERR(cbor_value_get_array_length(value, &arraySize))
+    PARSER_ASSERT_OR_ERROR(( tpy == CborTextStringType ) || ( tpy == CborByteStringType ), parser_unexpected_type)
 
-    PARSER_ASSERT_OR_ERROR(arraySize == 2, parser_unexpected_number_items)
-
-    PARSER_ASSERT_OR_ERROR(cbor_value_is_container(value), parser_unexpected_type)
-    CHECK_CBOR_MAP_ERR(cbor_value_enter_container(value, &container))
-
-
-    // do not include null
+    // omit NULL
     size_t stlen = sizeof(label->data) - 1;
-    MEMZERO(label->data, stlen);
-    CborValue dummy;
 
-    CborType bs_type = cbor_value_get_type(&container);
-    switch ( bs_type ) {
+    switch (tpy) {
         case CborTextStringType: {
-            CHECK_CBOR_MAP_ERR(cbor_value_copy_text_string(&container, (char *) label->data, &stlen, &dummy))
-            break;
+            CHECK_CBOR_MAP_ERR(cbor_value_copy_text_string(value, (char *) label->data, &stlen, NULL))
+            label->is_string = true;
+            label->len = stlen;
+            return parser_ok;
         }
         case CborByteStringType: {
-            CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(&container, (uint8_t *) label->data, &stlen, &dummy))
-            break;
+            CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(value, (uint8_t *) label->data, &stlen, NULL))
+            label->is_string = false;
+            label->len = stlen;
+            return parser_ok;
         }
-        default:{
+        default:
             return parser_unexpected_type;
-        }
     }
-    label->len = stlen;
-    PARSER_ASSERT_OR_ERROR(container.type != CborInvalidType, parser_unexpected_type)
-    CHECK_CBOR_MAP_ERR(cbor_value_advance(&container))
-
-    // now parse the is_string boolean flag
-    PARSER_ASSERT_OR_ERROR(cbor_value_is_boolean(&container), parser_unexpected_type)
-    CHECK_CBOR_MAP_ERR(cbor_value_get_boolean(&container, (bool *)&label->is_string))
-    CHECK_CBOR_MAP_ERR(cbor_value_advance_fixed(&container))
-
-    if ( ( bs_type == CborTextStringType && !label->is_string) || ( bs_type == CborByteStringType && label->is_string))
-        return parser_unexpected_type;
-
-    // leave this inner container
-    CHECK_CBOR_MAP_ERR(cbor_value_leave_container(value, &container))
-
-    return parser_ok;
 }
 
 parser_error_t _readClientDeal(const parser_context_t *ctx, client_deal_t *tx) {
@@ -116,15 +74,20 @@ parser_error_t _readClientDeal(const parser_context_t *ctx, client_deal_t *tx) {
     CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&it, &arrayContainer))
 
     // "cid" field
-    CHECK_PARSER_ERR(_readCid(&tx->cid, &arrayContainer))
+    CHECK_PARSER_ERR(parse_cid(&tx->cid, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // piece_size
     PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(&arrayContainer), parser_unexpected_type)
-    CHECK_CBOR_MAP_ERR(cbor_value_get_int64_checked(&arrayContainer, &tx->piece_size))
+    CHECK_CBOR_MAP_ERR(cbor_value_get_raw_integer(&arrayContainer, &tx->piece_size))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
+
+    // "verified_deal" field
+    PARSER_ASSERT_OR_ERROR(cbor_value_is_boolean(&arrayContainer), parser_unexpected_type)
+    CHECK_CBOR_MAP_ERR(cbor_value_get_boolean(&arrayContainer, (bool *)&tx->verified_deal))
+    CHECK_CBOR_MAP_ERR(cbor_value_advance_fixed(&arrayContainer))
 
     // "client" field
     CHECK_PARSER_ERR(readAddress(&tx->client, &arrayContainer))
@@ -136,11 +99,7 @@ parser_error_t _readClientDeal(const parser_context_t *ctx, client_deal_t *tx) {
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
-    // "Deal label" field
-    // make a copy to parse inner array that contains our
-    // deal label.
-    CborValue label = arrayContainer;
-    CHECK_PARSER_ERR(_readLabel(&tx->label, &label))
+    CHECK_PARSER_ERR(_readLabel(&tx->label, &arrayContainer))
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // "start_epoch" field
@@ -179,11 +138,6 @@ parser_error_t _readClientDeal(const parser_context_t *ctx, client_deal_t *tx) {
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
-    // "verified_deal" field
-    PARSER_ASSERT_OR_ERROR(cbor_value_is_boolean(&arrayContainer), parser_unexpected_type)
-    CHECK_CBOR_MAP_ERR(cbor_value_get_boolean(&arrayContainer, (bool *)&tx->verified_deal))
-    CHECK_CBOR_MAP_ERR(cbor_value_advance_fixed(&arrayContainer))
-
     CHECK_CBOR_MAP_ERR(cbor_value_leave_container(&it, &arrayContainer))
 
     // End of buffer does not match end of parsed data
@@ -213,7 +167,7 @@ __Z_INLINE parser_error_t render_label(
                               char *outVal, uint16_t outValLen,
                               uint8_t pageIdx, uint8_t *pageCount) {
 
-    snprintf(outKey, outKeyLen, "dealLabel");
+    snprintf(outKey, outKeyLen, "DealLabel");
 
     bool is_string = parser_tx_obj.client_deal_tx.label.is_string;
     uint8_t *data = parser_tx_obj.client_deal_tx.label.data;
@@ -255,9 +209,9 @@ parser_error_t _getItemClientDeal(__Z_UNUSED const parser_context_t *ctx,
     uint8_t expert_mode = app_mode_expert();
 
     if (displayIdx == 0) {
-        snprintf(outKey, outKeyLen, "pieceCID ");
-        pageString(outVal, outValLen, parser_tx_obj.client_deal_tx.cid.str, pageIdx, pageCount);
-        return parser_ok;
+        snprintf(outKey, outKeyLen, "PieceCID ");
+        parser_error_t res = printCid(&( parser_tx_obj.client_deal_tx.cid ), outVal, outValLen, pageIdx, pageCount);
+        return res;
     }
 
     if (displayIdx == 1) {
@@ -276,9 +230,9 @@ parser_error_t _getItemClientDeal(__Z_UNUSED const parser_context_t *ctx,
         snprintf(outKey, outKeyLen, "VerifiedDeal ");
 
         if (parser_tx_obj.client_deal_tx.verified_deal > 0) {
-            snprintf(outVal, outValLen, "True");
+            snprintf(outVal, outValLen, "true");
         } else {
-            snprintf(outVal, outValLen, "False");
+            snprintf(outVal, outValLen, "false");
         }
 
         *pageCount = 1;
@@ -287,7 +241,7 @@ parser_error_t _getItemClientDeal(__Z_UNUSED const parser_context_t *ctx,
     }
 
     if (displayIdx == 3 && expert_mode) {
-        snprintf(outKey, outKeyLen, "pieceSize(B)");
+        snprintf(outKey, outKeyLen, "PieceSize(B)");
         return render_integer(parser_tx_obj.client_deal_tx.piece_size, outVal, outValLen, pageCount);
     }
 
@@ -297,12 +251,12 @@ parser_error_t _getItemClientDeal(__Z_UNUSED const parser_context_t *ctx,
         }
 
         if (displayIdx == 5) {
-            snprintf(outKey, outKeyLen, "startEpoch");
+            snprintf(outKey, outKeyLen, "StartEpoch");
             return render_integer(parser_tx_obj.client_deal_tx.start_epoch, outVal, outValLen, pageCount);
         }
 
         if (displayIdx == 6) {
-            snprintf(outKey, outKeyLen, "endEpoch");
+            snprintf(outKey, outKeyLen, "EndEpoch");
             return render_integer(parser_tx_obj.client_deal_tx.end_epoch,  outVal, outValLen, pageCount);
         }
 

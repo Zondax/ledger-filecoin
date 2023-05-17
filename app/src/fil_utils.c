@@ -15,6 +15,8 @@
 ********************************************************************************/
 
 #include "fil_utils.h"
+#include "base32.h"
+#include <stdio.h>
 
 parser_error_t parser_mapCborError(CborError err) {
     switch (err) {
@@ -172,3 +174,103 @@ parser_error_t renderByteString(uint8_t *in, uint16_t inLen,
 
     return parser_value_out_of_range;
 }
+
+parser_error_t parse_cid(cid_t *cid, CborValue *value) {
+
+    MEMZERO(cid->str, sizeof(cid->str));
+
+    // CID is a custom type tagged with 42, as described here: https://github.com/ipld/cid-cbor/
+    CborTag tag;
+    CHECK_CBOR_TYPE(cbor_value_get_type(value), CborTagType)
+
+    CHECK_CBOR_MAP_ERR(cbor_value_get_tag(value, &tag))
+    // advance to the next element in the tag.
+    CHECK_CBOR_MAP_ERR(cbor_value_skip_tag(value));
+
+    // Tag is defined as an uint64_t, so we need to cast it here.
+    // in order to get the right value(a byte_string).
+    uint8_t tmp[100] = {0};
+    size_t cid_len = sizeof(tmp);
+
+    size_t bytes_read = 0;
+
+    if ((uint8_t)tag == TAG_CID) {
+        CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(value, tmp, &cid_len, NULL /* next */))
+
+        // CID docs says base can be omitted, but DagCbor protocol prefixes
+        // CID binary data with it.
+        // https://ipld.io/specs/codecs/dag-cbor/spec/#links
+        uint64_t base;
+        uint64_t version;
+        uint64_t codec;
+
+        uint8_t base_offset = parse_varint(tmp,  cid_len, &base);
+        bytes_read += base_offset;
+
+        bytes_read += parse_varint(tmp + bytes_read, cid_len - bytes_read, &version);
+        bytes_read += parse_varint(tmp + bytes_read, cid_len - bytes_read, &codec);
+
+        if ((uint8_t)codec != CID_CODEC || (uint8_t)version != CID_VERSION || (uint8_t)base != CID_BASE)
+            return parser_invalid_cid;
+
+        // skip first byte as it is CID_BASE, which was added as a prefix by
+        // DagCbor protocol. everything else is our cid.
+        MEMCPY(cid->str, tmp + base_offset, cid_len - base_offset);
+        cid->len = cid_len - base_offset;
+
+        return parser_ok;
+    }
+
+    return parser_invalid_cid;
+}
+
+// return lenght
+parser_error_t printCid(cid_t *cid, char *outVal, uint16_t outValLen,
+                             uint8_t pageIdx, uint8_t *pageCount) {
+
+    // 100-bytes is good enough
+    char outBuffer[100] = {0};
+
+    // We need to add the encoder prefix.
+    // https://github.com/multiformats/go-multibase/blob/master/multibase.go#L98
+    // filecoin uses base32 which base prefix is b.
+    *outBuffer = 'b';
+
+    size_t encoded_len = base32_encode(cid->str, cid->len, outBuffer + 1, sizeof(outBuffer)- 1);
+
+    if (encoded_len == 0)
+        return parser_no_data;
+
+    pageString(outVal, outValLen, outBuffer, pageIdx, pageCount);
+
+    return parser_ok;
+}
+
+/**
+* reads a varint from buf.
+* result is written into /value
+* returns the amount of bytes read from buf
+* */
+size_t parse_varint(uint8_t *buf, size_t buf_len, uint64_t *value) {
+
+    uint8_t shift = 0;
+    uint8_t b;
+    size_t i;
+
+    if (value == NULL)
+        return 0;
+
+    *value = 0;
+
+    for (i = 0; i < buf_len; i++) {
+        b = buf[i];
+        *value |= (uint64_t)(b & 0x7F) << shift;
+        shift += 7;
+        if ((b & 0x80) == 0) {
+            break;
+        }
+    }
+
+    return i + 1;
+}
+

@@ -23,13 +23,21 @@
 #include "parser_txdef.h"
 
 #define STR_BUF_LEN 200
+// special CBOR type that holds
+// a CID, bellow the custom tag for this type
+#define TAG_CID      42
+// https://ipld.io/docs/codecs/known/dag-cbor/
+#define DAG_CBOR     0x71
+// https://github.com/filecoin-project/go-state-types/blob/master/abi/cid.go#L45-L49
+#define CID_CODEC    DAG_CBOR
+#define CID_VERSION  0x01
+#define CID_BASE     0x00
 
 #define PARSER_ASSERT_OR_ERROR(CALL, ERROR) if (!(CALL)) return ERROR;
 
 #define CHECK_CBOR_MAP_ERR(CALL) { \
     CborError err = CALL;  \
     if (err!=CborNoError) return parser_mapCborError(err);}
-
 
 #define CHECK_CBOR_TYPE(type, expected) {if ((type)!=(expected)) return parser_unexpected_type;}
 
@@ -39,11 +47,16 @@
 
 #define LESS_THAN_64_DIGIT(num_digit) if (num_digit > 64) return parser_value_out_of_range;
 
+// common functions
+
 parser_error_t parser_mapCborError(CborError err);
 
 parser_error_t readAddress(address_t *address, CborValue *value);
 
 parser_error_t printAddress(const address_t *a,char *outVal, uint16_t outValLen,
+                             uint8_t pageIdx, uint8_t *pageCount);
+
+parser_error_t printCid(cid_t *cid, char *outVal, uint16_t outValLen,
                              uint8_t pageIdx, uint8_t *pageCount);
 
 parser_error_t readBigInt(bigint_t *bigint, CborValue *value);
@@ -59,3 +72,8 @@ bool format_quantity(const bigint_t *b,
 parser_error_t renderByteString(uint8_t *in, uint16_t inLen,
                           char *outVal, uint16_t outValLen,
                           uint8_t pageIdx, uint8_t *pageCount);
+
+parser_error_t parse_cid(cid_t *cid, CborValue *value);
+
+
+size_t parse_varint(uint8_t *buf, size_t buf_len, uint64_t *value);
