@@ -208,7 +208,7 @@ parser_error_t parse_cid(cid_t *cid, CborValue *value) {
         bytes_read += base_offset;
 
         bytes_read += parse_varint(tmp + bytes_read, cid_len - bytes_read, &version);
-        bytes_read += parse_varint(tmp + bytes_read, cid_len - bytes_read, &codec);
+        parse_varint(tmp + bytes_read, cid_len - bytes_read, &codec);
 
         if ((uint8_t)codec != CID_CODEC || (uint8_t)version != CID_VERSION || (uint8_t)base != CID_BASE)
             return parser_invalid_cid;

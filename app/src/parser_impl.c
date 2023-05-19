@@ -145,10 +145,10 @@ parser_error_t printValue(const struct CborValue *value,
                 CHECK_PARSER_ERR(renderByteString(buff, buffLen, outVal, outValLen, pageIdx, pageCount))
                 break;
             }
+            return parser_unexpected_type;
         }
         default:
             snprintf(outVal, outValLen, "Type: %d", value->type);
-            return parser_unexpected_type;
     }
     return parser_ok;
 }

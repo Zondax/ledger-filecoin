@@ -38,7 +38,7 @@ __Z_INLINE parser_error_t parse_proposal_id(uint64_t *proposal_id, CborValue *va
     switch (tpy) {
         case CborIntegerType: {
             PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(value), parser_unexpected_type)
-            CHECK_CBOR_MAP_ERR(cbor_value_get_int64_checked(value, proposal_id))
+            CHECK_CBOR_MAP_ERR(cbor_value_get_int64_checked(value, (int64_t *)proposal_id))
             return parser_ok;
         }
 
@@ -52,7 +52,7 @@ __Z_INLINE parser_error_t parse_proposal_id(uint64_t *proposal_id, CborValue *va
             PARSER_ASSERT_OR_ERROR(cbor_value_is_container(&internal), parser_unexpected_type)
             CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&internal, &container))
             PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(&container), parser_unexpected_type)
-            CHECK_CBOR_MAP_ERR(cbor_value_get_int64_checked(&container, proposal_id))
+            CHECK_CBOR_MAP_ERR(cbor_value_get_int64_checked(&container, (int64_t*)proposal_id))
             return parser_ok;
         }
 

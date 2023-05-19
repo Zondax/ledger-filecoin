@@ -147,7 +147,7 @@ typedef struct {
 unsigned int info = 0;
 
 
-zxerr_t _sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen, uint16_t *sigSize, const uint32_t *path, uint32_t pathLen, unsigned int *info) {
+zxerr_t _sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen, uint16_t *sigSize, const uint32_t *path, uint32_t pathLen, unsigned int *info_) {
     if (signatureMaxlen < sizeof(signature_t) || pathLen == 0 ) {
         return zxerr_invalid_crypto_settings;
     }
@@ -155,7 +155,7 @@ zxerr_t _sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message,
     cx_ecfp_private_key_t cx_privateKey;
     uint8_t privateKeyData[32];
     int signatureLength = 0;
-    *info = 0;
+    *info_ = 0;
 
     signature_t *const signature = (signature_t *) buffer;
 
@@ -180,7 +180,7 @@ zxerr_t _sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message,
                                             messageLen,
                                             signature->der_signature,
                                             sizeof_field(signature_t, der_signature),
-                                            info);
+                                            info_);
         }
         CATCH_OTHER(e) {
             error = zxerr_ledger_api_error;
@@ -196,7 +196,7 @@ zxerr_t _sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message,
         return error;
     }
 
-    err_convert_e err = convertDERtoRSV(signature->der_signature, *info,  signature->r, signature->s, &signature->v);
+    err_convert_e err = convertDERtoRSV(signature->der_signature, *info_,  signature->r, signature->s, &signature->v);
     if (err != no_error) {
         // Error while converting so return length 0
         return zxerr_invalid_crypto_settings;

@@ -374,7 +374,7 @@ handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
     CHECK_APP_CANARY()
 
     if (error_msg != NULL) {
-        int error_msg_length = strlen(error_msg);
+        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
         MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
         *tx += (error_msg_length);
         THROW(APDU_CODE_DATA_INVALID);
@@ -403,7 +403,7 @@ handleSignDataCap(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
     CHECK_APP_CANARY()
 
     if (error_msg != NULL) {
-        int error_msg_length = strlen(error_msg);
+        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
         MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
         *tx += (error_msg_length);
         THROW(APDU_CODE_DATA_INVALID);
@@ -432,7 +432,7 @@ handleSignClientDeal(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t r
     CHECK_APP_CANARY()
 
     if (error_msg != NULL) {
-        int error_msg_length = strlen(error_msg);
+        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
         MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
         *tx += (error_msg_length);
         THROW(APDU_CODE_DATA_INVALID);
@@ -456,7 +456,7 @@ handleSignRawBytes(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
         char message[100] = {0};
         snprintf(message, sizeof(message), "Chunk %d\n", msg_counter);
         if ((msg_counter % 5) == 0) {
-            char *prompt = "RawBytes:";
+            char prompt[] = {"RawBytes:"};
             view_message_show(prompt, message);
             #if !defined(TARGET_STAX)
             UX_WAIT_DISPLAYED();
@@ -475,7 +475,7 @@ handleSignRawBytes(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
     CHECK_APP_CANARY()
 
     if (error_msg != NULL) {
-        int error_msg_length = strlen(error_msg);
+        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
         MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
         *tx += (error_msg_length);
         THROW(APDU_CODE_DATA_INVALID);
@@ -503,7 +503,7 @@ handleSignEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
     CHECK_APP_CANARY()
 
     if (error_msg != NULL) {
-        int error_msg_length = strlen(error_msg);
+        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
         MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
         *tx += (error_msg_length);
         THROW(APDU_CODE_DATA_INVALID);
