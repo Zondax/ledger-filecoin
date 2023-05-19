@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2019 Zondax GmbH
+*  (c) 2023 Zondax AG
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -13,10 +13,27 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
-#pragma once
-#include <fstream>
-#include <vector>
-#include <json/json.h>
 
-std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool expertMode);
-std::vector<std::string> ClientDealGenerateExpectedUIOutput(const Json::Value &json, bool expertMode);
+#include "common/parser_common.h"
+#include "parser_common.h"
+#include "parser_txdef.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+parser_error_t _readClientDeal(const parser_context_t *ctx, client_deal_t *tx);
+
+parser_error_t _validateClientDeal(const parser_context_t *c);
+
+uint8_t _getNumItemsClientDeal(const parser_context_t *c);
+
+parser_error_t _getItemClientDeal(const parser_context_t *ctx,
+                              uint8_t displayIdx,
+                              char *outKey, uint16_t outKeyLen,
+                              char *outVal, uint16_t outValLen,
+                              uint8_t pageIdx, uint8_t *pageCount);
+
+#ifdef __cplusplus
+}
+#endif

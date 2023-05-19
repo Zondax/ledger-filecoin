@@ -49,7 +49,8 @@ std::string CleanTestname(std::string s) {
     return s;
 }
 
-std::vector<testcase_t> GetJsonTestCases(const std::string &jsonFile) {
+template <typename Generator>
+std::vector<testcase_t> GetJsonTestCases(const std::string &jsonFile, Generator gen_ui_output) {
     auto answer = std::vector<testcase_t>();
 
     Json::CharReaderBuilder builder;
@@ -68,8 +69,10 @@ std::vector<testcase_t> GetJsonTestCases(const std::string &jsonFile) {
     std::cout << "Number of testcases: " << obj.size() << std::endl;
 
     for (auto &i : obj) {
-        auto outputs = GenerateExpectedUIOutput(i, false);
-        auto outputs_expert = GenerateExpectedUIOutput(i, true);
+        // auto outputs = GenerateExpectedUIOutput(i, false);
+        // auto outputs_expert = GenerateExpectedUIOutput(i, true);
+        auto outputs = gen_ui_output(i, false);
+        auto outputs_expert = gen_ui_output(i, true);
 
         bool valid = true;
         if (i.isMember("valid")) {
@@ -93,10 +96,9 @@ std::vector<testcase_t> GetJsonTestCases(const std::string &jsonFile) {
     return answer;
 }
 
-void check_testcase(const testcase_t &tc, bool) {
+void check_testcase(const testcase_t &tc, bool a, parser_context_t ctx) {
     app_mode_set_expert(true);
 
-    parser_context_t ctx;
     parser_error_t err;
 
     uint8_t buffer[10000];
@@ -139,6 +141,18 @@ void check_testcase(const testcase_t &tc, bool) {
     }
 }
 
+void check_testcase_fil_base(const testcase_t &tc, bool a) {
+    parser_context_t ctx;
+    ctx.tx_type = fil_tx;
+    check_testcase(tc, a, ctx);
+}
+
+void check_testcase_client_deal(const testcase_t &tc, bool a) {
+    parser_context_t ctx;
+    ctx.tx_type = clientdeal_tx;
+    check_testcase(tc, a, ctx);
+}
+
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
@@ -156,20 +170,30 @@ public:
     };
 };
 
+class VerifyClientDeal: public JsonTests{};
+
 GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(VerifyTestVectors);
 
 INSTANTIATE_TEST_SUITE_P(
         KnownIssues,
         VerifyTestVectors,
-        ::testing::ValuesIn(GetJsonTestCases("testvectors/issues.json")), VerifyTestVectors::PrintToStringParamName()
+        ::testing::ValuesIn(GetJsonTestCases("testvectors/issues.json", GenerateExpectedUIOutput)), VerifyTestVectors::PrintToStringParamName()
 );
 
 INSTANTIATE_TEST_SUITE_P(
         Multisig,
         VerifyTestVectors,
-        ::testing::ValuesIn(GetJsonTestCases("testvectors/manual.json")), VerifyTestVectors::PrintToStringParamName()
+        ::testing::ValuesIn(GetJsonTestCases("testvectors/manual.json", GenerateExpectedUIOutput)), VerifyTestVectors::PrintToStringParamName()
 );
 
-TEST_P(VerifyTestVectors, CheckUIOutput_CurrentTX_Normal) { check_testcase(GetParam(), false); }
+INSTANTIATE_TEST_SUITE_P(
+        ClientDeal,
+        VerifyClientDeal,
+        ::testing::ValuesIn(GetJsonTestCases("testvectors/client_deal.json", ClientDealGenerateExpectedUIOutput)), VerifyTestVectors::PrintToStringParamName()
+);
 
-TEST_P(VerifyTestVectors, CheckUIOutput_CurrentTX_Expert) { check_testcase(GetParam(), true); }
+TEST_P(VerifyTestVectors, CheckUIOutput_CurrentTX_Normal) { check_testcase_fil_base(GetParam(), false); }
+
+TEST_P(VerifyTestVectors, CheckUIOutput_CurrentTX_Expert) { check_testcase_fil_base(GetParam(), true); }
+
+TEST_P(VerifyClientDeal, ClientDealCheckUIOutput_CurrentTX_Expert) { check_testcase_client_deal(GetParam(), true); }
