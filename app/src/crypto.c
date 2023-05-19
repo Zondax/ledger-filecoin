@@ -15,6 +15,7 @@
 ********************************************************************************/
 
 #include "crypto.h"
+#include <stdio.h>
 #include "coin.h"
 #include "tx.h"
 #include "zxmacros.h"
@@ -32,6 +33,7 @@ bool isTestnet() {
 
 #if defined(TARGET_NANOS) || defined(TARGET_NANOX) || defined(TARGET_NANOS2)
 #include "cx.h"
+#include "cx_blake2b.h"
 
 zxerr_t crypto_extractPublicKey(const uint32_t path[MAX_BIP32_PATH], uint8_t *pubKey, uint16_t pubKeyLen, uint8_t *chainCode) {
 
@@ -90,7 +92,25 @@ int keccak_digest(const unsigned char *in, unsigned int inLen,
     return keccak_hash(in, inLen, out, outLen);
 }
 
-__Z_INLINE int blake_hash(const unsigned char *in, unsigned int inLen,
+int blake_hash_init(cx_blake2b_t *ctx, size_t size) {
+    cx_blake2b_init(ctx, size * 8);
+    return 0;
+}
+
+int blake_hash_update(cx_blake2b_t *ctx, uint8_t *in, unsigned int len) {
+
+    if (cx_blake2b_update(ctx, in, len) != CX_OK)
+        return -1;
+
+    return 0;
+}
+
+int blake_hash_finish(cx_blake2b_t *ctx, uint8_t *out) {
+    cx_blake2b_final(ctx, out);
+    return 0;
+}
+
+int blake_hash(const unsigned char *in, unsigned int inLen,
                unsigned char *out, unsigned int outLen) {
 
     cx_blake2b_t ctx;
@@ -100,7 +120,7 @@ __Z_INLINE int blake_hash(const unsigned char *in, unsigned int inLen,
     return 0;
 }
 
-__Z_INLINE int blake_hash_cid(const unsigned char *in, unsigned int inLen,
+int blake_hash_cid(const unsigned char *in, unsigned int inLen,
                unsigned char *out, unsigned int outLen) {
 
     uint8_t prefix[] = PREFIX;
@@ -123,6 +143,9 @@ typedef struct {
     uint8_t der_signature[73];
 
 } __attribute__((packed)) signature_t;
+
+unsigned int info = 0;
+
 
 zxerr_t _sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen, uint16_t *sigSize, const uint32_t *path, uint32_t pathLen, unsigned int *info) {
     if (signatureMaxlen < sizeof(signature_t) || pathLen == 0 ) {
@@ -193,9 +216,19 @@ zxerr_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *me
     blake_hash(message, messageLen, tmp, BLAKE2B_256_SIZE);
     blake_hash_cid(tmp, BLAKE2B_256_SIZE, message_digest, BLAKE2B_256_SIZE);
 
-    unsigned int info = 0;
+    info = 0;
 
     zxerr_t ret = _sign(buffer, signatureMaxlen, message_digest, BLAKE2B_256_SIZE, sigSize, hdPath, HDPATH_LEN_DEFAULT, &info);
+    return ret;
+}
+
+zxerr_t crypto_sign_raw_bytes(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *digest, uint16_t messageLen, uint16_t *sigSize) {
+    info = 0;
+
+    if (messageLen != BLAKE2B_256_SIZE)
+        return zxerr_invalid_crypto_settings;
+
+    zxerr_t ret = _sign(buffer, signatureMaxlen, digest, BLAKE2B_256_SIZE, sigSize, hdPath, HDPATH_LEN_DEFAULT, &info);
     return ret;
 }
 
@@ -209,7 +242,6 @@ zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t
     uint8_t message_digest[KECCAK_256_SIZE] = {0};
     keccak_digest(message, messageLen, message_digest, KECCAK_256_SIZE);
 
-    unsigned int info = 0;
     zxerr_t error = _sign(buffer, signatureMaxlen, message_digest, KECCAK_256_SIZE, sigSize, hdPath, hdPath_len, &info);
     if (error != zxerr_ok){
         return zxerr_invalid_crypto_settings;
@@ -234,7 +266,6 @@ zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t
 #else // ******************************
 
 #include <hexutils.h>
-#include "blake2.h"
 
 char *crypto_testPubKey;
 
@@ -256,7 +287,7 @@ zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t
     return zxerr_ok;
 }
 
-__Z_INLINE int blake_hash(const unsigned char *in, unsigned int inLen,
+int blake_hash(const unsigned char *in, unsigned int inLen,
                           unsigned char *out, unsigned int outLen) {
     blake2b_state s;
     blake2b_init(&s, outLen);
@@ -265,7 +296,7 @@ __Z_INLINE int blake_hash(const unsigned char *in, unsigned int inLen,
     return 0;
 }
 
-__Z_INLINE int blake_hash_cid(const unsigned char *in, unsigned int inLen,
+int blake_hash_cid(const unsigned char *in, unsigned int inLen,
                               unsigned char *out, unsigned int outLen) {
 
     uint8_t prefix[] = PREFIX;
@@ -276,6 +307,20 @@ __Z_INLINE int blake_hash_cid(const unsigned char *in, unsigned int inLen,
     blake2b_update(&s, in, inLen);
     blake2b_final(&s, out, outLen);
 
+    return 0;
+}
+
+int blake_hash_init(cx_blake2b_t *ctx, size_t size) {
+    blake2b_init(&ctx->state, size);
+}
+
+int blake_hash_update(cx_blake2b_t *ctx, uint8_t *in, size_t len) {
+    blake2b_update(&ctx->state, in, len);
+    return 0;
+}
+
+int blake_hash_finish(cx_blake2b_t *ctx, uint8_t *out) {
+    blake2b_final(&ctx->state, out, BLAKE2B_256_SIZE);
     return 0;
 }
 
@@ -303,10 +348,15 @@ zxerr_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen,
     return zxerr_ok;
 }
 
+zxerr_t crypto_sign_raw_bytes(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *digest, uint16_t messageLen, uint16_t *sigSize) {
+    return zxerr_ok;
+}
+
 int keccak_digest(const unsigned char *in, unsigned int inLen,
                           unsigned char *out, unsigned int outLen) {
     return 0;
 }
+
 
 #endif // **************************** endif
 
@@ -439,7 +489,7 @@ uint16_t formatProtocol(const uint8_t *addressBytes,
 typedef struct {
     uint8_t publicKey[SECP256K1_PK_LEN];
 
-    // payload as described in https://filecoin-project.github.io/specs/#protocol-1-libsecpk1-elliptic-curve-public-keys
+    // payload as described in https://filecoin-projectegithub.io/specs/#protocol-1-libsecpk1-elliptic-curve-public-keys
     // payload [prot][hashed(pk)]       // 1 + 20
     uint8_t addrBytesLen;
     uint8_t addrBytes[21];

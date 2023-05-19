@@ -65,6 +65,28 @@ int prepareDigestToSign(const unsigned char *in, unsigned int inLen,
 int keccak_digest(const unsigned char *in, unsigned int inLen,
                         unsigned char *out, unsigned int outLen);
 
+int blake_hash(const unsigned char *in, unsigned int inLen,
+               unsigned char *out, unsigned int outLen);
+
+int blake_hash_cid(const unsigned char *in, unsigned int inLen,
+                              unsigned char *out, unsigned int outLen);
+
+#if defined(TARGET_NANOS) || defined(TARGET_NANOX) || defined(TARGET_NANOS2)
+int blake_hash_init(cx_blake2b_t *ctx, size_t size);
+int blake_hash_update(cx_blake2b_t *ctx, uint8_t *in, size_t len);
+int blake_hash_finish(cx_blake2b_t *ctx, uint8_t *out);
+#else
+#include "blake2.h"
+typedef struct {
+    blake2b_state state;
+} cx_blake2b_t;
+
+int blake_hash_init(cx_blake2b_t *ctx, size_t size);
+int blake_hash_update(cx_blake2b_t *ctx, uint8_t *in, size_t len);
+int blake_hash_finish(cx_blake2b_t *ctx, uint8_t *out);
+#endif
+
+
 zxerr_t crypto_extractPublicKey(const uint32_t path[MAX_BIP32_PATH], uint8_t *pubKey, uint16_t pubKeyLen, uint8_t *chainCode);
 
 zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t bufferLen, uint16_t *addrLen);
@@ -74,6 +96,8 @@ zxerr_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, const uint8_t 
                     uint16_t *sigSize);
 
 zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen, uint16_t *sigSize);
+
+zxerr_t crypto_sign_raw_bytes(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *digest, uint16_t messageLen, uint16_t *sigSize);
 
 #ifdef __cplusplus
 }
