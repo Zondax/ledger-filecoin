@@ -66,6 +66,8 @@ DEFINES       += UNUSED\(x\)=\(void\)x
 
 # App specific
 DEFINES += CBOR_NO_FLOATING_POINT
+DEFINES += HAVE_HASH HAVE_BLAKE2
+INCLUDES_PATH += $(BOLOS_SDK)/lib_cxng/src
 
 # NanoX SDK does not allow += in APP_SOURCE_PATH or INCLUDES_PATH
 CFLAGS += -I$(MY_DIR)/../deps/tinycbor/src
