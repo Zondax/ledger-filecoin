@@ -37,7 +37,7 @@ zxerr_t crypto_extractPublicKey(const uint32_t path[MAX_BIP32_PATH], uint8_t *pu
         return zxerr_invalid_crypto_settings;
     }
 
-    zxerr_t error = zxerr_ok;
+    zxerr_t error = zxerr_unknown;
     BEGIN_TRY
     {
         TRY {
@@ -49,7 +49,7 @@ zxerr_t crypto_extractPublicKey(const uint32_t path[MAX_BIP32_PATH], uint8_t *pu
             cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey);
             cx_ecfp_init_public_key(CX_CURVE_256K1, NULL, 0, &cx_publicKey);
             cx_ecfp_generate_pair(CX_CURVE_256K1, &cx_publicKey, &cx_privateKey, 1);
-
+            error = zxerr_ok;
         }
         CATCH_OTHER(e) {
             error = zxerr_ledger_api_error;
@@ -155,13 +155,13 @@ zxerr_t _sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message,
     }
 
     cx_ecfp_private_key_t cx_privateKey;
-    uint8_t privateKeyData[32];
+    uint8_t privateKeyData[32] = {0};
     int signatureLength = 0;
     *info = 0;
 
     signature_t *const signature = (signature_t *) buffer;
 
-    zxerr_t error = zxerr_ok;
+    zxerr_t error = zxerr_unknown;
     BEGIN_TRY
     {
         TRY
@@ -183,6 +183,7 @@ zxerr_t _sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message,
                                             signature->der_signature,
                                             sizeof_field(signature_t, der_signature),
                                             info);
+            error = zxerr_ok;
         }
         CATCH_OTHER(e) {
             error = zxerr_ledger_api_error;
@@ -211,6 +212,9 @@ zxerr_t _sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message,
 
 // Sign a filecoin related transaction
 zxerr_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen, uint16_t *sigSize) {
+    if (buffer == NULL || message == NULL || sigSize == NULL || signatureMaxlen < sizeof(signature_t)) {
+        return zxerr_invalid_crypto_settings;
+    }
 
     uint8_t tmp[BLAKE2B_256_SIZE] = {0};
     uint8_t message_digest[BLAKE2B_256_SIZE] = {0};
@@ -225,6 +229,9 @@ zxerr_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *me
 }
 
 zxerr_t crypto_sign_raw_bytes(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *digest, uint16_t messageLen, uint16_t *sigSize) {
+    if (buffer == NULL || digest == NULL || sigSize == NULL || signatureMaxlen < sizeof(signature_t)) {
+        return zxerr_invalid_crypto_settings;
+    }
     info = 0;
 
     if (messageLen != BLAKE2B_256_SIZE)
@@ -236,8 +243,7 @@ zxerr_t crypto_sign_raw_bytes(uint8_t *buffer, uint16_t signatureMaxlen, const u
 
 // Sign an ethereum related transaction
 zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen, uint16_t *sigSize) {
-
-    if (signatureMaxlen < sizeof(signature_t) ) {
+    if (buffer == NULL || message == NULL || sigSize == NULL || signatureMaxlen < sizeof(signature_t)) {
         return zxerr_invalid_crypto_settings;
     }
 
@@ -290,8 +296,8 @@ typedef struct {
 } __attribute__((packed)) answer_eth_t;
 
 zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrLen) {
-    if (buffer_len < sizeof(answer_t)) {
-        return 0;
+    if (buffer == NULL || buffer_len < sizeof(answer_t) || addrLen == NULL) {
+        return zxerr_no_data;
     }
     MEMZERO(buffer, buffer_len);
     answer_t *const answer = (answer_t *) buffer;
@@ -316,9 +322,8 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrL
 }
 
 zxerr_t crypto_fillEthAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrLen) {
-
-    if (buffer_len < sizeof(answer_eth_t)) {
-        return 0;
+    if (buffer == NULL || buffer_len < sizeof(answer_t) || addrLen == NULL) {
+        return zxerr_no_data;
     }
     MEMZERO(buffer, buffer_len);
     answer_eth_t *const answer = (answer_eth_t *) buffer;

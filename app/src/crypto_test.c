@@ -18,6 +18,7 @@
 #include "coin.h"
 #include "crypto_helper.h"
 
+// Implementation from methods that are needed for cpp_test
 #if !defined (TARGET_NANOS) && !defined(TARGET_NANOS2) && !defined(TARGET_NANOX) && !defined(TARGET_STAX)
 #include "blake2.h"
 
@@ -28,24 +29,6 @@ typedef struct {
 } cx_blake2b_t;
 
 static cx_blake2b_t ctx_blake2b;
-
-zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *pubKey, uint16_t pubKeyLen, uint8_t *chainCode) {
-    ///////////////////////////////////////
-    // THIS IS ONLY USED FOR TEST PURPOSES
-    ///////////////////////////////////////
-
-    // Empty version for non-Ledger devices
-    MEMZERO(pubKey, pubKeyLen);
-
-    if (crypto_testPubKey != NULL) {
-        parseHexString(pubKey, pubKeyLen, crypto_testPubKey);
-    } else {
-        const char *str = "0466f2bdb19e90fd7c29e4bf63612eb98515e5163c97888042364ba777d818e88b765c649056ba4a62292ae4e2ccdabd71b845d8fa0991c140f664d2978ac0972a";
-        parseHexString(pubKey, pubKeyLen, str);
-    }
-
-    return zxerr_ok;
-}
 
 zxerr_t blake_hash(const uint8_t *in, uint16_t inLen, uint8_t *out, uint16_t outLen) {
     if (in == NULL || inLen == 0 || out == NULL) {
@@ -106,25 +89,8 @@ int prepareDigestToSign(const unsigned char *in, unsigned int inLen,
     return 0;
 }
 
-zxerr_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen,
-                    const uint8_t *message, uint16_t messageLen,
-                    uint16_t *sigSize) {
-    // Empty version for non-Ledger devices
-    uint8_t tmp[BLAKE2B_256_SIZE];
-    uint8_t message_digest[BLAKE2B_256_SIZE];
-
-    blake_hash(message, messageLen, tmp, BLAKE2B_256_SIZE);
-    blake_hash_cid(tmp, BLAKE2B_256_SIZE, message_digest, BLAKE2B_256_SIZE);
-
-    return zxerr_ok;
-}
-
-zxerr_t crypto_sign_raw_bytes(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *digest, uint16_t messageLen, uint16_t *sigSize) {
-    return zxerr_ok;
-}
-
-int keccak_digest(const unsigned char *in, unsigned int inLen,
-                          unsigned char *out, unsigned int outLen) {
+int keccak_digest(  const unsigned char *in, unsigned int inLen,
+                    unsigned char *out, unsigned int outLen) {
     return 0;
 }
 

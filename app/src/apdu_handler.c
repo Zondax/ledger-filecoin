@@ -1,5 +1,5 @@
 /*******************************************************************************
- *   (c) 2018, 2019 Zondax GmbH
+ *   (c) 2018 - 2023 Zondax AG
  *   (c) 2016 Ledger
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -619,7 +619,7 @@ handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
                     break;
             }
             G_io_apdu_buffer[*tx] = sw >> 8;
-            G_io_apdu_buffer[*tx + 1] = sw;
+            G_io_apdu_buffer[*tx + 1] = sw & 0xFF;
             *tx += 2;
         }
         FINALLY {}
