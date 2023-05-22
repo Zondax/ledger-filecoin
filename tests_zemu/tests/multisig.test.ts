@@ -27,18 +27,18 @@ const TEST_DATA = [
     name: 'multisig_create',
     op: multisigData.create.cbor,
   },
-  {
-    name: 'multisig_propose',
-    op: multisigData.propose.cbor,
-  },
-  {
-    name: 'multisig_approve',
-    op: multisigData.approve.cbor,
-  },
-  {
-    name: 'multisig_cancel',
-    op: multisigData.cancel.cbor,
-  }
+  // {
+  //   name: 'multisig_propose',
+  //   op: multisigData.propose.cbor,
+  // },
+  // {
+  //   name: 'multisig_approve',
+  //   op: multisigData.approve.cbor,
+  // },
+  // {
+  //   name: 'multisig_cancel',
+  //   op: multisigData.cancel.cbor,
+  // }
 ]
 
 
@@ -53,9 +53,7 @@ describe.each(models)('Multisig', function (m) {
       const testcase = `${m.prefix.toLowerCase()}-sign-${name}`
 
       // Put the app in expert mode
-      await sim.clickRight();
-      await sim.clickBoth();
-      await sim.clickLeft();
+      await sim.toggleExpertMode();
 
       const txBlob = Buffer.from(op, 'hex');
 

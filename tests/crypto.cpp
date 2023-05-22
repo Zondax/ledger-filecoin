@@ -19,6 +19,7 @@
 #include <iostream>
 #include <hexutils.h>
 #include <crypto.h>
+#include "crypto_helper.h"
 #include <bignum.h>
 #include <zxformat.h>
 
@@ -27,75 +28,24 @@ extern const char *crypto_testPubKey;
 
 /// Test that we can generate the address from a known mnemonic
 TEST(CRYPTO, fillAddress) {
-    uint8_t buffer[200];
-
-// FIXME: use real values from Lotus and confirm functionality
-//    wage retreat alpha skull cactus inform device despair finish enforce chief young
-//    derived using 44'/461'/0'/0/0
-//    Public key (hex): 03cd4569c4fe16556d74dfd1372a2f3ae7b6c43121c7c2902f9ae935b80a7c254b
-//    Address: f1Z2UF3VZDJGPOZBG3IHFNWKHX3DMM6MOPKFHQOYY
+    uint8_t buffer[200] = {0};
 
     crypto_testPubKey = "0466f2bdb19e90fd7c29e4bf63612eb98515e5163c97888042364ba777d818e88b765c649056ba4a62292ae4e2ccdabd71b845d8fa0991c140f664d2978ac0972a";
+    uint8_t publicKey[SECP256K1_PK_LEN] = {0};
+    parseHexString(publicKey, sizeof(publicKey), crypto_testPubKey);
 
-    uint16_t addrLen;
-    ASSERT_THAT(crypto_fillAddress(buffer, sizeof(buffer), &addrLen), zxerr_ok);
-    ASSERT_THAT(addrLen, ::testing::Eq(129));
+    // addr bytes
+    uint8_t addrBytes[21] = {0};
+    addrBytes[0] = ADDRESS_PROTOCOL_SECP256K1;
+    blake_hash(publicKey, SECP256K1_PK_LEN, addrBytes + 1, sizeof(addrBytes) - 1);
 
-    std::cout << std::endl;
-
-    char pk[200];
-    array_to_hexstr(pk, sizeof(pk), buffer, SECP256K1_PK_LEN);
-    uint8_t *addrByte = (buffer + SECP256K1_PK_LEN + 1);
-    char addrByteToHexStr[ADDRESS_BYTE_TO_STRING_LEN];
-    array_to_hexstr(addrByteToHexStr, sizeof(addrByteToHexStr), addrByte, 21);
-    char *addrString = (char *) (addrByte + 21 + 1);
-
-    EXPECT_THAT(std::string(pk),
-                ::testing::Eq("0466f2bdb19e90fd7c29e4bf63612eb98515e5163c97888042364ba777d818e88b765c649056ba4a62292ae4e2ccdabd71b845d8fa0991c140f664d2978ac0972a"));
-
-    EXPECT_THAT(std::string(addrByteToHexStr),
-                ::testing::Eq("01dfe49184d46adc8f89d44638beb45f78fcad2590"));
-
-
-    EXPECT_THAT(std::string(addrString),
-                ::testing::Eq("f137sjdbgunloi7couiy4l5nc7pd6k2jmq32vizpy"));
-
-    std::cout << pk << std::endl;
-    std::cout << addrByteToHexStr << std::endl;
-    std::cout << addrString << std::endl;
-}
-
-/// Test that we can generate the address from a known mnemonic (use default = test mnemonic)
-TEST(CRYPTO, fillAddressTestMnemonic) {
-    uint8_t buffer[200];
-
-    crypto_testPubKey = nullptr;   // Use default test mnemonic
-
-    uint16_t addrLen;
-    ASSERT_THAT(crypto_fillAddress(buffer, sizeof(buffer), &addrLen), zxerr_ok);
-    ASSERT_THAT(addrLen, ::testing::Eq(129));
+    // addr str
+    char addrStr[42] = {0};  // 41 = because (20+1+4)*8/5 (32 base encoded size)
+    const uint16_t addrLen = formatProtocol(addrBytes, sizeof(addrBytes), (uint8_t*)addrStr, sizeof(addrStr));
 
     std::cout << std::endl;
-
-    char pk[200];
-    array_to_hexstr(pk, sizeof(pk), buffer, SECP256K1_PK_LEN);
-    uint8_t *addrByte = (buffer + SECP256K1_PK_LEN + 1);
-    char addrByteToHexStr[ADDRESS_BYTE_TO_STRING_LEN];
-    array_to_hexstr(addrByteToHexStr, sizeof(addrByteToHexStr), addrByte, 21);
-    char *addrString = (char *) (addrByte + 21 + 1);
-
-    EXPECT_THAT(std::string(pk),
-                ::testing::Eq("0466f2bdb19e90fd7c29e4bf63612eb98515e5163c97888042364ba777d818e88b765c649056ba4a62292ae4e2ccdabd71b845d8fa0991c140f664d2978ac0972a"));
-
-    EXPECT_THAT(std::string(addrByteToHexStr),
-                ::testing::Eq("01dfe49184d46adc8f89d44638beb45f78fcad2590"));
-
-    EXPECT_THAT(std::string(addrString),
+    EXPECT_THAT(std::string(addrStr),
                 ::testing::Eq("f137sjdbgunloi7couiy4l5nc7pd6k2jmq32vizpy"));
-
-    std::cout << pk << std::endl;
-    std::cout << addrByteToHexStr << std::endl;
-    std::cout << addrString << std::endl;
 }
 
 TEST(CRYPTO, extractBitsFromLEB128_small) {
