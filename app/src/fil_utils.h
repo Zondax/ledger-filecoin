@@ -1,5 +1,5 @@
 /*******************************************************************************
-*  (c) 2023 Zondax AG
+*  (c) 2018 - 2023 Zondax AG
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -13,6 +13,11 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
+#pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <zxmacros.h>
 #include "common/parser_common.h"
@@ -77,3 +82,7 @@ parser_error_t parse_cid(cid_t *cid, CborValue *value);
 
 
 size_t parse_varint(uint8_t *buf, size_t buf_len, uint64_t *value);
+
+#ifdef __cplusplus
+}
+#endif
