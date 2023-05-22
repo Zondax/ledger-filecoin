@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@zondax/ledger-filecoin": "^0.13.0",
-    "@zondax/zemu": "^0.40.1"
+    "@zondax/zemu": "^0.42.0"
   },
   "devDependencies": {
     "@types/jest": "^29.2.3",

@@ -31,7 +31,7 @@ uint8_t tx_is_rawbytes();
 zxerr_t tx_rawbytes_init_state(uint8_t *buf, size_t buf_len);
 zxerr_t tx_rawbytes_update(uint8_t *buf, size_t buf_len);
 
-void initialize_tx_buffer();
+void tx_initialize();
 
 /// Clears the transaction buffer
 void tx_reset();

@@ -55,6 +55,22 @@ typedef enum {
 
 #define COIN_SUPPORTED_TX_VERSION           0
 
+// transaction is sent as a blob of rlp encoded bytes,
+#define P1_ETH_FIRST                    0x00
+#define P1_ETH_MORE                     0x80
+// eth address chain_code allowed valuec
+#define P2_NO_CHAINCODE                 0x00
+#define P2_CHAINCODE                    0x01
+
+#define INS_GET_VERSION                 0x00
+#define INS_GET_ADDR_SECP256K1          0x01
+#define INS_SIGN_SECP256K1              0x02
+#define INS_SIGN_ETH                    0x04
+#define INS_SIGN_DATACAP                0x05
+#define INS_CLIENT_DEAL                 0x06
+#define INS_SIGN_RAW_BYTES              0x07
+#define INS_GET_ADDR_ETH                0x02
+
 #define MENU_MAIN_APP_LINE1 "Filecoin"
 #define MENU_MAIN_APP_LINE2 "Ready"
 #define MENU_MAIN_APP_LINE2_SECRET          "???"

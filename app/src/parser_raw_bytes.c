@@ -1,5 +1,5 @@
 /*******************************************************************************
-*  (c) 2023 Zondax AG
+*  (c) 2018 - 2023 Zondax AG
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -38,8 +38,14 @@ parser_error_t raw_bytes_init(uint8_t *buf, size_t buf_len) {
     if (buf_len == 0)
         return parser_unexpected_buffer_end;
 
+#if defined(TARGET_NANOS) || defined(TARGET_NANOS2) || defined(TARGET_NANOX) || defined(TARGET_STAX)
+    // Setup hasher pointer. This will reduce stack usage
+    if (blake_hash_setup(&parser_tx_obj.raw_bytes_tx.ctx_blake2b) != zxerr_ok) {
+        return parser_unexepected_error;
+    }
+#endif
     // init hash context
-    blake_hash_init(&parser_tx_obj.raw_bytes_tx.ctx, BLAKE2B_256_SIZE);
+    blake_hash_init();
 
     // get message len in bytes
     uint64_t total = 0;
@@ -75,7 +81,7 @@ parser_error_t raw_bytes_update(uint8_t *buf, size_t buf_len) {
     if (buf_len == 0)
         return parser_unexpected_buffer_end;
 
-    if (blake_hash_update(&parser_tx_obj.raw_bytes_tx.ctx, buf, buf_len) != 0)
+    if (blake_hash_update(buf, buf_len) != zxerr_ok)
         return parser_value_out_of_range;
 
     parser_tx_obj.raw_bytes_tx.current += buf_len;
@@ -93,7 +99,7 @@ parser_error_t _readRawBytes(__Z_UNUSED const parser_context_t *ctx, raw_bytes_s
     if (total != current)
         return parser_no_data;
 
-    if (blake_hash_finish(&tx->ctx, tmp) != 0)
+    if (blake_hash_finish(tmp, sizeof(tmp)) != zxerr_ok)
         return parser_value_out_of_range;
 
     blake_hash_cid(tmp, BLAKE2B_256_SIZE, tx->digest, BLAKE2B_256_SIZE);

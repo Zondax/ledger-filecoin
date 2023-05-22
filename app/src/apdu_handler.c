@@ -1,5 +1,5 @@
 /*******************************************************************************
- *   (c) 2018, 2019 Zondax GmbH
+ *   (c) 2018 - 2023 Zondax AG
  *   (c) 2016 Ledger
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -118,7 +118,7 @@ process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
     uint32_t added;
     switch (payloadType) {
         case P1_INIT:
-            initialize_tx_buffer();
+            tx_initialize();
             tx_reset();
             extract_fil_path(rx, OFFSET_DATA);
             tx_initialized = true;
@@ -166,7 +166,7 @@ process_rawbytes_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
     switch (payloadType) {
         case P1_INIT:
             // TODO: check if we need this
-            initialize_tx_buffer();
+            tx_initialize();
             tx_reset();
             extract_fil_path(rx, OFFSET_DATA);
             tx_initialized = true;
@@ -231,7 +231,7 @@ process_chunk_eth(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
     uint64_t added;
     switch (payloadType) {
         case P1_ETH_FIRST:
-            initialize_tx_buffer();
+            tx_initialize();
             tx_reset();
             extract_eth_path(rx, OFFSET_DATA);
             // there is not warranties that the first chunk
@@ -518,7 +518,7 @@ handleSignEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
 void
 handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
 {
-    uint16_t sw = 0;
+    volatile uint16_t sw = 0;
 
     BEGIN_TRY
     {
@@ -619,7 +619,7 @@ handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
                     break;
             }
             G_io_apdu_buffer[*tx] = sw >> 8;
-            G_io_apdu_buffer[*tx + 1] = sw;
+            G_io_apdu_buffer[*tx + 1] = sw & 0xFF;
             *tx += 2;
         }
         FINALLY {}

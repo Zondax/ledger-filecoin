@@ -1,5 +1,5 @@
 /*******************************************************************************
-*  (c) 2019 Zondax GmbH
+*  (c) 2018 - 2023 Zondax AG
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -111,7 +111,7 @@ typedef struct {
 } fil_base_tx_t;
 
 typedef struct {
-    cx_blake2b_t ctx;
+    cx_blake2b_t ctx_blake2b;
     uint8_t digest[BLAKE2B_256_SIZE];
     size_t total;
     size_t current;

@@ -45,7 +45,7 @@ storage_t NV_CONST N_appdata_impl __attribute__ ((aligned(64)));
 
 parser_context_t ctx_parsed_tx;
 
-void initialize_tx_buffer() {
+void tx_initialize() {
     buffering_init(
             ram_buffer,
             sizeof(ram_buffer),
