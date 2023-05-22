@@ -118,7 +118,7 @@ process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
     uint32_t added;
     switch (payloadType) {
         case P1_INIT:
-            initialize_tx_buffer();
+            tx_initialize();
             tx_reset();
             extract_fil_path(rx, OFFSET_DATA);
             tx_initialized = true;
@@ -166,7 +166,7 @@ process_rawbytes_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
     switch (payloadType) {
         case P1_INIT:
             // TODO: check if we need this
-            initialize_tx_buffer();
+            tx_initialize();
             tx_reset();
             extract_fil_path(rx, OFFSET_DATA);
             tx_initialized = true;
@@ -231,7 +231,7 @@ process_chunk_eth(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
     uint64_t added;
     switch (payloadType) {
         case P1_ETH_FIRST:
-            initialize_tx_buffer();
+            tx_initialize();
             tx_reset();
             extract_eth_path(rx, OFFSET_DATA);
             // there is not warranties that the first chunk
