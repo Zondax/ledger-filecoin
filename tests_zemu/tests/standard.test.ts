@@ -21,6 +21,7 @@ import {getDigest} from "./utils";
 import * as secp256k1 from "secp256k1";
 import { models, defaultOptions, PATH } from './common'
 
+jest.setTimeout(90000)
 
 describe('Standard', function () {
   test.concurrent.each(models)('can start and stop container', async function (m) {
@@ -190,9 +191,7 @@ describe('Standard', function () {
       const app = new FilecoinApp(sim.getTransport());
 
       // Put the app in expert mode
-      await sim.clickRight();
-      await sim.clickBoth();
-      await sim.clickLeft();
+      await sim.toggleExpertMode();
 
       const txBlob = Buffer.from(
         "8a004300ec075501dfe49184d46adc8f89d44638beb45f78fcad259001401a000f4240430009c4430009c402581d845501dfe49184d46adc8f89d44638beb45f78fcad2590430003e80040",
@@ -408,9 +407,7 @@ describe('Standard', function () {
       const app = new FilecoinApp(sim.getTransport());
 
       // Put the app in expert mode
-      await sim.clickRight();
-      await sim.clickBoth();
-      await sim.clickLeft();
+      await sim.toggleExpertMode();
 
       // cid: hex(bytes("bafyreie74tgmnxqwojhtumgh5dzfj46gi4mynlfr7dmm7duwzyvnpw7h7m")) // but displayed as byteString(hex)
       // piece_size = 19535695

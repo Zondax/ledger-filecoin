@@ -27,18 +27,18 @@ const TEST_DATA = [
     name: 'multisig_create',
     op: multisigData.create.cbor,
   },
-  // {
-  //   name: 'multisig_propose',
-  //   op: multisigData.propose.cbor,
-  // },
-  // {
-  //   name: 'multisig_approve',
-  //   op: multisigData.approve.cbor,
-  // },
-  // {
-  //   name: 'multisig_cancel',
-  //   op: multisigData.cancel.cbor,
-  // }
+  {
+    name: 'multisig_propose',
+    op: multisigData.propose.cbor,
+  },
+  {
+    name: 'multisig_approve',
+    op: multisigData.approve.cbor,
+  },
+  {
+    name: 'multisig_cancel',
+    op: multisigData.cancel.cbor,
+  }
 ]
 
 
