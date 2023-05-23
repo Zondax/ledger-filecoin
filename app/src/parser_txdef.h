@@ -111,6 +111,7 @@ typedef struct {
 } fil_base_tx_t;
 
 typedef struct {
+    cx_blake2b_t ctx_blake2b;
     uint8_t digest[BLAKE2B_256_SIZE];
     size_t total;
     size_t current;

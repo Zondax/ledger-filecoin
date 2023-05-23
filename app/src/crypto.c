@@ -25,7 +25,7 @@
 #include "cx.h"
 #include "cx_blake2b.h"
 
-static cx_blake2b_t ctx_blake2b;
+static cx_blake2b_t *ctx_blake2b = NULL;
 
 zxerr_t crypto_extractPublicKey(const uint32_t path[MAX_BIP32_PATH], uint8_t *pubKey, uint16_t pubKeyLen, uint8_t *chainCode) {
 
@@ -83,20 +83,27 @@ int keccak_digest(const unsigned char *in, unsigned int inLen,
                           unsigned char *out, unsigned int outLen) {
     return keccak_hash(in, inLen, out, outLen);
 }
+zxerr_t blake_hash_setup(cx_blake2b_t *hasher) {
+    if (hasher == NULL) {
+        return zxerr_no_data;
+    }
+    ctx_blake2b = hasher;
+    return zxerr_ok;
+}
 
 zxerr_t blake_hash_init() {
-    if (cx_blake2b_init_no_throw(&ctx_blake2b, BLAKE2B_256_SIZE * 8) != CX_OK) {
+    if (ctx_blake2b == NULL || cx_blake2b_init_no_throw(ctx_blake2b, BLAKE2B_256_SIZE * 8) != CX_OK) {
         return zxerr_unknown;
     }
     return zxerr_ok;
 }
 
 zxerr_t blake_hash_update(const uint8_t *in, uint16_t inLen) {
-    if (in == NULL) {
+    if (in == NULL || ctx_blake2b == NULL) {
         return zxerr_no_data;
     }
 
-    if (cx_blake2b_update(&ctx_blake2b, in, inLen) != CX_OK) {
+    if (cx_blake2b_update(ctx_blake2b, in, inLen) != CX_OK) {
         return zxerr_unknown;
     }
 
@@ -104,10 +111,10 @@ zxerr_t blake_hash_update(const uint8_t *in, uint16_t inLen) {
 }
 
 zxerr_t blake_hash_finish(uint8_t *out, uint16_t outLen) {
-    if (out == NULL || outLen < BLAKE2B_256_SIZE) {
+    if (out == NULL || outLen < BLAKE2B_256_SIZE || ctx_blake2b == NULL) {
         return zxerr_no_data;
     }
-    cx_blake2b_final(&ctx_blake2b, out);
+    cx_blake2b_final(ctx_blake2b, out);
     return zxerr_ok;
 }
 

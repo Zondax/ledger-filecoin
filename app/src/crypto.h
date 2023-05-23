@@ -46,6 +46,8 @@ typedef struct {
 
 #endif
 
+zxerr_t blake_hash_setup(cx_blake2b_t *hasher);
+
 
 zxerr_t crypto_extractPublicKey(const uint32_t path[MAX_BIP32_PATH], uint8_t *pubKey, uint16_t pubKeyLen, uint8_t *chainCode);
 
