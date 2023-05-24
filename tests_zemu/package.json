@@ -17,8 +17,8 @@
     "test": "ts-node tests/pullImageKillOld.ts && jest"
   },
   "dependencies": {
-    "@zondax/ledger-filecoin": "^0.12.2",
-    "@zondax/zemu": "^0.40.1"
+    "@zondax/ledger-filecoin": "^0.13.0",
+    "@zondax/zemu": "^0.42.0"
   },
   "devDependencies": {
     "@types/jest": "^29.2.3",

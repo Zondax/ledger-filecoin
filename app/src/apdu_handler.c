@@ -1,5 +1,5 @@
 /*******************************************************************************
- *   (c) 2018, 2019 Zondax GmbH
+ *   (c) 2018 - 2023 Zondax AG
  *   (c) 2016 Ledger
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,6 +25,7 @@
 
 #include "actions.h"
 #include "addr.h"
+#include "common/tx.h"
 #include "eth_addr.h"
 #include "coin.h"
 #include "crypto.h"
@@ -35,6 +36,7 @@
 #include "zxmacros.h"
 
 static bool tx_initialized = false;
+static uint32_t msg_counter = 0;
 
 void
 extractHDPath(uint32_t rx, uint32_t offset, uint32_t path_len)
@@ -116,7 +118,7 @@ process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
     uint32_t added;
     switch (payloadType) {
         case P1_INIT:
-            tx_initialize_fil();
+            tx_initialize();
             tx_reset();
             extract_fil_path(rx, OFFSET_DATA);
             tx_initialized = true;
@@ -149,6 +151,64 @@ process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
 }
 
 bool
+process_rawbytes_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
+{
+    const uint8_t payloadType = G_io_apdu_buffer[OFFSET_PAYLOAD_TYPE];
+
+    if (G_io_apdu_buffer[OFFSET_P2] != 0) {
+        THROW(APDU_CODE_INVALIDP1P2);
+    }
+
+    if (rx < OFFSET_DATA) {
+        THROW(APDU_CODE_WRONG_LENGTH);
+    }
+
+    switch (payloadType) {
+        case P1_INIT:
+            // TODO: check if we need this
+            tx_initialize();
+            tx_reset();
+            extract_fil_path(rx, OFFSET_DATA);
+            tx_initialized = true;
+            msg_counter = 0;
+            return false;
+        case P1_ADD:
+        case P1_LAST: {
+
+            size_t msg_len = rx - OFFSET_DATA;
+            uint8_t *buf = G_io_apdu_buffer + OFFSET_DATA;
+
+            if (!tx_initialized) {
+                THROW(APDU_CODE_TX_NOT_INITIALIZED);
+            }
+
+            // initialize if this is the first message, as P1_INIT is the first chunk containing only the PATH
+            // if this is not the first message, then, just update our state with this data
+            if (msg_counter == 1) {
+                if (tx_rawbytes_init_state(buf, msg_len) != zxerr_ok) {
+                    tx_initialized = false;
+                    THROW(APDU_CODE_DATA_INVALID);
+                }
+            } else {
+                if (tx_rawbytes_update(buf, msg_len) != zxerr_ok) {
+                    tx_initialized = false;
+                    THROW(APDU_CODE_EXECUTION_ERROR);
+                }
+            }
+
+            if (payloadType == P1_LAST){
+                return true;
+            }
+
+            return false;
+        }
+    }
+
+    tx_initialized = false;
+    THROW(APDU_CODE_INVALIDP1P2);
+}
+
+bool
 process_chunk_eth(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
 {
     const uint8_t payloadType = G_io_apdu_buffer[OFFSET_PAYLOAD_TYPE];
@@ -171,7 +231,7 @@ process_chunk_eth(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
     uint64_t added;
     switch (payloadType) {
         case P1_ETH_FIRST:
-            tx_initialize_eth();
+            tx_initialize();
             tx_reset();
             extract_eth_path(rx, OFFSET_DATA);
             // there is not warranties that the first chunk
@@ -306,13 +366,116 @@ handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
         THROW(APDU_CODE_OK);
     }
 
+    tx_context_fil();
+
     CHECK_APP_CANARY()
 
     const char *error_msg = tx_parse();
     CHECK_APP_CANARY()
 
     if (error_msg != NULL) {
-        int error_msg_length = strlen(error_msg);
+        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
+        MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
+        *tx += (error_msg_length);
+        THROW(APDU_CODE_DATA_INVALID);
+    }
+
+    CHECK_APP_CANARY()
+    view_review_init(tx_getItem, tx_getNumItems, app_sign);
+    view_review_show(REVIEW_TXN);
+    *flags |= IO_ASYNCH_REPLY;
+}
+
+__Z_INLINE void
+handleSignDataCap(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
+{
+    zemu_log_stack("handleSignDataCap");
+
+    if (!process_chunk(tx, rx)) {
+        THROW(APDU_CODE_OK);
+    }
+
+    tx_context_datacap();
+
+    CHECK_APP_CANARY()
+
+    const char *error_msg = tx_parse();
+    CHECK_APP_CANARY()
+
+    if (error_msg != NULL) {
+        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
+        MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
+        *tx += (error_msg_length);
+        THROW(APDU_CODE_DATA_INVALID);
+    }
+
+    CHECK_APP_CANARY()
+    view_review_init(tx_getItem, tx_getNumItems, app_sign);
+    view_review_show(REVIEW_TXN);
+    *flags |= IO_ASYNCH_REPLY;
+}
+
+__Z_INLINE void
+handleSignClientDeal(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
+{
+    zemu_log_stack("handleSignClientDeal");
+
+    if (!process_chunk(tx, rx)) {
+        THROW(APDU_CODE_OK);
+    }
+
+    tx_context_client_deal();
+
+    CHECK_APP_CANARY()
+
+    const char *error_msg = tx_parse();
+    CHECK_APP_CANARY()
+
+    if (error_msg != NULL) {
+        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
+        MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
+        *tx += (error_msg_length);
+        THROW(APDU_CODE_DATA_INVALID);
+    }
+
+    CHECK_APP_CANARY()
+    view_review_init(tx_getItem, tx_getNumItems, app_sign);
+    view_review_show(REVIEW_TXN);
+    *flags |= IO_ASYNCH_REPLY;
+}
+
+
+__Z_INLINE void
+handleSignRawBytes(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
+{
+    zemu_log_stack("handleSignRawBytes");
+
+    msg_counter += 1;
+
+    if (!process_rawbytes_chunk(tx, rx)) {
+        char message[100] = {0};
+        snprintf(message, sizeof(message), "Chunk %d\n", msg_counter);
+        if ((msg_counter % 5) == 0) {
+            char prompt[] = {"RawBytes:"};
+            view_message_show(prompt, message);
+            #if !defined(TARGET_STAX)
+            UX_WAIT_DISPLAYED();
+            #endif
+        }
+        THROW(APDU_CODE_OK);
+    }
+
+    tx_context_raw_bytes();
+
+    view_idle_show(0, NULL);
+
+    CHECK_APP_CANARY()
+
+    const char *error_msg = tx_parse();
+    CHECK_APP_CANARY()
+
+    if (error_msg != NULL) {
+        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
         MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
         *tx += (error_msg_length);
         THROW(APDU_CODE_DATA_INVALID);
@@ -332,13 +495,15 @@ handleSignEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
         THROW(APDU_CODE_OK);
     }
 
+    tx_context_eth();
+
     CHECK_APP_CANARY()
 
     const char *error_msg = tx_parse();
     CHECK_APP_CANARY()
 
     if (error_msg != NULL) {
-        int error_msg_length = strlen(error_msg);
+        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
         MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
         *tx += (error_msg_length);
         THROW(APDU_CODE_DATA_INVALID);
@@ -353,7 +518,7 @@ handleSignEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
 void
 handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
 {
-    uint16_t sw = 0;
+    volatile uint16_t sw = 0;
 
     BEGIN_TRY
     {
@@ -372,7 +537,7 @@ handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
 
             uint8_t instruction = G_io_apdu_buffer[OFFSET_INS];
 
-            // Handle this case as ins number is the same as normal fil sign 
+            // Handle this case as ins number is the same as normal fil sign
             // instruction
             if (instruction == INS_GET_ADDR_ETH && cla == CLA_ETH)
                 handleGetAddrEth(flags, tx, rx);
@@ -411,6 +576,21 @@ handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
                     handleSign(flags, tx, rx);
                     break;
                 }
+                case INS_SIGN_DATACAP: {
+                    CHECK_PIN_VALIDATED()
+                    handleSignDataCap(flags, tx, rx);
+                    break;
+                }
+                case INS_CLIENT_DEAL: {
+                    CHECK_PIN_VALIDATED()
+                    handleSignClientDeal(flags, tx, rx);
+                    break;
+                }
+                case INS_SIGN_RAW_BYTES: {
+                    CHECK_PIN_VALIDATED()
+                    handleSignRawBytes(flags, tx, rx);
+                    break;
+                }
                 case INS_SIGN_ETH: {
                     CHECK_PIN_VALIDATED()
                     if (cla != CLA_ETH) {
@@ -439,7 +619,7 @@ handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
                     break;
             }
             G_io_apdu_buffer[*tx] = sw >> 8;
-            G_io_apdu_buffer[*tx + 1] = sw;
+            G_io_apdu_buffer[*tx + 1] = sw & 0xFF;
             *tx += 2;
         }
         FINALLY {}
