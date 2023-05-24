@@ -32,6 +32,23 @@ typedef struct {
 } testcase_inputs_t;
 
 typedef struct {
+    bool valid;
+
+    std::string description;
+
+    std::string pieceCID;
+    std::string client;
+    std::string provider;
+    uint64_t pieceSize;
+    bool verifiedDeal;
+    std::string dealLabel;
+    uint64_t startEpoch;
+    uint64_t endEpoch;
+    uint64_t provCollateral;
+    uint64_t clientCollateral;
+} testcase_inputs_deal_est;
+
+typedef struct {
     uint64_t index;
     std::string name;
     std::string blob;

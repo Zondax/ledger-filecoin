@@ -1,5 +1,5 @@
 /*******************************************************************************
-*  (c) 2019 Zondax GmbH
+*  (c) 2018 - 2023 Zondax AG
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 ********************************************************************************/
 #pragma once
 
+#include "crypto.h"
 #define CBOR_PARSER_MAX_RECURSIONS 4
 
 #include <coin.h>
@@ -32,6 +33,12 @@ extern "C" {
 #define ETH_ADDRESS_LEN         20
 #define MAX_CHAIN_LEN           UINT64_MAX
 
+// https://github.com/filecoin-project/go-state-types/blob/master/builtin/v9/market/policy.go#L30
+#define MAX_DEAL_LABEL_SIZE     256
+
+// This limit is not part of lotus but our restriction
+#define MAX_CID_LEN             200
+
 
 // https://github.com/filecoin-project/lotus/blob/65c669b0f2dfd8c28b96755e198b9cdaf0880df8/chain/address/address.go#L36
 // https://github.com/filecoin-project/lotus/blob/65c669b0f2dfd8c28b96755e198b9cdaf0880df8/chain/address/address.go#L371-L373
@@ -48,6 +55,46 @@ typedef struct {
     size_t len;
 } bigint_t;
 
+// To hold information
+// about the Remove DataCap
+// command.
+typedef struct {
+    uint64_t proposal_id;
+    bigint_t amount;
+    address_t client;
+} remove_datacap_t;
+
+// https://github.com/filecoin-project/go-state-types/blob/master/builtin/v9/market/deal.go#L40
+typedef struct {
+    // add 1-byte for the null terminated string
+    // TODO: check if it is actually necessary
+    uint8_t data[MAX_DEAL_LABEL_SIZE + 1];
+    size_t len;
+    uint8_t is_string;
+} deal_label_t;
+
+// https://github.com/ipfs/go-cid/blob/master/cid.go#L173
+typedef struct {
+    // plus null
+    uint8_t str[MAX_CID_LEN + 1];
+    size_t len;
+} cid_t;
+
+// https://github.com/filecoin-project/lotus/blob/master/node/impl/client/client.go#L238-L265
+typedef struct {
+    cid_t cid;
+    uint64_t piece_size;
+    address_t client;
+    address_t provider;
+    deal_label_t label;
+    int64_t start_epoch;
+    int64_t end_epoch;
+    bigint_t storage_price_x_epoch;
+    bigint_t provider_collateral;
+    bigint_t client_collateral;
+    uint8_t verified_deal;
+} client_deal_t;
+
 // https://github.com/filecoin-project/lotus/blob/eb4f4675a5a765e4898ec6b005ba2e80da8e7e1a/chain/types/message.go#L24-L39
 typedef struct {
     int64_t version;
@@ -59,15 +106,30 @@ typedef struct {
     bigint_t gaspremium;
     bigint_t gasfeecap;
     uint64_t method;
-
     uint8_t numparams;
     uint8_t params[MAX_PARAMS_BUFFER_SIZE];
+} fil_base_tx_t;
+
+typedef struct {
+    cx_blake2b_t ctx_blake2b;
+    uint8_t digest[BLAKE2B_256_SIZE];
+    size_t total;
+    size_t current;
+} raw_bytes_state_t;
+
+typedef struct {
+    union {
+        fil_base_tx_t base_tx;
+        remove_datacap_t rem_datacap_tx;
+        client_deal_t client_deal_tx;
+        raw_bytes_state_t raw_bytes_tx;
+    };
 } parser_tx_t;
 
-// simple struct that holds a bigint(256) 
+// simple struct that holds a bigint(256)
 typedef struct {
     uint32_t offset;
-    // although bigInts are defined in 
+    // although bigInts are defined in
     // ethereum as 256 bits,
     // it is possible that it is smaller.
     uint32_t len;
@@ -84,7 +146,7 @@ typedef struct {
     uint8_t addr[ETH_ADDRESS_LEN];
 } eth_addr_t;
 
-// Type that holds the common fields 
+// Type that holds the common fields
 // for legacy and eip2930 transactions
 typedef struct {
     eth_big_int_t nonce;
@@ -108,13 +170,13 @@ typedef enum eth_tx_type_t {
 typedef struct {
     eth_tx_type_t tx_type;
     chain_id_t chain_id;
-    // lets use an anonymous 
+    // lets use an anonymous
     // union to hold the 3 possible types of transactions:
     // legacy, eip2930, eip1559
     union {
         eth_base_t legacy;
     };
- 
+
 } eth_tx_t;
 
 #ifdef __cplusplus

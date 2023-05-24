@@ -1,5 +1,5 @@
 /*******************************************************************************
-*  (c) 2019 Zondax GmbH
+*  (c) 2018 - 2023 Zondax AG
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -15,43 +15,15 @@
 ********************************************************************************/
 
 #include <zxmacros.h>
+#include "common/parser_common.h"
 #include "parser_impl.h"
+#include "fil_utils.h"
 #include "parser_txdef.h"
 #include "cbor.h"
 #include "app_mode.h"
 #include "zxformat.h"
 
-#define TAG_CID 42
-#define STR_BUF_LEN 200
-
 parser_tx_t parser_tx_obj;
-
-__Z_INLINE parser_error_t parser_mapCborError(CborError err);
-
-#define CHECK_CBOR_MAP_ERR(CALL) { \
-    CborError err = CALL;  \
-    if (err!=CborNoError) return parser_mapCborError(err);}
-
-#define PARSER_ASSERT_OR_ERROR(CALL, ERROR) if (!(CALL)) return ERROR;
-
-#define CHECK_CBOR_TYPE(type, expected) {if ((type)!=(expected)) return parser_unexpected_type;}
-
-#define INIT_CBOR_PARSER(c, it)  \
-    CborParser parser;           \
-    CHECK_CBOR_MAP_ERR(cbor_parser_init((c)->buffer + (c)->offset, (c)->bufferLen - (c)->offset, 0, &parser, &(it)))
-
-__Z_INLINE parser_error_t parser_mapCborError(CborError err) {
-    switch (err) {
-        case CborErrorUnexpectedEOF:
-            return parser_cbor_unexpected_EOF;
-        case CborErrorMapNotSorted:
-            return parser_cbor_not_canonical;
-        case CborNoError:
-            return parser_ok;
-        default:
-            return parser_cbor_unexpected;
-    }
-}
 
 const char *parser_getErrorDescription(parser_error_t err) {
     switch (err) {
@@ -116,99 +88,19 @@ const char *parser_getErrorDescription(parser_error_t err) {
             return "Invalid eth chainId";
         case parser_invalid_rs_values:
             return "Invalid rs values";
+        case parser_invalid_datacap_tx:
+            return "Invalid remove allowance tx";
+        case parser_invalid_cid:
+            return "Invalid CID";
+        case parser_invalid_deal_duration:
+            return "Client deal duration must be >= 518400";
+        case parser_invalid_prefix:
+            return "Invalid raw-bytes prefix";
         default:
             return "Unrecognized error code";
     }
 }
 
-__Z_INLINE parser_error_t readAddress(address_t *address, CborValue *value) {
-    CHECK_CBOR_TYPE(cbor_value_get_type(value), CborByteStringType)
-
-    CborValue dummy;
-    MEMZERO(address, sizeof(address_t));
-    address->len = sizeof_field(address_t, buffer);
-
-    PARSER_ASSERT_OR_ERROR(cbor_value_is_byte_string(value), parser_unexpected_type)
-    CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(value, (uint8_t *) address->buffer, &address->len, &dummy))
-
-    // Addresses are at least 2 characters Protocol + random data
-    PARSER_ASSERT_OR_ERROR(address->len > 1, parser_invalid_address)
-
-    // Verify size and protocol
-    switch (address->buffer[0]) {
-        case ADDRESS_PROTOCOL_ID:
-            // protocol 0
-            PARSER_ASSERT_OR_ERROR(address->len - 1 < 21, parser_invalid_address)
-            break;
-        case ADDRESS_PROTOCOL_SECP256K1:
-            // protocol 1
-            PARSER_ASSERT_OR_ERROR(address->len - 1 == ADDRESS_PROTOCOL_SECP256K1_PAYLOAD_LEN, parser_invalid_address)
-            break;
-        case ADDRESS_PROTOCOL_ACTOR:
-            // protocol 2
-            PARSER_ASSERT_OR_ERROR(address->len - 1 == ADDRESS_PROTOCOL_ACTOR_PAYLOAD_LEN, parser_invalid_address)
-            break;
-        case ADDRESS_PROTOCOL_BLS:
-            // protocol 3
-            PARSER_ASSERT_OR_ERROR(address->len - 1 == ADDRESS_PROTOCOL_BLS_PAYLOAD_LEN, parser_invalid_address)
-            break;
-        case ADDRESS_PROTOCOL_DELEGATED: {
-            // protocol 4
-            uint64_t actorId = 0;
-            const uint16_t actorIdSize = decompressLEB128(address->buffer + 1, address->len - 1, &actorId);
-            PARSER_ASSERT_OR_ERROR(actorIdSize > 0, parser_invalid_address)
-            // At least 1 byte in subaddress
-            PARSER_ASSERT_OR_ERROR(address->len > actorIdSize + 1, parser_invalid_address)
-            break;
-        }
-        default:
-            return parser_invalid_address;
-    }
-
-    return parser_ok;
-}
-
-__Z_INLINE parser_error_t readBigInt(bigint_t *bigint, CborValue *value) {
-    CHECK_CBOR_TYPE(cbor_value_get_type(value), CborByteStringType)
-    CborValue dummy;
-
-    MEMZERO(bigint, sizeof(bigint_t));
-    bigint->len = sizeof_field(bigint_t, buffer);
-
-    PARSER_ASSERT_OR_ERROR(cbor_value_is_byte_string(value), parser_unexpected_type)
-    CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(value, (uint8_t *) bigint->buffer, &bigint->len, &dummy))
-
-    // We have an empty value so value is default (zero)
-    PARSER_ASSERT_OR_ERROR(bigint->len != 0, parser_ok)
-
-    // We only have a byte sign, no good
-    PARSER_ASSERT_OR_ERROR(bigint->len > 1, parser_unexpected_value)
-
-    // negative bigint, should be positive
-    PARSER_ASSERT_OR_ERROR(bigint->buffer[0] == 0x00, parser_unexpected_value)
-
-    return parser_ok;
-}
-
-static parser_error_t renderByteString(uint8_t *in, uint16_t inLen,
-                          char *outVal, uint16_t outValLen,
-                          uint8_t pageIdx, uint8_t *pageCount) {
-    const uint32_t len = inLen * 2;
-
-    // check bounds
-    if (inLen > 0 && inLen <= STR_BUF_LEN) {
-        char hexStr[STR_BUF_LEN * 2 + 1] = {0};
-        const uint32_t count = array_to_hexstr(hexStr, sizeof(hexStr), in, inLen);
-        PARSER_ASSERT_OR_ERROR(count == len, parser_value_out_of_range)
-        CHECK_APP_CANARY()
-
-        pageString(outVal, outValLen, hexStr, pageIdx, pageCount);
-        CHECK_APP_CANARY()
-        return parser_ok;
-    }
-
-    return parser_value_out_of_range;
-}
 
 parser_error_t printValue(const struct CborValue *value,
                           char *outVal, uint16_t outValLen,
@@ -253,32 +145,15 @@ parser_error_t printValue(const struct CborValue *value,
                 CHECK_PARSER_ERR(renderByteString(buff, buffLen, outVal, outValLen, pageIdx, pageCount))
                 break;
             }
-            return parser_unexepected_error;
+            return parser_unexpected_type;
         }
         default:
             snprintf(outVal, outValLen, "Type: %d", value->type);
-            return parser_unexpected_type;
     }
     return parser_ok;
 }
 
-parser_error_t _printAddress(const address_t *a,char *outVal, uint16_t outValLen,
-                             uint8_t pageIdx, uint8_t *pageCount) {
-    // the format :
-    // network (1 byte) + protocol (1 byte) + base 32 [ payload (20 bytes or 48 bytes) + checksum (optional - 4bytes)]
-    // Max we need 84 bytes to support BLS + 16 bytes padding
-    char outBuffer[84 + 16];
-    MEMZERO(outBuffer, sizeof(outBuffer));
-
-    if (formatProtocol(a->buffer, a->len, (uint8_t *) outBuffer, sizeof(outBuffer)) == 0) {
-        return parser_invalid_address;
-    }
-
-    pageString(outVal, outValLen, outBuffer, pageIdx, pageCount);
-    return parser_ok;
-}
-
-parser_error_t _printParam(const parser_tx_t *tx, uint8_t paramIdx,
+parser_error_t _printParam(const fil_base_tx_t *tx, uint8_t paramIdx,
                            char *outVal, uint16_t outValLen,
                            uint8_t pageIdx, uint8_t *pageCount) {
     CHECK_APP_CANARY()
@@ -304,7 +179,7 @@ parser_error_t _printParam(const parser_tx_t *tx, uint8_t paramIdx,
             }
             PARSER_ASSERT_OR_ERROR(itContainer.type != CborInvalidType, parser_unexpected_type)
             //Not every ByteStringType must be interpreted as address. Depends on method number and actor.
-            CHECK_PARSER_ERR(_printAddress(&tmpAddr, outVal, outValLen, pageIdx, pageCount));
+            CHECK_PARSER_ERR(printAddress(&tmpAddr, outVal, outValLen, pageIdx, pageCount));
             break;
         }
         case CborMapType:
@@ -340,7 +215,7 @@ parser_error_t checkMethod(uint64_t methodValue) {
     return parser_unexpected_method;
 }
 
-__Z_INLINE parser_error_t readMethod(parser_tx_t *tx, CborValue *value) {
+__Z_INLINE parser_error_t readMethod(fil_base_tx_t *tx, CborValue *value) {
 
     uint64_t methodValue;
     PARSER_ASSERT_OR_ERROR(cbor_value_is_unsigned_integer(value), parser_unexpected_type)
@@ -407,7 +282,7 @@ __Z_INLINE parser_error_t readMethod(parser_tx_t *tx, CborValue *value) {
     return parser_ok;
 }
 
-parser_error_t _read(const parser_context_t *c, parser_tx_t *v) {
+parser_error_t _read(const parser_context_t *c, fil_base_tx_t *v) {
     CborValue it;
     INIT_CBOR_PARSER(c, it)
     PARSER_ASSERT_OR_ERROR(!cbor_value_at_end(&it), parser_unexpected_buffer_end)
@@ -484,14 +359,14 @@ parser_error_t _read(const parser_context_t *c, parser_tx_t *v) {
     return parser_ok;
 }
 
-parser_error_t _validateTx(__Z_UNUSED const parser_context_t *c, __Z_UNUSED const parser_tx_t *v) {
+parser_error_t _validateTx(__Z_UNUSED const parser_context_t *c, __Z_UNUSED const fil_base_tx_t *v) {
     // Note: This is place holder for transaction level checks that the project may require before accepting
     // the parsed values. the parser already validates input
     // This function is called by parser_validate, where additional checks are made (formatting, UI/UX, etc.(
     return parser_ok;
 }
 
-uint8_t _getNumItems(__Z_UNUSED const parser_context_t *c, const parser_tx_t *v) {
+uint8_t _getNumItems(__Z_UNUSED const parser_context_t *c, const fil_base_tx_t *v) {
 
     uint8_t itemCount = 6;
 

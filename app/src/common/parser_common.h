@@ -62,17 +62,24 @@ typedef enum {
     parser_invalid_rlp_data,
     parser_invalid_chain_id,
     parser_invalid_rs_values,
+    parser_invalid_datacap_tx,
+    parser_invalid_cid,
+    parser_invalid_deal_duration,
+    parser_invalid_prefix,
 } parser_error_t;
 
-// Define the two types 
-// of supported transactions.
+// Define the three types
+// of supported transactions/msgs.
 // there are other sub-categories for each
 // that can be handled by their respective parser.
 // this type helps defining which parser to call
 typedef enum {
   fil_tx = 0,
   eth_tx,
-}tx_type_t; 
+  datacap_tx,
+  clientdeal_tx,
+  raw_bytes,
+}tx_type_t;
 
 typedef struct {
     const uint8_t *buffer;

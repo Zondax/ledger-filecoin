@@ -53,9 +53,7 @@ describe.each(models)('Multisig', function (m) {
       const testcase = `${m.prefix.toLowerCase()}-sign-${name}`
 
       // Put the app in expert mode
-      await sim.clickRight();
-      await sim.clickBoth();
-      await sim.clickLeft();
+      await sim.toggleExpertMode();
 
       const txBlob = Buffer.from(op, 'hex');
 
