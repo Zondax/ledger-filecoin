@@ -191,19 +191,22 @@ parser_error_t _readEth(parser_context_t *ctx, eth_tx_t *tx_obj)
     uint32_t len = 0;
 
     // read out transaction rlp header(which indicates tx data length)
-    if (parse_rlp_item(ctx->buffer + ctx->offset, ctx->bufferLen, &read, &len) != rlp_ok)
+    if (parse_rlp_item(ctx->buffer + ctx->offset, ctx->bufferLen, &read, &len) != rlp_ok) {
         // should not happen as this was check before
+        ctx->offset = start;
         return parser_unexepected_error;
+    }
 
     ctx->offset += read;
 
-    if (ctx->offset > ctx->bufferLen)
+    if (ctx->offset > ctx->bufferLen) {
         // should not happend though
+        ctx->offset = start;
         return parser_unexepected_error;
+    }
 
     // parser transaction
     parser_error_t err = parseEthTx(ctx, tx_obj);
-
     ctx->offset = start;
 
     if (err != parser_ok)
@@ -282,8 +285,9 @@ parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int i
         // this is not good but it relies on hw-eth-app lib from ledger
         // to recover the right chain_id from the V component being computed here, and
         // which is returned with the signature
-        if (id_len > UINT32_MAX)
-            id_len = UINT32_MAX;
+        if (id_len > UINT8_MAX) {
+            return parser_unexepected_error;
+        }
 
         const uint8_t *chain = ctx->buffer + tx_obj->chain_id.offset;
 

@@ -64,9 +64,9 @@ be_bytes_to_u64(const uint8_t *bytes, uint8_t len, uint64_t *num)
     }
 
     uint8_t *num_ptr = (uint8_t *)num;
-    for (int i = len; i--;) {
-        *num_ptr = bytes[i];
-        num_ptr += 1;
+    for (uint8_t i = 0; i < len; i++) {
+        *num_ptr = bytes[len - i - 1];
+        num_ptr++;
     }
 
     return 0;
@@ -146,30 +146,26 @@ parse_rlp_item(const uint8_t *data,
 
     uint8_t marker = data[0];
 
-
-    // first case item is just one byte
-    if ((marker - 0x00) * (marker - 0x7F) <= 0) {
+    if (marker <= 0x7F) {
+        // first case item is just one byte
         *read = 0;
         *item_len = 1;
         return rlp_ok;
-    }
 
-    // second case it is a sstring with a fixed length
-    if ((marker - 0x80) * (marker - 0xB7) <= 0) {
+    } else if (marker <= 0xB7) {
+        // second case it is a string with a fixed length
         uint8_t len = marker - 0x80;
-
         *read = 1;
         CHECK_RLP_LEN(dataLen, len + 1)
         *item_len = len;
         return rlp_ok;
-    }
 
-    // For strings longer than 55 bytes the length is encoded
-    // differently.
-    // The number of bytes that compose the length is encoded
-    // in the marker
-    // And then the length is just the number BE encoded
-    if ((marker - 0xB8) * (marker - 0xBF) <= 0) {
+    } else if (marker <= 0xBF) {
+        // For strings longer than 55 bytes the length is encoded
+        // differently.
+        // The number of bytes that compose the length is encoded
+        // in the marker
+        // And then the length is just the number BE encoded
         uint8_t num_bytes = marker - 0xB7;
         uint64_t len = 0;
         if (be_bytes_to_u64(&data[1], num_bytes, &len) != 0)
@@ -180,10 +176,9 @@ parse_rlp_item(const uint8_t *data,
         *item_len = len;
 
         return rlp_ok;
-    }
 
-    // simple list
-    if ((marker - 0xC0) * (marker - 0xF7) <= 0) {
+    } else if (marker <= 0xF7) {
+        // simple list
         uint8_t len = marker - 0xC0;
 
         *read = 1;
@@ -192,24 +187,21 @@ parse_rlp_item(const uint8_t *data,
         return rlp_ok;
     }
 
+    // marker >= 0xF8
     // For lists longer than 55 bytes the length is encoded
     // differently.
     // The number of bytes that compose the length is encoded
     // in the marker
     // And then the length is just the number BE encoded
-    if (marker >= 0xF8) {
-        uint8_t num_bytes = marker - 0xF7;
-        uint64_t len = 0;
-        if (be_bytes_to_u64(&data[1], num_bytes, &len) != 0)
-            return rlp_invalid_data;
+    uint8_t num_bytes = marker - 0xF7;
+    uint64_t len = 0;
+    if (be_bytes_to_u64(&data[1], num_bytes, &len) != 0)
+        return rlp_invalid_data;
 
-        CHECK_RLP_LEN(dataLen, len + 1 + num_bytes)
+    CHECK_RLP_LEN(dataLen, len + 1 + num_bytes)
 
-        *read = 1 + num_bytes;
-        *item_len = len;
+    *read = 1 + num_bytes;
+    *item_len = len;
 
-        return rlp_ok;
-    }
-
-    return rlp_invalid_data;
+    return rlp_ok;
 }

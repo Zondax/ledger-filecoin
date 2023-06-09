@@ -204,11 +204,11 @@ parser_error_t parse_cid(cid_t *cid, CborValue *value) {
         uint64_t version;
         uint64_t codec;
 
-        uint8_t base_offset = parse_varint(tmp,  cid_len, &base);
+        uint8_t base_offset = decompressLEB128(tmp,  cid_len, &base);
         bytes_read += base_offset;
 
-        bytes_read += parse_varint(tmp + bytes_read, cid_len - bytes_read, &version);
-        parse_varint(tmp + bytes_read, cid_len - bytes_read, &codec);
+        bytes_read += decompressLEB128(tmp + bytes_read, cid_len - bytes_read, &version);
+        decompressLEB128(tmp + bytes_read, cid_len - bytes_read, &codec);
 
         if ((uint8_t)codec != CID_CODEC || (uint8_t)version != CID_VERSION || (uint8_t)base != CID_BASE)
             return parser_invalid_cid;
@@ -236,41 +236,10 @@ parser_error_t printCid(cid_t *cid, char *outVal, uint16_t outValLen,
     // filecoin uses base32 which base prefix is b.
     *outBuffer = 'b';
 
-    size_t encoded_len = base32_encode(cid->str, cid->len, outBuffer + 1, sizeof(outBuffer)- 1);
-
-    if (encoded_len == 0)
+    if (base32_encode(cid->str, cid->len, outBuffer + 1, sizeof(outBuffer)- 1) == 0) {
         return parser_no_data;
-
-    pageString(outVal, outValLen, outBuffer, pageIdx, pageCount);
-
-    return parser_ok;
-}
-
-/**
-* reads a varint from buf.
-* result is written into /value
-* returns the amount of bytes read from buf
-* */
-size_t parse_varint(uint8_t *buf, size_t buf_len, uint64_t *value) {
-
-    uint8_t shift = 0;
-    uint8_t b;
-    size_t i;
-
-    if (value == NULL)
-        return 0;
-
-    *value = 0;
-
-    for (i = 0; i < buf_len; i++) {
-        b = buf[i];
-        *value |= (uint64_t)(b & 0x7F) << shift;
-        shift += 7;
-        if ((b & 0x80) == 0) {
-            break;
-        }
     }
 
-    return i + 1;
+    pageString(outVal, outValLen, outBuffer, pageIdx, pageCount);
+    return parser_ok;
 }
-

@@ -49,7 +49,7 @@ parser_error_t raw_bytes_init(uint8_t *buf, size_t buf_len) {
 
     // get message len in bytes
     uint64_t total = 0;
-    size_t bytes_read = parse_varint(buf, buf_len, &total);
+    size_t bytes_read = decompressLEB128(buf, buf_len, &total);
 
     if (total == 0 || bytes_read == buf_len)
         return parser_unexpected_buffer_end;

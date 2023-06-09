@@ -329,7 +329,7 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrL
 }
 
 zxerr_t crypto_fillEthAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrLen) {
-    if (buffer == NULL || buffer_len < sizeof(answer_t) || addrLen == NULL) {
+    if (buffer == NULL || buffer_len < sizeof(answer_eth_t) || addrLen == NULL) {
         return zxerr_no_data;
     }
     MEMZERO(buffer, buffer_len);

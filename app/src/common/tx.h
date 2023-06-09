@@ -26,7 +26,7 @@ void tx_context_client_deal();
 void tx_context_raw_bytes();
 
 // Signing is differently depending tx is rawBytes type
-uint8_t tx_is_rawbytes();
+bool tx_is_rawbytes();
 
 zxerr_t tx_rawbytes_init_state(uint8_t *buf, size_t buf_len);
 zxerr_t tx_rawbytes_update(uint8_t *buf, size_t buf_len);

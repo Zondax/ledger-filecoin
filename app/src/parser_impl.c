@@ -105,11 +105,9 @@ const char *parser_getErrorDescription(parser_error_t err) {
 parser_error_t printValue(const struct CborValue *value,
                           char *outVal, uint16_t outValLen,
                           uint8_t pageIdx, uint8_t *pageCount) {
-    uint8_t buff[STR_BUF_LEN];
+    uint8_t buff[STR_BUF_LEN] = {0};
     size_t buffLen = sizeof(buff);
-    MEMZERO(buff, sizeof(buff));
 
-    snprintf(outVal, outValLen, "-- EMPTY --");
     switch (value->type) {
         case CborByteStringType: {
             CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(value, buff, &buffLen, NULL /* next */))
@@ -150,6 +148,13 @@ parser_error_t printValue(const struct CborValue *value,
         default:
             snprintf(outVal, outValLen, "Type: %d", value->type);
     }
+
+    // Print EMPTY when buffLen is zero
+    if (buffLen == 0) {
+        snprintf(outVal, outValLen, "-- EMPTY --");
+        *pageCount = 1;
+    }
+
     return parser_ok;
 }
 

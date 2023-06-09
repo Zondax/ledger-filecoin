@@ -206,7 +206,7 @@ parser_error_t _getItemClientDeal(__Z_UNUSED const parser_context_t *ctx,
 
     CHECK_APP_CANARY()
 
-    uint8_t expert_mode = app_mode_expert();
+    bool expert_mode = app_mode_expert();
 
     if (displayIdx == 0) {
         snprintf(outKey, outKeyLen, "PieceCID ");

@@ -35,8 +35,8 @@ uint16_t decompressLEB128(const uint8_t *input, uint16_t inputSize, uint64_t *v)
     while (i < 10u && i < inputSize) {
         uint64_t b = input[i] & 0x7fu;
 
-        if (shift >= 63 && b > 1) {
-            // This will overflow uint64_t
+        if ((shift == 63 && b > 1) || (shift > 63 && b > 0)) {
+            // This will overflow uint64_t, break and return
             break;
         }
 
@@ -79,10 +79,10 @@ uint16_t formatProtocol(const uint8_t *addressBytes,
         case ADDRESS_PROTOCOL_ID: {
             uint64_t val = 0;
 
-            if (!decompressLEB128(addressBytes + 1, addressSize - 1, &val)) {
+            if (!decompressLEB128(addressBytes + 1, addressSize - 1, &val) ||
+                uint64_to_str((char *) formattedAddress + 2, formattedAddressSize - 2, val) != NULL) {
                 return 0;
             }
-            uint64_to_str((char *) formattedAddress + 2, formattedAddressSize - 2, val);
             return strnlen((const char *) formattedAddress, formattedAddressSize);
         }
         case ADDRESS_PROTOCOL_SECP256K1: {  // NOLINT(bugprone-branch-clone)
@@ -140,7 +140,7 @@ uint16_t formatProtocol(const uint8_t *addressBytes,
     if (base32_encode(payload_crc,
                       (uint32_t) (payloadSize + CHECKSUM_LENGTH),
                       (char *)(formattedAddress + offset),
-                      (uint32_t) (formattedAddressSize - offset)) < 0) {
+                      (uint32_t) (formattedAddressSize - offset)) == 0) {
         return 0;
     }
 
