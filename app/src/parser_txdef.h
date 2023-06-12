@@ -67,7 +67,6 @@ typedef struct {
 // https://github.com/filecoin-project/go-state-types/blob/master/builtin/v9/market/deal.go#L40
 typedef struct {
     // add 1-byte for the null terminated string
-    // TODO: check if it is actually necessary
     uint8_t data[MAX_DEAL_LABEL_SIZE + 1];
     size_t len;
     uint8_t is_string;
