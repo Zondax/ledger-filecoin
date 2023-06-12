@@ -165,7 +165,6 @@ process_rawbytes_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
 
     switch (payloadType) {
         case P1_INIT:
-            // TODO: check if we need this
             tx_initialize();
             tx_reset();
             extract_fil_path(rx, OFFSET_DATA);
@@ -366,8 +365,27 @@ handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
         THROW(APDU_CODE_OK);
     }
 
-    tx_context_fil();
+    const uint8_t instruction = G_io_apdu_buffer[OFFSET_INS];
+    switch (instruction) {
+        case INS_SIGN_SECP256K1:
+            ZEMU_LOGF(50, "HandleSignFil")
+            tx_context_fil();
+            break;
 
+        case INS_SIGN_DATACAP:
+            ZEMU_LOGF(50, "HandleSignDatacap")
+            tx_context_datacap();
+            break;
+
+        case INS_CLIENT_DEAL:
+            ZEMU_LOGF(50, "HandleSignClientDeal")
+            tx_context_client_deal();
+            break;
+
+        default:
+            THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+            break;
+    }
     CHECK_APP_CANARY()
 
     const char *error_msg = tx_parse();
@@ -385,65 +403,6 @@ handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
     view_review_show(REVIEW_TXN);
     *flags |= IO_ASYNCH_REPLY;
 }
-
-__Z_INLINE void
-handleSignDataCap(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
-{
-    zemu_log_stack("handleSignDataCap");
-
-    if (!process_chunk(tx, rx)) {
-        THROW(APDU_CODE_OK);
-    }
-
-    tx_context_datacap();
-
-    CHECK_APP_CANARY()
-
-    const char *error_msg = tx_parse();
-    CHECK_APP_CANARY()
-
-    if (error_msg != NULL) {
-        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
-        MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
-        *tx += (error_msg_length);
-        THROW(APDU_CODE_DATA_INVALID);
-    }
-
-    CHECK_APP_CANARY()
-    view_review_init(tx_getItem, tx_getNumItems, app_sign);
-    view_review_show(REVIEW_TXN);
-    *flags |= IO_ASYNCH_REPLY;
-}
-
-__Z_INLINE void
-handleSignClientDeal(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
-{
-    zemu_log_stack("handleSignClientDeal");
-
-    if (!process_chunk(tx, rx)) {
-        THROW(APDU_CODE_OK);
-    }
-
-    tx_context_client_deal();
-
-    CHECK_APP_CANARY()
-
-    const char *error_msg = tx_parse();
-    CHECK_APP_CANARY()
-
-    if (error_msg != NULL) {
-        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
-        MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
-        *tx += (error_msg_length);
-        THROW(APDU_CODE_DATA_INVALID);
-    }
-
-    CHECK_APP_CANARY()
-    view_review_init(tx_getItem, tx_getNumItems, app_sign);
-    view_review_show(REVIEW_TXN);
-    *flags |= IO_ASYNCH_REPLY;
-}
-
 
 __Z_INLINE void
 handleSignRawBytes(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
@@ -525,7 +484,7 @@ handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
         TRY
         {
 
-            uint8_t cla = G_io_apdu_buffer[OFFSET_CLA];
+            const uint8_t cla = G_io_apdu_buffer[OFFSET_CLA];
 
             if ((cla != CLA) && (cla != CLA_ETH)) {
                 THROW(APDU_CODE_CLA_NOT_SUPPORTED);
@@ -535,7 +494,7 @@ handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
                 THROW(APDU_CODE_WRONG_LENGTH);
             }
 
-            uint8_t instruction = G_io_apdu_buffer[OFFSET_INS];
+            const uint8_t instruction = G_io_apdu_buffer[OFFSET_INS];
 
             // Handle this case as ins number is the same as normal fil sign
             // instruction
@@ -578,12 +537,12 @@ handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
                 }
                 case INS_SIGN_DATACAP: {
                     CHECK_PIN_VALIDATED()
-                    handleSignDataCap(flags, tx, rx);
+                    handleSign(flags, tx, rx);
                     break;
                 }
                 case INS_CLIENT_DEAL: {
                     CHECK_PIN_VALIDATED()
-                    handleSignClientDeal(flags, tx, rx);
+                    handleSign(flags, tx, rx);
                     break;
                 }
                 case INS_SIGN_RAW_BYTES: {

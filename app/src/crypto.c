@@ -287,7 +287,7 @@ typedef struct {
     uint8_t addrBytes[21];
 
     uint8_t addrStrLen;
-    uint8_t addrStr[41];  // 41 = because (20+1+4)*8/5 (32 base encoded size)
+    uint8_t addrStr[41];
 
 } __attribute__((packed)) answer_t;
 
@@ -296,7 +296,7 @@ typedef struct {
     uint8_t publicKey[SECP256K1_PK_LEN + 1];
     // hex of the ethereum address plus 1-bytes
     // to write the address len
-    uint8_t address[(ETH_ADDR_LEN * 2) + 1];  // 41 = because (20+1+4)*8/5 (32 base encoded size)
+    uint8_t address[(ETH_ADDR_LEN * 2) + 1];
     // place holder for further dev
     uint8_t chainCode[32];
 
