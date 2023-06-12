@@ -1266,10 +1266,10 @@
     "@ledgerhq/hw-transport" "^6.28.1"
     varint "^6.0.0"
 
-"@zondax/zemu@^0.40.1":
-  version "0.40.1"
-  resolved "https://registry.yarnpkg.com/@zondax/zemu/-/zemu-0.40.1.tgz#a06885f2dead2c5ede7cbb69a02d7d992ae738d1"
-  integrity sha512-SO7i++bHGITw9zCz+6tnCe3gTP6SN947uSMzkR+D5rKLidbrzN2vmw1Hf5Ueze3rVbcHHnQDtWLAucXIyhfvhw==
+"@zondax/zemu@^0.42.1":
+  version "0.42.1"
+  resolved "https://registry.yarnpkg.com/@zondax/zemu/-/zemu-0.42.1.tgz#b60ae867b6c5400d47c817097125e818ce11644f"
+  integrity sha512-qT4FgCeZuOL6MllGibNzaIeQy1S8OABFlBnyTNNRFOSf5BgeSAhYJsvQ15k1W/1uqC0PnhswgFcf/E7uk2IzkA==
   dependencies:
     "@grpc/grpc-js" "^1.8.12"
     "@grpc/proto-loader" "^0.7.5"

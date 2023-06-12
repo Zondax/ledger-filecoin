@@ -74,7 +74,7 @@ void tx_context_raw_bytes() {
   ctx_parsed_tx.tx_type = raw_bytes;
 }
 
-uint8_t tx_is_rawbytes() {
+bool tx_is_rawbytes() {
     return ctx_parsed_tx.tx_type == raw_bytes;
 }
 
@@ -136,7 +136,7 @@ zxerr_t tx_getItem(int8_t displayIdx,
 
     CHECK_ZXERR(tx_getNumItems(&numItems))
 
-    if (displayIdx < 0 || displayIdx > numItems) {
+    if (displayIdx < 0 || displayIdx >= numItems) {
         return zxerr_no_data;
     }
 

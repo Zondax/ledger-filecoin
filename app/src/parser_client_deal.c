@@ -206,69 +206,70 @@ parser_error_t _getItemClientDeal(__Z_UNUSED const parser_context_t *ctx,
 
     CHECK_APP_CANARY()
 
-    uint8_t expert_mode = app_mode_expert();
+    const bool expert_mode = app_mode_expert();
 
-    if (displayIdx == 0) {
-        snprintf(outKey, outKeyLen, "PieceCID ");
-        parser_error_t res = printCid(&( parser_tx_obj.client_deal_tx.cid ), outVal, outValLen, pageIdx, pageCount);
-        return res;
-    }
-
-    if (displayIdx == 1) {
-        snprintf(outKey, outKeyLen, "Client ");
-        return printAddress(&parser_tx_obj.client_deal_tx.client,
-                             outVal, outValLen, pageIdx, pageCount);
-    }
-
-    if (displayIdx == 2) {
-        snprintf(outKey, outKeyLen, "Provider ");
-        return printAddress(&parser_tx_obj.client_deal_tx.provider,
-                             outVal, outValLen, pageIdx, pageCount);
-    }
-
-    if (( displayIdx == 3 && !expert_mode ) || ( displayIdx == 9 && expert_mode )) {
-        snprintf(outKey, outKeyLen, "VerifiedDeal ");
-
-        if (parser_tx_obj.client_deal_tx.verified_deal > 0) {
-            snprintf(outVal, outValLen, "true");
-        } else {
-            snprintf(outVal, outValLen, "false");
-        }
-
-        *pageCount = 1;
-
-        return parser_ok;
-    }
-
-    if (displayIdx == 3 && expert_mode) {
-        snprintf(outKey, outKeyLen, "PieceSize(B)");
-        return render_integer(parser_tx_obj.client_deal_tx.piece_size, outVal, outValLen, pageCount);
-    }
-
+    // Remapping displayIdx to simplify switch-case logic
+    // VerifiedDeal should be placed at the 10th position for Expert mode
     if (expert_mode) {
-        if (displayIdx == 4) {
-            return render_label(outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
+        if (displayIdx == 3) {
+            displayIdx = 9;
+        } else if (displayIdx == 9) {
+            displayIdx = 3;
         }
+    }
 
-        if (displayIdx == 5) {
+    // Normal mode: 4 fields  [PieceCID | Client | Provider | VerifiedDeal]
+    // Expert mode: 10 fields [PieceCID | Client | Provider | PieceSize(B) | DealLabel | StartEpoch | EndEpoch | ProvCollateral | ClientCollateral | VerifiedDeal]
+    switch (displayIdx) {
+        case 0:
+            snprintf(outKey, outKeyLen, "PieceCID ");
+            return printCid(&( parser_tx_obj.client_deal_tx.cid ), outVal, outValLen, pageIdx, pageCount);
+
+        case 1:
+            snprintf(outKey, outKeyLen, "Client ");
+            return printAddress(&parser_tx_obj.client_deal_tx.client,
+                                outVal, outValLen, pageIdx, pageCount);
+
+        case 2:
+            snprintf(outKey, outKeyLen, "Provider ");
+            return printAddress(&parser_tx_obj.client_deal_tx.provider,
+                                outVal, outValLen, pageIdx, pageCount);
+
+        case 3:
+            snprintf(outKey, outKeyLen, "VerifiedDeal ");
+            if (parser_tx_obj.client_deal_tx.verified_deal > 0) {
+                snprintf(outVal, outValLen, "true");
+            } else {
+                snprintf(outVal, outValLen, "false");
+            }
+            *pageCount = 1;
+            return parser_ok;
+
+        case 4:
+            return render_label(outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
+
+        case 5:
             snprintf(outKey, outKeyLen, "StartEpoch");
             return render_integer(parser_tx_obj.client_deal_tx.start_epoch, outVal, outValLen, pageCount);
-        }
 
-        if (displayIdx == 6) {
+        case 6:
             snprintf(outKey, outKeyLen, "EndEpoch");
             return render_integer(parser_tx_obj.client_deal_tx.end_epoch,  outVal, outValLen, pageCount);
-        }
 
-        if (displayIdx == 7) {
+        case 7:
             snprintf(outKey, outKeyLen, "ProvCollateral");
             return parser_printBigIntFixedPoint(&parser_tx_obj.client_deal_tx.provider_collateral, outVal, outValLen, pageIdx, pageCount, COIN_AMOUNT_DECIMAL_PLACES);
-        }
 
-        if (displayIdx == 8) {
+        case 8:
             snprintf(outKey, outKeyLen, "ClientCollateral");
             return parser_printBigIntFixedPoint(&parser_tx_obj.client_deal_tx.client_collateral, outVal, outValLen, pageIdx, pageCount, COIN_AMOUNT_DECIMAL_PLACES);
-        }
+
+        case 9:
+            snprintf(outKey, outKeyLen, "PieceSize(B)");
+            return render_integer(parser_tx_obj.client_deal_tx.piece_size, outVal, outValLen, pageCount);
+
+        default:
+            break;
     }
 
     return parser_no_data;

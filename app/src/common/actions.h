@@ -31,7 +31,7 @@ __Z_INLINE void app_sign() {
     uint16_t replyLen = 0;
 
     MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
-    zxerr_t err = zxerr_ok;
+    zxerr_t err = zxerr_unknown;
 
     // data digest for raw_bytes is computed differently, so it
     // requires its own signing method

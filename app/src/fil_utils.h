@@ -81,8 +81,6 @@ parser_error_t renderByteString(uint8_t *in, uint16_t inLen,
 parser_error_t parse_cid(cid_t *cid, CborValue *value);
 
 
-size_t parse_varint(uint8_t *buf, size_t buf_len, uint64_t *value);
-
 #ifdef __cplusplus
 }
 #endif
