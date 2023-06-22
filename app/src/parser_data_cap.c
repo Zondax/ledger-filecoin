@@ -31,18 +31,21 @@
 #define MB_DECIMAL_PLACES 6
 
 __Z_INLINE parser_error_t parse_proposal_id(uint64_t *proposal_id, CborValue *value) {
+    zemu_log_stack("Parsing proposal_id");
     CborValue internal = *value;
     CborValue container;
 
     CborType tpy = cbor_value_get_type(value);
     switch (tpy) {
         case CborIntegerType: {
+            zemu_log_stack("proposal_id as uint64_t");
             PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(value), parser_unexpected_type)
             CHECK_CBOR_MAP_ERR(cbor_value_get_int64_checked(value, (int64_t *)proposal_id))
             return parser_ok;
         }
 
         case CborArrayType: {
+            zemu_log_stack("proposal_id as Array type");
             size_t arraySize;
             CHECK_CBOR_MAP_ERR(cbor_value_get_array_length(&internal, &arraySize))
             PARSER_ASSERT_OR_ERROR(arraySize == 1, parser_unexpected_number_items)
@@ -57,6 +60,7 @@ __Z_INLINE parser_error_t parse_proposal_id(uint64_t *proposal_id, CborValue *va
         }
 
         default:
+            zemu_log_stack("wrong proposal_id type");
             return parser_unexpected_type;
 
     }
@@ -68,13 +72,16 @@ __Z_INLINE parser_error_t parse_address(address_t *addr, CborValue *value) {
 
     // SignRemoveDataCap proposal require addresses to be of type ID
     // https://github.com/filecoin-project/go-state-types/blob/master/builtin/v9/verifreg/verifreg_types.go#L16
-    if (addr->buffer[0] != ADDRESS_PROTOCOL_ID)
+    if (addr->buffer[0] != ADDRESS_PROTOCOL_ID) {
+        zemu_log_stack("ERROR_ invalid address protocol");
         return parser_invalid_address;
+    }
 
     return parser_ok;
 }
 
 parser_error_t _readDataCap(const parser_context_t *ctx, remove_datacap_t *tx) {
+    zemu_log_stack(">>>>>_readDataCap\n");
     CborValue it;
     INIT_CBOR_PARSER(ctx, it)
     PARSER_ASSERT_OR_ERROR(!cbor_value_at_end(&it), parser_unexpected_buffer_end)
@@ -91,26 +98,34 @@ parser_error_t _readDataCap(const parser_context_t *ctx, remove_datacap_t *tx) {
     CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&it, &arrayContainer))
 
 
+
     // "client" field
+    zemu_log_stack("--->> Trying parsing client address");
     CHECK_PARSER_ERR(parse_address(&tx->client, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
+    zemu_log_stack("<<--- Client address parsed!");
 
     // "amount" field
+    zemu_log_stack("--->> Trying parsing amount");
     CHECK_PARSER_ERR(readBigInt(&tx->amount, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
+    zemu_log_stack("<<--- Amount parsed!");
 
     // proposal_id
+    zemu_log_stack("--->> Trying parsing proposal_id");
     CHECK_PARSER_ERR(parse_proposal_id(&tx->proposal_id, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
+    zemu_log_stack("<<--- proposal_id parsed!!");
 
     CHECK_CBOR_MAP_ERR(cbor_value_leave_container(&it, &arrayContainer))
 
     // End of buffer does not match end of parsed data
     PARSER_ASSERT_OR_ERROR(it.ptr == ctx->buffer + ctx->bufferLen, parser_cbor_unexpected_EOF)
 
+    zemu_log_stack("<<<<<_readDataCap\n");
     return parser_ok;
 }
 

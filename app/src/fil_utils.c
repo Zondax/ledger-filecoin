@@ -38,31 +38,39 @@ parser_error_t readAddress(address_t *address, CborValue *value) {
     MEMZERO(address, sizeof(address_t));
     address->len = sizeof_field(address_t, buffer);
 
+    zemu_log_stack("**checking CBOR type for address");
     PARSER_ASSERT_OR_ERROR(cbor_value_is_byte_string(value), parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(value, (uint8_t *) address->buffer, &address->len, &dummy))
+    zemu_log_stack("address_byte_string");
 
     // Addresses are at least 2 characters Protocol + random data
     PARSER_ASSERT_OR_ERROR(address->len > 1, parser_invalid_address)
 
+    zemu_log_stack("address is protocol: ");
     // Verify size and protocol
     switch (address->buffer[0]) {
         case ADDRESS_PROTOCOL_ID:
+            zemu_log_stack("ID");
             // protocol 0
             PARSER_ASSERT_OR_ERROR(address->len - 1 < 21, parser_invalid_address)
             break;
         case ADDRESS_PROTOCOL_SECP256K1:
+            zemu_log_stack("SECP256K1");
             // protocol 1
             PARSER_ASSERT_OR_ERROR(address->len - 1 == ADDRESS_PROTOCOL_SECP256K1_PAYLOAD_LEN, parser_invalid_address)
             break;
         case ADDRESS_PROTOCOL_ACTOR:
+            zemu_log_stack("ACTOR");
             // protocol 2
             PARSER_ASSERT_OR_ERROR(address->len - 1 == ADDRESS_PROTOCOL_ACTOR_PAYLOAD_LEN, parser_invalid_address)
             break;
         case ADDRESS_PROTOCOL_BLS:
+            zemu_log_stack("BLS");
             // protocol 3
             PARSER_ASSERT_OR_ERROR(address->len - 1 == ADDRESS_PROTOCOL_BLS_PAYLOAD_LEN, parser_invalid_address)
             break;
         case ADDRESS_PROTOCOL_DELEGATED: {
+            zemu_log_stack("DELEGATED");
             // protocol 4
             uint64_t actorId = 0;
             const uint16_t actorIdSize = decompressLEB128(address->buffer + 1, address->len - 1, &actorId);
@@ -72,6 +80,7 @@ parser_error_t readAddress(address_t *address, CborValue *value) {
             break;
         }
         default:
+            zemu_log_stack("INVALID_ADDRESS!!!");
             return parser_invalid_address;
     }
 
@@ -95,6 +104,7 @@ parser_error_t printAddress(const address_t *a,char *outVal, uint16_t outValLen,
 }
 
 parser_error_t readBigInt(bigint_t *bigint, CborValue *value) {
+    zemu_log_stack("parsing bigint\n");
     CHECK_CBOR_TYPE(cbor_value_get_type(value), CborByteStringType)
     CborValue dummy;
 
@@ -113,6 +123,7 @@ parser_error_t readBigInt(bigint_t *bigint, CborValue *value) {
     // negative bigint, should be positive
     PARSER_ASSERT_OR_ERROR(bigint->buffer[0] == 0x00, parser_unexpected_value)
 
+    zemu_log_stack("bigint parsed!");
     return parser_ok;
 }
 
