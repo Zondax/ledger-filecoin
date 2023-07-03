@@ -121,6 +121,9 @@ describe.each(models)('ETH_Legacy', function (m) {
       await sim.start({ ...defaultOptions, model: m.name })
       const app = new FilecoinApp(sim.getTransport());
 
+      // Put the app in expert mode
+      await sim.toggleExpertMode();
+
       const testcase = `${m.prefix.toLowerCase()}-eth-sign-${data.name}`
 
       const currentScreen = sim.snapshot()

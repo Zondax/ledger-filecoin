@@ -1,359 +1,382 @@
 /*******************************************************************************
-*  (c) 2018 - 2023 Zondax AG
-*
-*  Licensed under the Apache License, Version 2.0 (the "License");
-*  you may not use this file except in compliance with the License.
-*  You may obtain a copy of the License at
-*
-*      http://www.apache.org/licenses/LICENSE-2.0
-*
-*  Unless required by applicable law or agreed to in writing, software
-*  distributed under the License is distributed on an "AS IS" BASIS,
-*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*  See the License for the specific language governing permissions and
-*  limitations under the License.
-********************************************************************************/
+ *  (c) 2018 - 2023 Zondax AG
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ ********************************************************************************/
 
-#include <stdio.h>
-#include <zxmacros.h>
+#include "parser.h"
+#include "app_mode.h"
+#include "bignum.h"
+#include "coin.h"
 #include "common/parser_common.h"
+#include "fil_utils.h"
+#include "parser_client_deal.h"
+#include "parser_data_cap.h"
 #include "parser_impl.h"
 #include "parser_impl_eth.h"
-#include "parser_data_cap.h"
-#include "parser_client_deal.h"
 #include "parser_raw_bytes.h"
-#include "bignum.h"
-#include "parser.h"
 #include "parser_txdef.h"
-#include "coin.h"
 #include "zxformat.h"
-#include "app_mode.h"
-#include "fil_utils.h"
+#include <stdio.h>
+#include <zxmacros.h>
 
 #if defined(TARGET_NANOX) || defined(TARGET_NANOS2)
 // For some reason NanoX requires this function
-void __assert_fail(__Z_UNUSED const char * assertion, __Z_UNUSED const char * file, __Z_UNUSED unsigned int line, __Z_UNUSED const char * function){
-    while(1) {};
+void __assert_fail(__Z_UNUSED const char *assertion,
+                   __Z_UNUSED const char *file, __Z_UNUSED unsigned int line,
+                   __Z_UNUSED const char *function) {
+  while (1) {
+  };
 }
 #endif
 
-parser_error_t parser_init(parser_context_t *ctx,
-                                   const uint8_t *buffer,
-                                   uint16_t bufferSize);
+parser_error_t parser_init(parser_context_t *ctx, const uint8_t *buffer,
+                           uint16_t bufferSize);
 
 static parser_error_t parser_init_context(parser_context_t *ctx,
-                                   const uint8_t *buffer,
-                                   uint16_t bufferSize) {
-    ctx->offset = 0;
-    ctx->buffer = NULL;
-    ctx->bufferLen = 0;
+                                          const uint8_t *buffer,
+                                          uint16_t bufferSize) {
+  ctx->offset = 0;
+  ctx->buffer = NULL;
+  ctx->bufferLen = 0;
 
-    if (bufferSize == 0 || buffer == NULL) {
-        // Not available, use defaults
-        return parser_init_context_empty;
-    }
+  if (bufferSize == 0 || buffer == NULL) {
+    // Not available, use defaults
+    return parser_init_context_empty;
+  }
 
-    ctx->buffer = buffer;
-    ctx->bufferLen = bufferSize;
+  ctx->buffer = buffer;
+  ctx->bufferLen = bufferSize;
 
-    memset(&parser_tx_obj, 0, sizeof(parser_tx_obj));
+  memset(&parser_tx_obj, 0, sizeof(parser_tx_obj));
 
-    return parser_ok;
+  return parser_ok;
 }
 
-parser_error_t parser_init(parser_context_t *ctx, const uint8_t *buffer, uint16_t bufferSize) {
-    CHECK_PARSER_ERR(parser_init_context(ctx, buffer, bufferSize))
-    return parser_ok;
+parser_error_t parser_init(parser_context_t *ctx, const uint8_t *buffer,
+                           uint16_t bufferSize) {
+  CHECK_PARSER_ERR(parser_init_context(ctx, buffer, bufferSize))
+  return parser_ok;
 }
 
+parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data,
+                            size_t dataLen) {
+  zemu_log_stack("parser_parse");
 
-parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data, size_t dataLen) {
-    zemu_log_stack("parser_parse");
+  switch (ctx->tx_type) {
+  case fil_tx: {
+    CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
+    return _read(ctx, &(parser_tx_obj.base_tx));
+  }
+  case eth_tx: {
+    // Ethereum Transactions valid only in expert mode
+    if (!app_mode_expert())
+      return parser_unsupported_tx;
 
-    switch (ctx->tx_type) {
-        case fil_tx: {
-            CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
-            return _read(ctx, &(parser_tx_obj.base_tx));
-        }
-        case eth_tx: {
-            CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
-            return _readEth(ctx, &eth_tx_obj);
-        }
-        case datacap_tx : {
-            CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
-            return _readDataCap(ctx, &parser_tx_obj.rem_datacap_tx);
-        }
-        case clientdeal_tx : {
-            CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
-            return _readClientDeal(ctx, &parser_tx_obj.client_deal_tx);
-        }
-        case raw_bytes: {
-            return _readRawBytes(ctx, &parser_tx_obj.raw_bytes_tx);
-        }
-        default:
-            return parser_unsupported_tx;
-    }
+    CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
+    return _readEth(ctx, &eth_tx_obj);
+  }
+  case datacap_tx: {
+    CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
+    return _readDataCap(ctx, &parser_tx_obj.rem_datacap_tx);
+  }
+  case clientdeal_tx: {
+    CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
+    return _readClientDeal(ctx, &parser_tx_obj.client_deal_tx);
+  }
+  case raw_bytes: {
+    return _readRawBytes(ctx, &parser_tx_obj.raw_bytes_tx);
+  }
+  default:
+    return parser_unsupported_tx;
+  }
 }
 
 parser_error_t parser_validate(const parser_context_t *ctx) {
-    zemu_log_stack("parser_validate\n");
+  zemu_log_stack("parser_validate\n");
 
-    // Call especific fil transaction implementation for data validation
-    switch (ctx->tx_type) {
-      case fil_tx:{
-          CHECK_PARSER_ERR(_validateTx(ctx, &parser_tx_obj.base_tx))
-          break;
-      }
-      case eth_tx:{
-          CHECK_PARSER_ERR(_validateTxEth(ctx))
-          break;
-      }
-      case datacap_tx:{
-          CHECK_PARSER_ERR(_validateDataCap(ctx))
-          break;
-      }
-      case clientdeal_tx : {
-          CHECK_PARSER_ERR(_validateClientDeal(ctx))
-          break;
-      }
-      case raw_bytes:{
-          CHECK_PARSER_ERR(_validateRawBytes(ctx))
-          break;
-      }
-      default:
-          return parser_unsupported_tx;
-    }
+  // Call especific fil transaction implementation for data validation
+  switch (ctx->tx_type) {
+  case fil_tx: {
+    CHECK_PARSER_ERR(_validateTx(ctx, &parser_tx_obj.base_tx))
+    break;
+  }
+  case eth_tx: {
+    CHECK_PARSER_ERR(_validateTxEth(ctx))
+    break;
+  }
+  case datacap_tx: {
+    CHECK_PARSER_ERR(_validateDataCap(ctx))
+    break;
+  }
+  case clientdeal_tx: {
+    CHECK_PARSER_ERR(_validateClientDeal(ctx))
+    break;
+  }
+  case raw_bytes: {
+    CHECK_PARSER_ERR(_validateRawBytes(ctx))
+    break;
+  }
+  default:
+    return parser_unsupported_tx;
+  }
 
-    zemu_log("parser_validate::validated\n");
+  zemu_log("parser_validate::validated\n");
 
-    // Iterate through all items to check that all can be shown and are valid
-    uint8_t numItems = 0;
-    CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems));
+  // Iterate through all items to check that all can be shown and are valid
+  uint8_t numItems = 0;
+  CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems));
 
-    char log_tmp[100];
-    snprintf(log_tmp, sizeof(log_tmp), "parser_validate %d\n", numItems);
-    zemu_log(log_tmp);
+  char log_tmp[100];
+  snprintf(log_tmp, sizeof(log_tmp), "parser_validate %d\n", numItems);
+  zemu_log(log_tmp);
 
-    char tmpKey[40] = {0};
-    char tmpVal[40] = {0};
+  char tmpKey[40] = {0};
+  char tmpVal[40] = {0};
 
-    for (uint8_t idx = 0; idx < numItems; idx++) {
-        uint8_t pageCount = 0;
-        CHECK_PARSER_ERR(parser_getItem(ctx, idx, tmpKey, sizeof(tmpKey), tmpVal, sizeof(tmpVal), 0, &pageCount))
-    }
+  for (uint8_t idx = 0; idx < numItems; idx++) {
+    uint8_t pageCount = 0;
+    CHECK_PARSER_ERR(parser_getItem(ctx, idx, tmpKey, sizeof(tmpKey), tmpVal,
+                                    sizeof(tmpVal), 0, &pageCount))
+  }
 
-    zemu_log("parser_validate::ok\n");
-    return parser_ok;
+  zemu_log("parser_validate::ok\n");
+  return parser_ok;
 }
 
-parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_items) {
-    zemu_log("parser_getNumItems\n");
+parser_error_t parser_getNumItems(const parser_context_t *ctx,
+                                  uint8_t *num_items) {
+  zemu_log("parser_getNumItems\n");
 
-    switch (ctx->tx_type) {
-      case fil_tx:{
-          *num_items = _getNumItems(ctx, &parser_tx_obj.base_tx);
-          break;
-      }
-      case eth_tx:{
-          *num_items = _getNumItemsEth(ctx);
-          break;
-      }
-      case datacap_tx:{
-          *num_items = _getNumItemsDataCap(ctx);
-          break;
-      }
-      case clientdeal_tx : {
-          *num_items = _getNumItemsClientDeal(ctx);
-            break;
-      }
-      case raw_bytes:{
-          *num_items = _getNumItemsRawBytes(ctx);
-          break;
-      }
-      default:
-          return parser_unsupported_tx;
-    }
-    return parser_ok;
+  switch (ctx->tx_type) {
+  case fil_tx: {
+    *num_items = _getNumItems(ctx, &parser_tx_obj.base_tx);
+    break;
+  }
+  case eth_tx: {
+    *num_items = _getNumItemsEth(ctx);
+    break;
+  }
+  case datacap_tx: {
+    *num_items = _getNumItemsDataCap(ctx);
+    break;
+  }
+  case clientdeal_tx: {
+    *num_items = _getNumItemsClientDeal(ctx);
+    break;
+  }
+  case raw_bytes: {
+    *num_items = _getNumItemsRawBytes(ctx);
+    break;
+  }
+  default:
+    return parser_unsupported_tx;
+  }
+  return parser_ok;
 }
 
 parser_error_t parser_printParam(const fil_base_tx_t *tx, uint8_t paramIdx,
                                  char *outVal, uint16_t outValLen,
                                  uint8_t pageIdx, uint8_t *pageCount) {
-    return _printParam(tx, paramIdx, outVal, outValLen, pageIdx, pageCount);
+  return _printParam(tx, paramIdx, outVal, outValLen, pageIdx, pageCount);
 }
-
 
 static parser_error_t printMethod(char *outKey, uint16_t outKeyLen,
                                   char *outVal, uint16_t outValLen,
                                   uint8_t pageIdx, uint8_t *pageCount) {
-    snprintf(outKey, outKeyLen, "Method ");
-    *pageCount = 1;
+  snprintf(outKey, outKeyLen, "Method ");
+  *pageCount = 1;
 
-    CHECK_PARSER_ERR(checkMethod(parser_tx_obj.base_tx.method));
-    if (parser_tx_obj.base_tx.method == 0) {
-        snprintf(outVal, outValLen, "Transfer ");
-    } else {
-        char buffer[100];
-        MEMZERO(buffer, sizeof(buffer));
-        fpuint64_to_str(buffer, sizeof(buffer), parser_tx_obj.base_tx.method, 0);
-        pageString(outVal, outValLen, buffer, pageIdx, pageCount);
+  CHECK_PARSER_ERR(checkMethod(parser_tx_obj.base_tx.method));
+  if (parser_tx_obj.base_tx.method == 0) {
+    snprintf(outVal, outValLen, "Transfer ");
+  } else {
+    char buffer[100];
+    MEMZERO(buffer, sizeof(buffer));
+    fpuint64_to_str(buffer, sizeof(buffer), parser_tx_obj.base_tx.method, 0);
+    pageString(outVal, outValLen, buffer, pageIdx, pageCount);
+  }
+  return parser_ok;
+}
+
+parser_error_t _getItemFil(const parser_context_t *ctx, uint8_t displayIdx,
+                           char *outKey, uint16_t outKeyLen, char *outVal,
+                           uint16_t outValLen, uint8_t pageIdx,
+                           uint8_t *pageCount) {
+  char log_tmp[100];
+  snprintf(log_tmp, sizeof(log_tmp), "getItem %d\n", displayIdx);
+  zemu_log(log_tmp);
+  const bool expert_mode = app_mode_expert();
+
+  MEMZERO(outKey, outKeyLen);
+  MEMZERO(outVal, outValLen);
+  snprintf(outKey, outKeyLen, "?");
+  snprintf(outVal, outValLen, " ");
+  *pageCount = 0;
+
+  uint8_t numItems = 0;
+  CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems))
+  CHECK_APP_CANARY()
+
+  if (displayIdx >= numItems) {
+    return parser_no_data;
+  }
+
+  // Normal mode: 6 fields [To | From | Value | Gas Limit | Gas Fee Cap |
+  // Method] + Params (variable length) Expert mode: 8 fields [To | From | Value
+  // | Gas Limit | Gas Fee Cap | Gas Premium | Nonce | Method] + Params
+  // (variable length)
+  switch (displayIdx) {
+  case 0:
+    snprintf(outKey, outKeyLen, "To ");
+    return printAddress(&parser_tx_obj.base_tx.to, outVal, outValLen, pageIdx,
+                        pageCount);
+
+  case 1:
+    snprintf(outKey, outKeyLen, "From ");
+    return printAddress(&parser_tx_obj.base_tx.from, outVal, outValLen, pageIdx,
+                        pageCount);
+
+  case 2:
+    snprintf(outKey, outKeyLen, "Value ");
+    return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.value, outVal,
+                                        outValLen, pageIdx, pageCount,
+                                        COIN_AMOUNT_DECIMAL_PLACES);
+
+  case 3:
+    snprintf(outKey, outKeyLen, "Gas Limit ");
+    if (int64_to_str(outVal, outValLen, parser_tx_obj.base_tx.gaslimit) !=
+        NULL) {
+      return parser_unexepected_error;
     }
+    *pageCount = 1;
     return parser_ok;
+
+  case 4:
+    snprintf(outKey, outKeyLen, "Gas Fee Cap ");
+    return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.gasfeecap,
+                                        outVal, outValLen, pageIdx, pageCount,
+                                        COIN_AMOUNT_DECIMAL_PLACES);
+
+  case 5:
+    if (expert_mode) {
+      snprintf(outKey, outKeyLen, "Gas Premium ");
+      return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.gaspremium,
+                                          outVal, outValLen, pageIdx, pageCount,
+                                          COIN_AMOUNT_DECIMAL_PLACES);
+    }
+    return printMethod(outKey, outKeyLen, outVal, outValLen, pageIdx,
+                       pageCount);
+
+  case 6:
+    if (expert_mode) {
+      snprintf(outKey, outKeyLen, "Nonce ");
+      if (uint64_to_str(outVal, outValLen, parser_tx_obj.base_tx.nonce) !=
+          NULL) {
+        return parser_unexepected_error;
+      }
+      *pageCount = 1;
+      return parser_ok;
+    }
+    // For non expert mode this index represent params field.
+    break;
+
+  case 7:
+    if (expert_mode) {
+      return printMethod(outKey, outKeyLen, outVal, outValLen, pageIdx,
+                         pageCount);
+    }
+    // For non expert mode this index represent params field.
+    break;
+
+  default:
+    break;
+  }
+
+  if (parser_tx_obj.base_tx.numparams == 0) {
+    snprintf(outKey, outKeyLen, "Params ");
+    snprintf(outVal, outValLen, "- NONE -");
+    return parser_ok;
+  }
+
+  // remaining display pages show the params
+  int32_t paramIdxSigned =
+      displayIdx - (numItems - parser_tx_obj.base_tx.numparams);
+
+  // end of params
+  if (paramIdxSigned < 0 || paramIdxSigned >= parser_tx_obj.base_tx.numparams) {
+    return parser_unexpected_field;
+  }
+
+  uint8_t paramIdx = (uint8_t)paramIdxSigned;
+  *pageCount = 1;
+  snprintf(outKey, outKeyLen, "Params |%d| ", paramIdx + 1);
+
+  zemu_log_stack(outKey);
+  return parser_printParam(&parser_tx_obj.base_tx, paramIdx, outVal, outValLen,
+                           pageIdx, pageCount);
 }
 
-parser_error_t _getItemFil(const parser_context_t *ctx,
-                              uint8_t displayIdx,
-                              char *outKey, uint16_t outKeyLen,
-                              char *outVal, uint16_t outValLen,
-                              uint8_t pageIdx, uint8_t *pageCount) {
-    char log_tmp[100];
-    snprintf(log_tmp, sizeof(log_tmp), "getItem %d\n", displayIdx);
-    zemu_log(log_tmp);
-    const bool expert_mode = app_mode_expert();
+parser_error_t parser_getItem(const parser_context_t *ctx, uint8_t displayIdx,
+                              char *outKey, uint16_t outKeyLen, char *outVal,
+                              uint16_t outValLen, uint8_t pageIdx,
+                              uint8_t *pageCount) {
 
-    MEMZERO(outKey, outKeyLen);
-    MEMZERO(outVal, outValLen);
-    snprintf(outKey, outKeyLen, "?");
-    snprintf(outVal, outValLen, " ");
-    *pageCount = 0;
+  switch (ctx->tx_type) {
+  case fil_tx: {
+    return _getItemFil(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen,
+                       pageIdx, pageCount);
+  }
+  case eth_tx: {
+    // Ethereum Transactions only valid in expert mode
+    if (!app_mode_expert())
+      return parser_unsupported_tx;
 
-    uint8_t numItems = 0;
-    CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems))
-    CHECK_APP_CANARY()
-
-    if (displayIdx >= numItems) {
-        return parser_no_data;
-    }
-
-    // Normal mode: 6 fields [To | From | Value | Gas Limit | Gas Fee Cap | Method] + Params (variable length)
-    // Expert mode: 8 fields [To | From | Value | Gas Limit | Gas Fee Cap | Gas Premium | Nonce | Method] + Params (variable length)
-    switch (displayIdx) {
-        case 0:
-            snprintf(outKey, outKeyLen, "To ");
-            return printAddress(&parser_tx_obj.base_tx.to,
-                                outVal, outValLen, pageIdx, pageCount);
-
-        case 1:
-            snprintf(outKey, outKeyLen, "From ");
-            return printAddress(&parser_tx_obj.base_tx.from,
-                                outVal, outValLen, pageIdx, pageCount);
-
-        case 2:
-            snprintf(outKey, outKeyLen, "Value ");
-            return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.value, outVal, outValLen, pageIdx, pageCount, COIN_AMOUNT_DECIMAL_PLACES);
-
-        case 3:
-            snprintf(outKey, outKeyLen, "Gas Limit ");
-            if (int64_to_str(outVal, outValLen, parser_tx_obj.base_tx.gaslimit) != NULL) {
-                return parser_unexepected_error;
-            }
-            *pageCount = 1;
-            return parser_ok;
-
-        case 4:
-            snprintf(outKey, outKeyLen, "Gas Fee Cap ");
-            return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.gasfeecap, outVal, outValLen, pageIdx, pageCount, COIN_AMOUNT_DECIMAL_PLACES);
-
-        case 5:
-            if (expert_mode) {
-                snprintf(outKey, outKeyLen, "Gas Premium ");
-                return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.gaspremium, outVal, outValLen, pageIdx, pageCount, COIN_AMOUNT_DECIMAL_PLACES);
-            }
-            return printMethod(outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
-
-        case 6:
-            if(expert_mode) {
-            snprintf(outKey, outKeyLen, "Nonce ");
-                if (uint64_to_str(outVal, outValLen, parser_tx_obj.base_tx.nonce) != NULL) {
-                    return parser_unexepected_error;
-                }
-                *pageCount = 1;
-                return parser_ok;
-            }
-            // For non expert mode this index represent params field.
-            break;
-
-        case 7:
-            if (expert_mode) {
-                return printMethod(outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
-            }
-            // For non expert mode this index represent params field.
-            break;
-
-        default:
-            break;
-    }
-
-    if (parser_tx_obj.base_tx.numparams == 0) {
-        snprintf(outKey, outKeyLen, "Params ");
-        snprintf(outVal, outValLen, "- NONE -");
-        return parser_ok;
-    }
-
-    // remaining display pages show the params
-    int32_t paramIdxSigned = displayIdx - (numItems - parser_tx_obj.base_tx.numparams);
-
-    // end of params
-    if (paramIdxSigned < 0 || paramIdxSigned >= parser_tx_obj.base_tx.numparams) {
-        return parser_unexpected_field;
-    }
-
-    uint8_t paramIdx = (uint8_t) paramIdxSigned;
-    *pageCount = 1;
-    snprintf(outKey, outKeyLen, "Params |%d| ", paramIdx + 1);
-
-    zemu_log_stack(outKey);
-    return parser_printParam(&parser_tx_obj.base_tx, paramIdx, outVal, outValLen, pageIdx, pageCount);
+    // for now just display the hash
+    return _getItemEth(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen,
+                       pageIdx, pageCount);
+  }
+  case datacap_tx: {
+    return _getItemDataCap(ctx, displayIdx, outKey, outKeyLen, outVal,
+                           outValLen, pageIdx, pageCount);
+  }
+  case clientdeal_tx: {
+    return _getItemClientDeal(ctx, displayIdx, outKey, outKeyLen, outVal,
+                              outValLen, pageIdx, pageCount);
+  }
+  case raw_bytes: {
+    // for now just display the hash
+    return _getItemRawBytes(ctx, displayIdx, outKey, outKeyLen, outVal,
+                            outValLen, pageIdx, pageCount);
+  }
+  default:
+    return parser_unsupported_tx;
+  }
 }
 
-parser_error_t parser_getItem(const parser_context_t *ctx,
-                              uint8_t displayIdx,
-                              char *outKey, uint16_t outKeyLen,
-                              char *outVal, uint16_t outValLen,
-                              uint8_t pageIdx, uint8_t *pageCount) {
-
-    switch (ctx->tx_type) {
-      case fil_tx:{
-          return _getItemFil(ctx, displayIdx, outKey, outKeyLen,
-                              outVal, outValLen, pageIdx, pageCount);
-      }
-      case eth_tx:{
-          // for now just display the hash
-          return _getItemEth(ctx, displayIdx, outKey, outKeyLen,
-                              outVal, outValLen, pageIdx, pageCount);
-      }
-     case datacap_tx : {
-         return _getItemDataCap(ctx, displayIdx, outKey, outKeyLen,
-                              outVal, outValLen, pageIdx, pageCount);
-     }
-     case clientdeal_tx : {
-         return _getItemClientDeal(ctx, displayIdx, outKey, outKeyLen,
-                              outVal, outValLen, pageIdx, pageCount);
-     }
-      case raw_bytes:{
-          // for now just display the hash
-          return _getItemRawBytes(ctx, displayIdx, outKey, outKeyLen,
-                              outVal, outValLen, pageIdx, pageCount);
-      }
-      default:
-          return parser_unsupported_tx;
-    }
-}
-
-parser_error_t parser_compute_eth_v(parser_context_t *ctx, unsigned int info, uint8_t *v) {
-    return _computeV(ctx , &eth_tx_obj, info, v);
+parser_error_t parser_compute_eth_v(parser_context_t *ctx, unsigned int info,
+                                    uint8_t *v) {
+  return _computeV(ctx, &eth_tx_obj, info, v);
 }
 
 parser_error_t parser_rawbytes_init(uint8_t *buf, size_t buf_len) {
 
-    return raw_bytes_init(buf, buf_len);
+  return raw_bytes_init(buf, buf_len);
 }
 parser_error_t parser_rawbytes_update(uint8_t *buf, size_t buf_len) {
-    return raw_bytes_update(buf, buf_len);
+  return raw_bytes_update(buf, buf_len);
 }
-uint8_t *parser_rawbytes_hash() {
-    return parser_tx_obj.raw_bytes_tx.digest;
-}
+uint8_t *parser_rawbytes_hash() { return parser_tx_obj.raw_bytes_tx.digest; }
 size_t parser_rawbytes_hash_len() {
-    return sizeof(parser_tx_obj.raw_bytes_tx.digest);
+  return sizeof(parser_tx_obj.raw_bytes_tx.digest);
 }
