@@ -126,7 +126,7 @@ parser_error_t printValue(const struct CborValue *value, char *outVal,
                                                    &buffLen, NULL /* next */))
     CHECK_APP_CANARY()
 
-    if (buffLen >= 0) {
+    if (buffLen > 0) {
       pageString(outVal, outValLen, (char *)buff, pageIdx, pageCount);
     }
     break;
@@ -142,7 +142,7 @@ parser_error_t printValue(const struct CborValue *value, char *outVal,
   case CborTagType: {
     CborTag tag;
     CHECK_CBOR_MAP_ERR(cbor_value_get_tag(value, &tag))
-    if (tag == TAG_CID && buffLen > 0) {
+    if (tag == TAG_CID) {
       CHECK_CBOR_MAP_ERR(
           cbor_value_copy_byte_string(value, buff, &buffLen, NULL /* next */))
       CHECK_APP_CANARY()

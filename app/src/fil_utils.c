@@ -271,7 +271,7 @@ parser_error_t parse_check_prefix(CborValue *value, const char *prefix,
   CHECK_CBOR_TYPE(cbor_value_get_type(value), CborTextStringType)
 
   char copied[100] = {0};
-  uint16_t len = 100;
+  size_t len = 100;
 
   bool is_equal = 0;
   CHECK_CBOR_MAP_ERR(cbor_value_copy_text_string(value, copied, &len, NULL)) {
