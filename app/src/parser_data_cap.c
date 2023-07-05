@@ -83,9 +83,10 @@ parser_error_t _readDataCap(parser_context_t *ctx, remove_datacap_t *tx) {
 
   const uint8_t *prefix = ctx->buffer + ctx->offset;
 
-  // The prefix is not cbor-encoded, but plain text.
-  if (strncmp((char *)prefix, dataCapPrefix, DATA_CAP_PREFIX_LEN) != 0)
+  // compare prefix
+  if (strncmp((const char*)prefix, dataCapPrefix, DATA_CAP_PREFIX_LEN) != 0) {
     return parser_invalid_datacap_prefix;
+  }
 
   // skip the header
   ctx->offset += DATA_CAP_PREFIX_LEN;

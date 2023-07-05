@@ -31,10 +31,10 @@ bool isTestnet();
 int prepareDigestToSign(const unsigned char *in, unsigned int inLen,
                         unsigned char *out, unsigned int outLen);
 
-int keccak_digest(const unsigned char *in, unsigned int inLen,
+zxerr_t keccak_digest(const unsigned char *in, unsigned int inLen,
                         unsigned char *out, unsigned int outLen);
 
-int blake_hash_cid(const unsigned char *in, unsigned int inLen,
+zxerr_t blake_hash_cid(const unsigned char *in, unsigned int inLen,
                               unsigned char *out, unsigned int outLen);
 
 #if defined(TARGET_NANOS) || defined(TARGET_NANOX) || defined(TARGET_NANOS2)
@@ -47,9 +47,6 @@ typedef struct {
 #endif
 
 zxerr_t blake_hash_setup(cx_blake2b_t *hasher);
-
-
-zxerr_t crypto_extractPublicKey(const uint32_t path[MAX_BIP32_PATH], uint8_t *pubKey, uint16_t pubKeyLen, uint8_t *chainCode);
 
 zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t bufferLen, uint16_t *addrLen);
 zxerr_t crypto_fillEthAddress(uint8_t *buffer, uint16_t bufferLen, uint16_t *addrLen);
