@@ -81,13 +81,13 @@ __Z_INLINE parser_error_t parse_address(address_t *addr, CborValue *value) {
 
 parser_error_t _readDataCap(parser_context_t *ctx, remove_datacap_t *tx) {
 
-  uint8_t *prefix = ctx->buffer + ctx->offset;
+  const uint8_t *prefix = ctx->buffer + ctx->offset;
 
-  // compare prefix
-  if (strncmp(prefix, dataCapPrefix, DATA_CAP_PREFIX_LEN) != 0)
+  // The prefix is not cbor-encoded, but plain text.
+  if (strncmp((char *)prefix, dataCapPrefix, DATA_CAP_PREFIX_LEN) != 0)
     return parser_invalid_datacap_prefix;
 
-  // skip the header now
+  // skip the header
   ctx->offset += DATA_CAP_PREFIX_LEN;
 
   // continue parsing proposal data which is encoded using CBOR
