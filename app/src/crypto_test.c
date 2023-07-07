@@ -42,7 +42,7 @@ zxerr_t blake_hash(const uint8_t *in, uint16_t inLen, uint8_t *out, uint16_t out
     return zxerr_ok;
 }
 
-int blake_hash_cid(const unsigned char *in, unsigned int inLen,
+zxerr_t blake_hash_cid(const unsigned char *in, unsigned int inLen,
                               unsigned char *out, unsigned int outLen) {
 
     uint8_t prefix[] = PREFIX;
@@ -53,7 +53,7 @@ int blake_hash_cid(const unsigned char *in, unsigned int inLen,
     blake2b_update(&s, in, inLen);
     blake2b_final(&s, out, outLen);
 
-    return 0;
+    return zxerr_ok;
 }
 
 zxerr_t blake_hash_init() {
@@ -89,9 +89,9 @@ int prepareDigestToSign(const unsigned char *in, unsigned int inLen,
     return 0;
 }
 
-int keccak_digest(  const unsigned char *in, unsigned int inLen,
+zxerr_t keccak_digest(  const unsigned char *in, unsigned int inLen,
                     unsigned char *out, unsigned int outLen) {
-    return 0;
+    return zxerr_ok;
 }
 
 #endif

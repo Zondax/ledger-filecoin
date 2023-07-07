@@ -95,6 +95,9 @@ describe.each(models)('ETH', function (m) {
       const app = new FilecoinApp(sim.getTransport());
       const msg = data.op
 
+      // Put the app in expert mode
+      await sim.toggleExpertMode();
+
 
       const testcase = `${m.prefix.toLowerCase()}-eth-sign-${data.name}`
 

@@ -367,10 +367,12 @@ describe('Standard', function () {
       const app = new FilecoinApp(sim.getTransport());
 
       // The data to sign for this transaction is:
-      // proposalID = 1256
-      // allowance_to_remove = 158856254
-      // cliens_address = t01004
-      const txBlob = Buffer.from("834300ec0745000977f43e811904e8", 'hex')
+      // proposalID = 1
+      // allowance_to_remove = 34359738368
+      // cliens_address = t0102
+      // encoded: 66696c5f72656d6f7665646174616361703a83420066460008000000008101
+
+      const txBlob = Buffer.from("66696c5f72656d6f7665646174616361703a83420066460008000000008101", 'hex')
 
       const pkResponse = await app.getAddressAndPubKey(PATH);
       console.log(pkResponse);

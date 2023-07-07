@@ -102,7 +102,9 @@ parser_error_t _readRawBytes(__Z_UNUSED const parser_context_t *ctx, raw_bytes_s
     if (blake_hash_finish(tmp, sizeof(tmp)) != zxerr_ok)
         return parser_value_out_of_range;
 
-    blake_hash_cid(tmp, BLAKE2B_256_SIZE, tx->digest, BLAKE2B_256_SIZE);
+    if (blake_hash_cid(tmp, BLAKE2B_256_SIZE, tx->digest, BLAKE2B_256_SIZE) != zxerr_ok) {
+        return parser_unexepected_error;
+    }
 
     return parser_ok;
 }
