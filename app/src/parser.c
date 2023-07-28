@@ -95,6 +95,10 @@ parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data,
     return _readClientDeal(ctx, &parser_tx_obj.client_deal_tx);
   }
   case raw_bytes: {
+    // Processing raw-bytes is valid only in expert mode
+    if (!app_mode_expert())
+      return parser_unsupported_tx;
+
     return _readRawBytes(ctx, &parser_tx_obj.raw_bytes_tx);
   }
   default:
