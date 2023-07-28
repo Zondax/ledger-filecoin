@@ -131,8 +131,8 @@ parser_error_t _getItemRawBytes(__Z_UNUSED const parser_context_t *ctx,
     return parser_display_idx_out_of_range;
 
   if (displayIdx == 0) {
-    snprintf(outKey, outKeyLen, "Blind-signing");
-    pageString(outVal, outValLen, "Raw-bytes data", pageIdx, pageCount);
+    snprintf(outKey, outKeyLen, "Warning:");
+    pageString(outVal, outValLen, "Signing Raw-bytes data", pageIdx, pageCount);
     return parser_ok;
   }
 

@@ -232,8 +232,8 @@ parser_error_t _getItemEth(const parser_context_t *ctx, uint8_t displayIdx,
   }
 
   if (displayIdx == 0) {
-    snprintf(outKey, outKeyLen, "Blind-signing");
-    pageString(outVal, outValLen, "EVM-Transaction", pageIdx, pageCount);
+    snprintf(outKey, outKeyLen, "Warning:");
+    pageString(outVal, outValLen, "Blind-signing EVM Tx", pageIdx, pageCount);
     return parser_ok;
   }
 
