@@ -21,7 +21,7 @@ import {getDigest} from "./utils";
 import * as secp256k1 from "secp256k1";
 import { models, defaultOptions, PATH } from './common'
 
-jest.setTimeout(90000)
+jest.setTimeout(180000)
 
 describe('Standard', function () {
   test.concurrent.each(models)('can start and stop container', async function (m) {

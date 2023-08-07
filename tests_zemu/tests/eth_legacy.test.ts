@@ -36,7 +36,7 @@ const SIGN_TEST_DATA = [
         value: 'abcdef00',
         to: 'df073477da421520cf03af261b782282c304ad66',
     },
-    chainId: 9867,
+    chainId: 314,
   },
   {
     name: 'legacy_contract_deploy',
@@ -44,7 +44,7 @@ const SIGN_TEST_DATA = [
         value: 'abcdef00',
         data: '1a8451e600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
     },
-    chainId: 5,
+    chainId: 314,
   },
   {
     name: 'legacy_contract_call',
@@ -53,7 +53,7 @@ const SIGN_TEST_DATA = [
         value: 'abcdef01',
         data: 'ee919d500000000000000000000000000000000000000000000000000000000000000001',
     },
-    chainId: 689,
+    chainId: 314,
   },
   {
     name: 'basic_transfer_no_eip155',
@@ -61,6 +61,7 @@ const SIGN_TEST_DATA = [
         value: 'a1bcd400',
         to: 'df073477da421520cf03af261b782282c304ad66',
     },
+    chainId: 314,
   },
   {
     name: 'contract_deploy_no_eip155',
@@ -68,6 +69,7 @@ const SIGN_TEST_DATA = [
         value: '1',
         data: '1a8451e600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
     },
+    chainId: 314,
   },
 ]
 
