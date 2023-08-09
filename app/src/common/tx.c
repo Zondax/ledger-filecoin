@@ -18,6 +18,7 @@
 #include "apdu_codes.h"
 #include "buffering.h"
 #include "parser.h"
+#include "parser_common.h"
 #include <string.h>
 #include "zxmacros.h"
 
@@ -53,6 +54,30 @@ void tx_initialize() {
     );
 }
 
+void tx_context_fil() {
+  ctx_parsed_tx.tx_type = fil_tx;
+}
+
+void tx_context_eth() {
+  ctx_parsed_tx.tx_type = eth_tx;
+}
+
+void tx_context_datacap() {
+  ctx_parsed_tx.tx_type = datacap_tx;
+}
+
+void tx_context_client_deal() {
+  ctx_parsed_tx.tx_type = clientdeal_tx;
+}
+
+void tx_context_raw_bytes() {
+  ctx_parsed_tx.tx_type = raw_bytes;
+}
+
+bool tx_is_rawbytes() {
+    return ctx_parsed_tx.tx_type == raw_bytes;
+}
+
 void tx_reset() {
     buffering_reset();
 }
@@ -62,10 +87,16 @@ uint32_t tx_append(unsigned char *buffer, uint32_t length) {
 }
 
 uint32_t tx_get_buffer_length() {
+    if (tx_is_rawbytes())
+        return parser_rawbytes_hash_len();
+
     return buffering_get_buffer()->pos;
 }
 
 uint8_t *tx_get_buffer() {
+    if (tx_is_rawbytes())
+        return parser_rawbytes_hash();
+
     return buffering_get_buffer()->data;
 }
 
@@ -75,19 +106,15 @@ const char *tx_parse() {
             tx_get_buffer(),
             tx_get_buffer_length());
 
-    if (err != parser_ok) {
+    if (err != parser_ok)
         return parser_getErrorDescription(err);
-    }
 
     err = parser_validate(&ctx_parsed_tx);
     CHECK_APP_CANARY()
 
-    if (err != parser_ok) {
-        zemu_log("parser_validate::failed\n");
+    if (err != parser_ok)
         return parser_getErrorDescription(err);
-    }
 
-    zemu_log("parser_validate::ok\n");
     return NULL;
 }
 
@@ -109,7 +136,7 @@ zxerr_t tx_getItem(int8_t displayIdx,
 
     CHECK_ZXERR(tx_getNumItems(&numItems))
 
-    if (displayIdx < 0 || displayIdx > numItems) {
+    if (displayIdx < 0 || displayIdx >= numItems) {
         return zxerr_no_data;
     }
 
@@ -127,6 +154,29 @@ zxerr_t tx_getItem(int8_t displayIdx,
 
     if (err != parser_ok)
         return zxerr_unknown;
+
+    return zxerr_ok;
+}
+
+zxerr_t tx_compute_eth_v(unsigned int info, uint8_t *v) {
+    parser_error_t err = parser_compute_eth_v(&ctx_parsed_tx, info, v);
+
+    if (err != parser_ok)
+        return zxerr_unknown;
+
+    return zxerr_ok;
+}
+
+zxerr_t  tx_rawbytes_init_state(uint8_t *buf, size_t buf_len) {
+    if ( parser_rawbytes_init(buf, buf_len) != parser_ok )
+        return zxerr_unknown;
+
+    return zxerr_ok;
+}
+
+zxerr_t tx_rawbytes_update(uint8_t *buf, size_t buf_len) {
+    if ( parser_rawbytes_update(buf, buf_len) != parser_ok )
+ 	       return zxerr_unknown;
 
     return zxerr_ok;
 }

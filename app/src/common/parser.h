@@ -42,6 +42,14 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
                               char *outVal, uint16_t outValLen,
                               uint8_t pageIdx, uint8_t *pageCount);
 
+parser_error_t parser_compute_eth_v(parser_context_t *ctx, unsigned int info, uint8_t *v);
+
+parser_error_t parser_rawbytes_init(uint8_t *buf, size_t buf_len);
+parser_error_t parser_rawbytes_update(uint8_t *buf, size_t buf_len);
+parser_error_t parser_rawbytes_finalize();
+uint8_t *parser_rawbytes_hash();
+size_t parser_rawbytes_hash_len();
+
 #ifdef __cplusplus
 }
 #endif

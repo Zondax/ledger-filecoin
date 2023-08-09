@@ -1,0 +1,42 @@
+[
+    {
+        "description": "ClientDeal expert_mode",
+        "encoded_tx": "",
+        "valid": true,
+        "testnet": true,
+        "error": "",
+        "message": {
+            "PieceCID": "bafy2bzacea3wsdh6y3a36tb3skempjoxqpuyompjbmfeyf34fi3uy6uue42v4",
+            "Client": "t1d2xrzcslx7xlbbylc5c3d5lvandqw4iwl6epxba",
+            "Provider": "t137sjdbgunloi7couiy4l5nc7pd6k2jmq32vizpy",
+            "PieceSize(B)": 582852585,
+            "DealLabel": "client_deal_label",
+            "StartEpoch": 700000000,
+            "EndEpoch": 900050030,
+            "ProvCollateral": "899900",
+            "ClientCollateral": "0",
+            "VerifiedDeal": false
+        },
+        "encoded_tx_hex": "8bd82a5827000171a0e4022037690cfec6c1bf4c3b9288c7a5d783e98731e90b0a4c177c2a374c7a9427355e1a22bd9fe9f455011eaf1c8a4bbfeeb0870b1745b1f57503470b71165501dfe49184d46adc8f89d44638beb45f78fcad259071636c69656e745f6465616c5f6c6162656c1a29b927001a35a5ac6e440007a48244000dbb3c40"
+    },
+    {
+        "description": "ClientDeal Wrong EndEpoch",
+        "encoded_tx": "",
+        "valid": false,
+        "testnet": true,
+        "error": "Client deal duration must be >= 518400",
+        "message": {
+            "PieceCID": "bafy2bzacea3wsdh6y3a36tb3skempjoxqpuyompjbmfeyf34fi3uy6uue42v4",
+            "Client": "t1d2xrzcslx7xlbbylc5c3d5lvandqw4iwl6epxba",
+            "Provider": "t137sjdbgunloi7couiy4l5nc7pd6k2jmq32vizpy",
+            "PieceSize(B)": 582852585,
+            "DealLabel": "client_deal_label",
+            "StartEpoch": 700000000,
+            "EndEpoch": 700000501,
+            "ProvCollateral": "899900",
+            "ClientCollateral": "0",
+            "VerifiedDeal": false
+        },
+        "encoded_tx_hex": "8bd82a5827000171a0e4022037690cfec6c1bf4c3b9288c7a5d783e98731e90b0a4c177c2a374c7a9427355e1a22bd9fe9f455011eaf1c8a4bbfeeb0870b1745b1f57503470b71165501dfe49184d46adc8f89d44638beb45f78fcad259071636c69656e745f6465616c5f6c6162656c1a29b927001a29b928f5440007a48244000dbb3c40"
+    }
+]
