@@ -15,9 +15,21 @@
 ********************************************************************************/
 #pragma once
 
-#include "os.h"
 #include "coin.h"
 #include "zxerror.h"
+
+// transaction initializer for the buffer and transaction type.
+void tx_context_fil();
+void tx_context_eth();
+void tx_context_datacap();
+void tx_context_client_deal();
+void tx_context_raw_bytes();
+
+// Signing is differently depending tx is rawBytes type
+bool tx_is_rawbytes();
+
+zxerr_t tx_rawbytes_init_state(uint8_t *buf, size_t buf_len);
+zxerr_t tx_rawbytes_update(uint8_t *buf, size_t buf_len);
 
 void tx_initialize();
 
@@ -52,3 +64,5 @@ zxerr_t tx_getItem(int8_t displayIdx,
                    char *outKey, uint16_t outKeyLen,
                    char *outValue, uint16_t outValueLen,
                    uint8_t pageIdx, uint8_t *pageCount);
+
+zxerr_t tx_compute_eth_v(unsigned int info, uint8_t *v);
