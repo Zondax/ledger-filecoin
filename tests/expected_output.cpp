@@ -79,8 +79,10 @@ std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool)
     ///
 
     auto message = json["message"];
+    auto from0x = message["from0x"].asString();
     auto from = message["from"].asString();
 
+    auto to0x = message["to0x"].asString();
     auto to = message["to"].asString();
     auto nonce = message["nonce"].asUInt64();
 
@@ -94,33 +96,55 @@ std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool)
     auto params = message["params"];
     ///
 
-    auto toAddress = FormatAddress(0, "To ", to);
+    uint8_t idx = 0;
+    if (!to0x.empty()) {
+        auto to0xAddress = FormatAddress(idx, "To ", to0x);
+        answer.insert(answer.end(), to0xAddress.begin(), to0xAddress.end());
+        // addTo(answer, "{} | To : {}", idx, to0xAddress);
+        idx++;
+    }
+
+    auto toAddress = FormatAddress(idx, "To ", to);
     answer.insert(answer.end(), toAddress.begin(), toAddress.end());
+    idx++;
 
-    auto fromAddress = FormatAddress(1, "From ", from);
+    if (!from0x.empty()) {
+        auto fromAddress0x = FormatAddress(idx, "From ", from0x);
+        answer.insert(answer.end(), fromAddress0x.begin(), fromAddress0x.end());
+        idx++;
+    }
+
+    auto fromAddress = FormatAddress(idx, "From ", from);
     answer.insert(answer.end(), fromAddress.begin(), fromAddress.end());
+    idx++;
 
+    addTo(answer, "{} | Value : {}", idx, FormatAmount(value));
+    idx++;
 
-    addTo(answer, "2 | Value : {}", FormatAmount(value));
+    addTo(answer, "{} | Gas Limit : {}", idx, gaslimit);
+    idx++;
 
-    addTo(answer, "3 | Gas Limit : {}", gaslimit);
+    addTo(answer, "{} | Gas Fee Cap : {}", idx, FormatAmount(gasfeecap));
+    idx++;
 
-    addTo(answer, "4 | Gas Fee Cap : {}", FormatAmount(gasfeecap));
+    addTo(answer, "{} | Gas Premium : {}", idx, FormatAmount(gaspremium));
+    idx++;
 
-    addTo(answer, "5 | Gas Premium : {}", FormatAmount(gaspremium));
-
-    addTo(answer, "6 | Nonce : {}", nonce);
+    addTo(answer, "{} | Nonce : {}", idx, nonce);
+    idx++;
 
     if (method != 0) {
-        addTo(answer, "7 | Method : {}", method);
+        addTo(answer, "{} | Method : {}", idx, method);
+        idx++;
     } else {
-        addTo(answer, "7 | Method : Transfer", method);
+        addTo(answer, "{} | Method : Transfer", idx, method);
+        idx++;
     }
 
     int paramIdx = 1;
     for(auto value : params) {
         std::string paramText = "Params |" + std::to_string(paramIdx) + "| ";
-        auto paramsAddress = FormatAddress(8 + paramIdx - 1, paramText, value.asString());
+        auto paramsAddress = FormatAddress(idx + paramIdx - 1, paramText, value.asString());
         answer.insert(answer.end(), paramsAddress.begin(), paramsAddress.end());
         paramIdx++;
     }

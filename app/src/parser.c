@@ -135,15 +135,9 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
     return parser_unsupported_tx;
   }
 
-  zemu_log("parser_validate::validated\n");
-
   // Iterate through all items to check that all can be shown and are valid
   uint8_t numItems = 0;
   CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems));
-
-  char log_tmp[100];
-  snprintf(log_tmp, sizeof(log_tmp), "parser_validate %d\n", numItems);
-  zemu_log(log_tmp);
 
   char tmpKey[40] = {0};
   char tmpVal[40] = {0};
@@ -154,14 +148,11 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
                                     sizeof(tmpVal), 0, &pageCount))
   }
 
-  zemu_log("parser_validate::ok\n");
   return parser_ok;
 }
 
 parser_error_t parser_getNumItems(const parser_context_t *ctx,
                                   uint8_t *num_items) {
-  zemu_log("parser_getNumItems\n");
-
   switch (ctx->tx_type) {
   case fil_tx: {
     *num_items = _getNumItems(ctx, &parser_tx_obj.base_tx);
@@ -217,9 +208,7 @@ parser_error_t _getItemFil(const parser_context_t *ctx, uint8_t displayIdx,
                            char *outKey, uint16_t outKeyLen, char *outVal,
                            uint16_t outValLen, uint8_t pageIdx,
                            uint8_t *pageCount) {
-    char log_tmp[100];
-    snprintf(log_tmp, sizeof(log_tmp), "getItem %d\n", displayIdx);
-    zemu_log(log_tmp);
+
     const bool expert_mode = app_mode_expert();
 
     MEMZERO(outKey, outKeyLen);
@@ -236,32 +225,34 @@ parser_error_t _getItemFil(const parser_context_t *ctx, uint8_t displayIdx,
         return parser_no_data;
     }
 
+    uint8_t adjustedIndex = displayIdx;
     if (parser_tx_obj.base_tx.to.buffer[0] != ADDRESS_PROTOCOL_DELEGATED) {
-        displayIdx++;
+        adjustedIndex++;
     }
-    if (displayIdx >= 2 && parser_tx_obj.base_tx.from.buffer[0] != ADDRESS_PROTOCOL_DELEGATED) {
-        displayIdx++;
+
+    if (adjustedIndex >= 2 && parser_tx_obj.base_tx.from.buffer[0] != ADDRESS_PROTOCOL_DELEGATED) {
+        adjustedIndex++;
     }
 
     // Normal mode: 6 fields [To | From | Value | Gas Limit | Gas Fee Cap |
     // Method] + Params (variable length) Expert mode: 8 fields [To | From | Value
     // | Gas Limit | Gas Fee Cap | Gas Premium | Nonce | Method] + Params
     // (variable length)
-    switch (displayIdx) {
+    switch (adjustedIndex) {
         case 0:
-            snprintf(outKey, outKeyLen, "To");
+            snprintf(outKey, outKeyLen, "To ");
             return printEthAddress(&parser_tx_obj.base_tx.to, outVal, outValLen, pageIdx,
                                 pageCount);
         case 1:
-            snprintf(outKey, outKeyLen, "To");
+            snprintf(outKey, outKeyLen, "To ");
             return printAddress(&parser_tx_obj.base_tx.to, outVal, outValLen, pageIdx,
                                 pageCount);
         case 2:
-            snprintf(outKey, outKeyLen, "From");
+            snprintf(outKey, outKeyLen, "From ");
             return printEthAddress(&parser_tx_obj.base_tx.from, outVal, outValLen, pageIdx,
                                 pageCount);
         case 3:
-            snprintf(outKey, outKeyLen, "From");
+            snprintf(outKey, outKeyLen, "From ");
             return printAddress(&parser_tx_obj.base_tx.from, outVal, outValLen, pageIdx,
                                 pageCount);
         case 4:
