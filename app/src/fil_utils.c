@@ -106,6 +106,31 @@ parser_error_t printAddress(const address_t *a, char *outVal,
   return parser_ok;
 }
 
+parser_error_t printEthAddress(const address_t *a, char *outVal,
+                            uint16_t outValLen, uint8_t pageIdx,
+                            uint8_t *pageCount) {
+
+    const uint8_t protocol = a->buffer[0];
+    if (protocol != ADDRESS_PROTOCOL_DELEGATED) {
+        return parser_unexpected_type;
+    }
+
+    uint64_t actorId = 0;
+    const uint16_t actorIdSize = decompressLEB128(a->buffer + 1, a->len - 1, &actorId);
+    const uint16_t payloadSize = a->len - 1 - actorIdSize;
+    if (payloadSize != 20) {
+        return parser_unexepected_error;
+    }
+
+    char outputBuffer[45] = {0};
+    outputBuffer[0] = '0';
+    outputBuffer[1] = 'x';
+    array_to_hexstr(outputBuffer + 2, sizeof(outputBuffer) - 2, a->buffer + 1 + actorIdSize, payloadSize);
+    pageStringExt(outVal, outValLen, outputBuffer, sizeof(outputBuffer), pageIdx, pageCount);
+
+    return parser_ok;
+}
+
 parser_error_t readBigInt(bigint_t *bigint, CborValue *value) {
   CHECK_CBOR_TYPE(cbor_value_get_type(value), CborByteStringType)
   CborValue dummy;

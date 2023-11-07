@@ -217,118 +217,131 @@ parser_error_t _getItemFil(const parser_context_t *ctx, uint8_t displayIdx,
                            char *outKey, uint16_t outKeyLen, char *outVal,
                            uint16_t outValLen, uint8_t pageIdx,
                            uint8_t *pageCount) {
-  char log_tmp[100];
-  snprintf(log_tmp, sizeof(log_tmp), "getItem %d\n", displayIdx);
-  zemu_log(log_tmp);
-  const bool expert_mode = app_mode_expert();
+    char log_tmp[100];
+    snprintf(log_tmp, sizeof(log_tmp), "getItem %d\n", displayIdx);
+    zemu_log(log_tmp);
+    const bool expert_mode = app_mode_expert();
 
-  MEMZERO(outKey, outKeyLen);
-  MEMZERO(outVal, outValLen);
-  snprintf(outKey, outKeyLen, "?");
-  snprintf(outVal, outValLen, " ");
-  *pageCount = 0;
+    MEMZERO(outKey, outKeyLen);
+    MEMZERO(outVal, outValLen);
+    snprintf(outKey, outKeyLen, "?");
+    snprintf(outVal, outValLen, " ");
+    *pageCount = 0;
 
-  uint8_t numItems = 0;
-  CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems))
-  CHECK_APP_CANARY()
+    uint8_t numItems = 0;
+    CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems))
+    CHECK_APP_CANARY()
 
-  if (displayIdx >= numItems) {
-    return parser_no_data;
-  }
-
-  // Normal mode: 6 fields [To | From | Value | Gas Limit | Gas Fee Cap |
-  // Method] + Params (variable length) Expert mode: 8 fields [To | From | Value
-  // | Gas Limit | Gas Fee Cap | Gas Premium | Nonce | Method] + Params
-  // (variable length)
-  switch (displayIdx) {
-  case 0:
-    snprintf(outKey, outKeyLen, "To ");
-    return printAddress(&parser_tx_obj.base_tx.to, outVal, outValLen, pageIdx,
-                        pageCount);
-
-  case 1:
-    snprintf(outKey, outKeyLen, "From ");
-    return printAddress(&parser_tx_obj.base_tx.from, outVal, outValLen, pageIdx,
-                        pageCount);
-
-  case 2:
-    snprintf(outKey, outKeyLen, "Value ");
-    return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.value, outVal,
-                                        outValLen, pageIdx, pageCount,
-                                        COIN_AMOUNT_DECIMAL_PLACES);
-
-  case 3:
-    snprintf(outKey, outKeyLen, "Gas Limit ");
-    if (int64_to_str(outVal, outValLen, parser_tx_obj.base_tx.gaslimit) !=
-        NULL) {
-      return parser_unexepected_error;
+    if (displayIdx >= numItems) {
+        return parser_no_data;
     }
+
+    if (parser_tx_obj.base_tx.to.buffer[0] != ADDRESS_PROTOCOL_DELEGATED) {
+        displayIdx++;
+    }
+    if (displayIdx >= 2 && parser_tx_obj.base_tx.from.buffer[0] != ADDRESS_PROTOCOL_DELEGATED) {
+        displayIdx++;
+    }
+
+    // Normal mode: 6 fields [To | From | Value | Gas Limit | Gas Fee Cap |
+    // Method] + Params (variable length) Expert mode: 8 fields [To | From | Value
+    // | Gas Limit | Gas Fee Cap | Gas Premium | Nonce | Method] + Params
+    // (variable length)
+    switch (displayIdx) {
+        case 0:
+            snprintf(outKey, outKeyLen, "To");
+            return printEthAddress(&parser_tx_obj.base_tx.to, outVal, outValLen, pageIdx,
+                                pageCount);
+        case 1:
+            snprintf(outKey, outKeyLen, "To");
+            return printAddress(&parser_tx_obj.base_tx.to, outVal, outValLen, pageIdx,
+                                pageCount);
+        case 2:
+            snprintf(outKey, outKeyLen, "From");
+            return printEthAddress(&parser_tx_obj.base_tx.from, outVal, outValLen, pageIdx,
+                                pageCount);
+        case 3:
+            snprintf(outKey, outKeyLen, "From");
+            return printAddress(&parser_tx_obj.base_tx.from, outVal, outValLen, pageIdx,
+                                pageCount);
+        case 4:
+            snprintf(outKey, outKeyLen, "Value ");
+            return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.value, outVal,
+                                                outValLen, pageIdx, pageCount,
+                                                COIN_AMOUNT_DECIMAL_PLACES);
+
+        case 5:
+            snprintf(outKey, outKeyLen, "Gas Limit ");
+            if (int64_to_str(outVal, outValLen, parser_tx_obj.base_tx.gaslimit) !=
+                NULL) {
+            return parser_unexepected_error;
+            }
+            *pageCount = 1;
+            return parser_ok;
+
+        case 6:
+            snprintf(outKey, outKeyLen, "Gas Fee Cap ");
+            return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.gasfeecap,
+                                                outVal, outValLen, pageIdx, pageCount,
+                                                COIN_AMOUNT_DECIMAL_PLACES);
+
+        case 7:
+            if (expert_mode) {
+            snprintf(outKey, outKeyLen, "Gas Premium ");
+            return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.gaspremium,
+                                                outVal, outValLen, pageIdx, pageCount,
+                                                COIN_AMOUNT_DECIMAL_PLACES);
+            }
+            return printMethod(outKey, outKeyLen, outVal, outValLen, pageIdx,
+                            pageCount);
+
+        case 8:
+            if (expert_mode) {
+            snprintf(outKey, outKeyLen, "Nonce ");
+            if (uint64_to_str(outVal, outValLen, parser_tx_obj.base_tx.nonce) !=
+                NULL) {
+                return parser_unexepected_error;
+            }
+            *pageCount = 1;
+            return parser_ok;
+            }
+            // For non expert mode this index represent params field.
+            break;
+
+        case 9:
+            if (expert_mode) {
+            return printMethod(outKey, outKeyLen, outVal, outValLen, pageIdx,
+                                pageCount);
+            }
+            // For non expert mode this index represent params field.
+            break;
+
+        default:
+            break;
+    }
+
+    if (parser_tx_obj.base_tx.numparams == 0) {
+        snprintf(outKey, outKeyLen, "Params ");
+        snprintf(outVal, outValLen, "- NONE -");
+        return parser_ok;
+    }
+
+    // remaining display pages show the params
+    int32_t paramIdxSigned =
+        displayIdx - (numItems - parser_tx_obj.base_tx.numparams);
+
+    // end of params
+    if (paramIdxSigned < 0 || paramIdxSigned >= parser_tx_obj.base_tx.numparams) {
+        return parser_unexpected_field;
+    }
+
+    uint8_t paramIdx = (uint8_t)paramIdxSigned;
     *pageCount = 1;
-    return parser_ok;
+    snprintf(outKey, outKeyLen, "Params |%d| ", paramIdx + 1);
 
-  case 4:
-    snprintf(outKey, outKeyLen, "Gas Fee Cap ");
-    return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.gasfeecap,
-                                        outVal, outValLen, pageIdx, pageCount,
-                                        COIN_AMOUNT_DECIMAL_PLACES);
-
-  case 5:
-    if (expert_mode) {
-      snprintf(outKey, outKeyLen, "Gas Premium ");
-      return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.gaspremium,
-                                          outVal, outValLen, pageIdx, pageCount,
-                                          COIN_AMOUNT_DECIMAL_PLACES);
-    }
-    return printMethod(outKey, outKeyLen, outVal, outValLen, pageIdx,
-                       pageCount);
-
-  case 6:
-    if (expert_mode) {
-      snprintf(outKey, outKeyLen, "Nonce ");
-      if (uint64_to_str(outVal, outValLen, parser_tx_obj.base_tx.nonce) !=
-          NULL) {
-        return parser_unexepected_error;
-      }
-      *pageCount = 1;
-      return parser_ok;
-    }
-    // For non expert mode this index represent params field.
-    break;
-
-  case 7:
-    if (expert_mode) {
-      return printMethod(outKey, outKeyLen, outVal, outValLen, pageIdx,
-                         pageCount);
-    }
-    // For non expert mode this index represent params field.
-    break;
-
-  default:
-    break;
-  }
-
-  if (parser_tx_obj.base_tx.numparams == 0) {
-    snprintf(outKey, outKeyLen, "Params ");
-    snprintf(outVal, outValLen, "- NONE -");
-    return parser_ok;
-  }
-
-  // remaining display pages show the params
-  int32_t paramIdxSigned =
-      displayIdx - (numItems - parser_tx_obj.base_tx.numparams);
-
-  // end of params
-  if (paramIdxSigned < 0 || paramIdxSigned >= parser_tx_obj.base_tx.numparams) {
-    return parser_unexpected_field;
-  }
-
-  uint8_t paramIdx = (uint8_t)paramIdxSigned;
-  *pageCount = 1;
-  snprintf(outKey, outKeyLen, "Params |%d| ", paramIdx + 1);
-
-  zemu_log_stack(outKey);
-  return parser_printParam(&parser_tx_obj.base_tx, paramIdx, outVal, outValLen,
-                           pageIdx, pageCount);
+    zemu_log_stack(outKey);
+    return parser_printParam(&parser_tx_obj.base_tx, paramIdx, outVal, outValLen,
+                            pageIdx, pageCount);
 }
 
 parser_error_t parser_getItem(const parser_context_t *ctx, uint8_t displayIdx,
