@@ -77,6 +77,10 @@ parser_error_t printAddress(const address_t *a, char *outVal,
                             uint16_t outValLen, uint8_t pageIdx,
                             uint8_t *pageCount);
 
+parser_error_t printEthAddress(const address_t *a, char *outVal,
+                            uint16_t outValLen, uint8_t pageIdx,
+                            uint8_t *pageCount);
+
 parser_error_t printCid(cid_t *cid, char *outVal, uint16_t outValLen,
                         uint8_t pageIdx, uint8_t *pageCount);
 

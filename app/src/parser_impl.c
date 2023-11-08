@@ -417,5 +417,13 @@ uint8_t _getNumItems(__Z_UNUSED const parser_context_t *c,
     itemCount = 8;
   }
 
+  // For f4 addresses dispaly f4 and 0x addresses
+  if (v->from.buffer[0] == ADDRESS_PROTOCOL_DELEGATED) {
+    itemCount++;
+  }
+  if (v->to.buffer[0] == ADDRESS_PROTOCOL_DELEGATED) {
+    itemCount++;
+  }
+
   return itemCount + v->numparams;
 }
