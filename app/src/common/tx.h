@@ -17,6 +17,7 @@
 
 #include "coin.h"
 #include "zxerror.h"
+#include <stdbool.h>
 
 // transaction initializer for the buffer and transaction type.
 void tx_context_fil();

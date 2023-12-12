@@ -13,14 +13,16 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
+// Implementation from methods that are needed for cpp_test
+#if !defined(LEDGER_SPECIFIC)
+
 #include <hexutils.h>
 #include "zxerror.h"
 #include "coin.h"
 #include "crypto_helper.h"
 
-// Implementation from methods that are needed for cpp_test
-#if !defined (TARGET_NANOS) && !defined(TARGET_NANOS2) && !defined(TARGET_NANOX) && !defined(TARGET_STAX)
 #include "blake2.h"
+#include "zxmacros.h"
 
 char *crypto_testPubKey;
 

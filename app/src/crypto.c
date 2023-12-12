@@ -45,11 +45,11 @@ static zxerr_t crypto_extractPublicKey(uint8_t *pubKey, uint16_t pubKeyLen, uint
                                                      privateKeyData,
                                                      chainCode,
                                                      NULL,
-                                                     0))
+                                                     0));
 
-    CATCH_CXERROR(cx_ecfp_init_private_key_no_throw(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey))
-    CATCH_CXERROR(cx_ecfp_init_public_key_no_throw(CX_CURVE_256K1, NULL, 0, &cx_publicKey))
-    CATCH_CXERROR(cx_ecfp_generate_pair_no_throw(CX_CURVE_256K1, &cx_publicKey, &cx_privateKey, 1))
+    CATCH_CXERROR(cx_ecfp_init_private_key_no_throw(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey));
+    CATCH_CXERROR(cx_ecfp_init_public_key_no_throw(CX_CURVE_256K1, NULL, 0, &cx_publicKey));
+    CATCH_CXERROR(cx_ecfp_generate_pair_no_throw(CX_CURVE_256K1, &cx_publicKey, &cx_privateKey, 1));
     memcpy(pubKey, cx_publicKey.W, SECP256K1_PK_LEN);
     error = zxerr_ok;
 
@@ -69,7 +69,7 @@ __Z_INLINE zxerr_t keccak_hash(const unsigned char *in, unsigned int inLen,
     // return actual size using value from signatureLength
     cx_sha3_t keccak;
     if (cx_keccak_init_no_throw(&keccak, outLen * 8) != CX_OK) return zxerr_unknown;
-    cx_hash_no_throw((cx_hash_t *)&keccak, CX_LAST, in, inLen, out, outLen);
+    CHECK_CX_OK(cx_hash_no_throw((cx_hash_t *)&keccak, CX_LAST, in, inLen, out, outLen));
 
     return zxerr_ok;
 }
@@ -119,7 +119,7 @@ zxerr_t blake_hash(const uint8_t *in, uint16_t inLen, uint8_t *out, uint16_t out
     }
     cx_blake2b_t ctx;
     if (cx_blake2b_init_no_throw(&ctx, outLen * 8) != CX_OK) return zxerr_unknown;
-    cx_hash_no_throw(&ctx.header, CX_LAST, in, inLen, out, outLen);
+    CHECK_CX_OK(cx_hash_no_throw(&ctx.header, CX_LAST, in, inLen, out, outLen));
 
     return zxerr_ok;
 }
@@ -131,8 +131,8 @@ zxerr_t blake_hash_cid(const unsigned char *in, unsigned int inLen,
 
     cx_blake2b_t ctx;
     if (cx_blake2b_init_no_throw(&ctx, outLen * 8) != CX_OK) return zxerr_unknown;
-    cx_hash_no_throw(&ctx.header, 0, prefix, sizeof(prefix), NULL, 0);
-    cx_hash_no_throw(&ctx.header, CX_LAST, in, inLen, out, outLen);
+    CHECK_CX_OK(cx_hash_no_throw(&ctx.header, 0, prefix, sizeof(prefix), NULL, 0));
+    CHECK_CX_OK(cx_hash_no_throw(&ctx.header, CX_LAST, in, inLen, out, outLen));
 
     return zxerr_ok;
 }
@@ -170,16 +170,16 @@ zxerr_t _sign(uint8_t *output, uint16_t outputLen, const uint8_t *message, uint1
                                                      privateKeyData,
                                                      NULL,
                                                      NULL,
-                                                     0))
+                                                     0));
 
-    CATCH_CXERROR(cx_ecfp_init_private_key_no_throw(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey))
+    CATCH_CXERROR(cx_ecfp_init_private_key_no_throw(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey));
     CATCH_CXERROR(cx_ecdsa_sign_no_throw(&cx_privateKey,
                                          CX_RND_RFC6979 | CX_LAST,
                                          CX_SHA256,
                                          message,
                                          messageLen,
                                          signature->der_signature,
-                                         &signatureLength, &tmpInfo))
+                                         &signatureLength, &tmpInfo));
 
     const err_convert_e err_c = convertDERtoRSV(signature->der_signature, tmpInfo,  signature->r, signature->s, &signature->v);
     if (err_c == no_error) {
@@ -316,7 +316,7 @@ zxerr_t crypto_fillEthAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *ad
     MEMZERO(buffer, buffer_len);
     answer_eth_t *const answer = (answer_eth_t *) buffer;
 
-    CHECK_ZXERR(crypto_extractPublicKey(&answer->publicKey[1], sizeof_field(answer_eth_t, publicKey) - 1, &chain_code))
+    CHECK_ZXERR(crypto_extractPublicKey(&answer->publicKey[1], sizeof_field(answer_eth_t, publicKey) - 1, &fil_chain_code))
 
     answer->publicKey[0] = SECP256K1_PK_LEN;
 

@@ -25,7 +25,7 @@ extern "C" {
 
 extern uint32_t hdPath[MAX_BIP32_PATH];
 extern uint32_t hdPath_len;
-extern uint8_t chain_code;
+extern uint8_t fil_chain_code;
 
 #define ADDRESS_PROTOCOL_LEN        1
 
