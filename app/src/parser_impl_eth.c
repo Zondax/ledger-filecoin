@@ -26,6 +26,7 @@
 
 eth_tx_t eth_tx_obj;
 #define FILECOIN_MAINNET_CHAINID 314
+#define FILECOIN_CALIBRATION_CHAINID 314159
 
 static parser_error_t parse_field(parser_context_t *ctx, uint32_t *fieldOffset,
                                   uint32_t *len) {
@@ -56,7 +57,7 @@ static parser_error_t readChainID(parser_context_t *ctx, chain_id_t *chain_id) {
   const uint8_t *chain = ctx->buffer + chain_id->offset;
   uint64_t id = 0;
   if (be_bytes_to_u64(chain, chain_id->len, &id) != 0 ||
-      id != FILECOIN_MAINNET_CHAINID) {
+     (id != FILECOIN_MAINNET_CHAINID && id != FILECOIN_CALIBRATION_CHAINID)) {
     return parser_invalid_chain_id;
   }
 
