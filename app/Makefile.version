@@ -3,4 +3,4 @@ APPVERSION_M=0
 # This is the minor version of this release
 APPVERSION_N=23
 # This is the patch version of this release
-APPVERSION_P=10
+APPVERSION_P=11
