@@ -186,7 +186,7 @@ __Z_INLINE parser_error_t render_integer(int64_t value,
                               uint8_t *pageCount) {
 
     if (int64_to_str(outVal, outValLen, value) != NULL) {
-        return parser_unexepected_error;
+        return parser_unexpected_error;
     }
     *pageCount = 1;
     return parser_ok;

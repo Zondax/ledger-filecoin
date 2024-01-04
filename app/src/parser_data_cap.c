@@ -167,7 +167,7 @@ parser_error_t _getItemDataCap(__Z_UNUSED const parser_context_t *ctx,
     if (int64_to_str(outVal, outValLen,
                      (int64_t)parser_tx_obj.rem_datacap_tx.proposal_id) !=
         NULL) {
-      return parser_unexepected_error;
+      return parser_unexpected_error;
     }
     *pageCount = 1;
     return parser_ok;

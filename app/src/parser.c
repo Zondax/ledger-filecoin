@@ -265,7 +265,7 @@ parser_error_t _getItemFil(const parser_context_t *ctx, uint8_t displayIdx,
             snprintf(outKey, outKeyLen, "Gas Limit ");
             if (int64_to_str(outVal, outValLen, parser_tx_obj.base_tx.gaslimit) !=
                 NULL) {
-            return parser_unexepected_error;
+            return parser_unexpected_error;
             }
             *pageCount = 1;
             return parser_ok;
@@ -291,7 +291,7 @@ parser_error_t _getItemFil(const parser_context_t *ctx, uint8_t displayIdx,
             snprintf(outKey, outKeyLen, "Nonce ");
             if (uint64_to_str(outVal, outValLen, parser_tx_obj.base_tx.nonce) !=
                 NULL) {
-                return parser_unexepected_error;
+                return parser_unexpected_error;
             }
             *pageCount = 1;
             return parser_ok;
