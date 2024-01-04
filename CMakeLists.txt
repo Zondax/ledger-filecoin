@@ -18,7 +18,7 @@ project(ledger-filecoin VERSION 0.0.0)
 enable_testing()
 
 cmake_policy(SET CMP0025 NEW)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 20)
 
 option(ENABLE_FUZZING "Build with fuzzing instrumentation and build fuzz targets" OFF)
 option(ENABLE_COVERAGE "Build with source code coverage instrumentation" OFF)

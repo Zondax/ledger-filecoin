@@ -20,3 +20,4 @@
 
 std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool expertMode);
 std::vector<std::string> ClientDealGenerateExpectedUIOutput(const Json::Value &json, bool expertMode);
+std::vector<std::string> EVMGenerateExpectedUIOutput(const Json::Value &json, bool expertMode);
