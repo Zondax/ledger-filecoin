@@ -79,10 +79,6 @@ parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data,
     return _read(ctx, &(parser_tx_obj.base_tx));
   }
   case eth_tx: {
-    // Ethereum Transactions valid only in expert mode
-    if (!app_mode_expert())
-      return parser_unsupported_tx;
-
     CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
     return _readEth(ctx, &eth_tx_obj);
   }
@@ -116,7 +112,7 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
     break;
   }
   case eth_tx: {
-    CHECK_PARSER_ERR(_validateTxEth(ctx))
+    CHECK_PARSER_ERR(_validateTxEth())
     break;
   }
   case datacap_tx: {
@@ -159,7 +155,7 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx,
     break;
   }
   case eth_tx: {
-    *num_items = _getNumItemsEth(ctx);
+    CHECK_PARSER_ERR(_getNumItemsEth(num_items));
     break;
   }
   case datacap_tx: {
@@ -346,11 +342,6 @@ parser_error_t parser_getItem(const parser_context_t *ctx, uint8_t displayIdx,
                        pageIdx, pageCount);
   }
   case eth_tx: {
-    // Ethereum Transactions only valid in expert mode
-    if (!app_mode_expert())
-      return parser_unsupported_tx;
-
-    // for now just display the hash
     return _getItemEth(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen,
                        pageIdx, pageCount);
   }
