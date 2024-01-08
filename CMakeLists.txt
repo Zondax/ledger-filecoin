@@ -18,7 +18,7 @@ project(ledger-filecoin VERSION 0.0.0)
 enable_testing()
 
 cmake_policy(SET CMP0025 NEW)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 20)
 
 option(ENABLE_FUZZING "Build with fuzzing instrumentation and build fuzz targets" OFF)
 option(ENABLE_COVERAGE "Build with source code coverage instrumentation" OFF)
@@ -90,6 +90,7 @@ file(GLOB_RECURSE LIB_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/src/app_mode.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/src/bignum.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/src/zxmacros.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/src/zxformat.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/BLAKE2/ref/blake2b-ref.c
         ####
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser.c
@@ -103,6 +104,9 @@ file(GLOB_RECURSE LIB_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/crypto_helper.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/crypto_test.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/base32.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/rlp.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/uint256.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/eth_erc20.c
         )
 
 add_library(app_lib STATIC

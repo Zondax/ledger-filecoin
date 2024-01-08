@@ -56,6 +56,29 @@ std::vector<std::string> FormatAddress(uint32_t prefix, const std::string &name,
     return answer;
 }
 
+std::vector<std::string> FormatEthAddress(const uint32_t idx, const std::string &name, const std::string &address) {
+    auto answer = std::vector<std::string>();
+    uint8_t numPages = 0;
+    char outBuffer[100];
+
+    pageString(outBuffer, fieldSize, address.c_str(), 0, &numPages);
+
+    for (auto i = 0; i < numPages; i++) {
+        MEMZERO(outBuffer, sizeof(outBuffer));
+        pageString(outBuffer, fieldSize, address.c_str(), i, &numPages);
+
+        auto pages = std::string("");
+
+        if (numPages > 1) {
+            pages = fmt::format("[{}/{}] ", i + 1, numPages);
+        }
+
+        addTo(answer, "{} | {}{}: {}", idx, name, pages, outBuffer);
+    }
+
+    return answer;
+}
+
 std::string FormatAmount(const std::string &amount) {
     char buffer[500];
     MEMZERO(buffer, sizeof(buffer));
@@ -202,6 +225,54 @@ std::vector<std::string> ClientDealGenerateExpectedUIOutput(const Json::Value &j
     addTo(answer, "8 | ClientCollateral: {}", FormatAmount( clientCollateral ));
 
     addTo(answer, "9 | VerifiedDeal : {}", verifiedDeal);
+
+    return answer;
+}
+
+std::vector<std::string> EVMGenerateExpectedUIOutput(const Json::Value &json, bool) {
+    auto answer = std::vector<std::string>();
+
+    bool valid = true;
+    if (json.isMember("value")) {
+        valid = json["valid"].asBool();
+    }
+
+    if (!valid) {
+        answer.emplace_back("Test case is not valid!");
+        return answer;
+    }
+
+    ///
+    auto message = json["message"];
+    auto to = message["To"].asString();
+    auto contract = message["Contract"].asString();
+    auto value = message["Value"].asString();
+    auto nonce = message["Nonce"].asString();
+    auto gasPrice = message["GasPrice"].asString();
+    auto gasLimit = message["GasLimit"].asString();
+    ///
+
+    uint8_t idx = 0;
+    auto destAddress = FormatEthAddress(idx, "To", to);
+    answer.insert(answer.end(), destAddress.begin(), destAddress.end());
+
+    if (value.starts_with("??")) {
+        idx++;
+        auto contractAddress = FormatEthAddress(idx, "Contract", contract);
+        answer.insert(answer.end(), contractAddress.begin(), contractAddress.end());
+    }
+
+    idx++;
+    addTo(answer, "{} | Value: {}", idx, value);
+
+    idx++;
+    addTo(answer, "{} | Nonce: {}", idx, nonce);
+
+    idx++;
+    addTo(answer, "{} | Gas price: {}", idx, gasPrice);
+
+    idx++;
+    addTo(answer, "{} | Gas limit: {}", idx, gasLimit);
 
     return answer;
 }

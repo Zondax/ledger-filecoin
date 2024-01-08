@@ -42,7 +42,7 @@ parser_error_t raw_bytes_init(uint8_t *buf, size_t buf_len) {
     defined(TARGET_NANOX) || defined(TARGET_STAX)
   // Setup hasher pointer. This will reduce stack usage
   if (blake_hash_setup(&parser_tx_obj.raw_bytes_tx.ctx_blake2b) != zxerr_ok) {
-    return parser_unexepected_error;
+    return parser_unexpected_error;
   }
 #endif
   // init hash context
@@ -106,7 +106,7 @@ parser_error_t _readRawBytes(__Z_UNUSED const parser_context_t *ctx,
 
   if (blake_hash_cid(tmp, BLAKE2B_256_SIZE, tx->digest, BLAKE2B_256_SIZE) !=
       zxerr_ok) {
-    return parser_unexepected_error;
+    return parser_unexpected_error;
   }
 
   return parser_ok;

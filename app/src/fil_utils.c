@@ -119,7 +119,7 @@ parser_error_t printEthAddress(const address_t *a, char *outVal,
     const uint16_t actorIdSize = decompressLEB128(a->buffer + 1, a->len - 1, &actorId);
     const uint16_t payloadSize = a->len - 1 - actorIdSize;
     if (payloadSize != 20) {
-        return parser_unexepected_error;
+        return parser_unexpected_error;
     }
 
     char outputBuffer[45] = {0};

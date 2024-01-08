@@ -28,6 +28,8 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
+#include "rlp.h"
+
 #define MAX_SUPPORT_METHOD      UINT64_MAX
 #define MAX_PARAMS_BUFFER_SIZE  200
 #define ETH_ADDRESS_LEN         20
@@ -148,27 +150,26 @@ typedef struct {
 // Type that holds the common fields
 // for legacy and eip2930 transactions
 typedef struct {
-    eth_big_int_t nonce;
-    eth_big_int_t gas_price;
-    eth_big_int_t gas_limit;
-    eth_addr_t address;
-    eth_big_int_t value;
-    uint32_t data_at;
-    uint32_t dataLen;
+    rlp_t nonce;
+    rlp_t gasPrice;
+    rlp_t gasLimit;
+    rlp_t to;
+    rlp_t value;
+    rlp_t data;
 } eth_base_t;
 
 // EIP 2718 TransactionType
 // Valid transaction types should be in [0x00, 0x7f]
-typedef enum eth_tx_type_t {
+typedef enum {
   eip2930 = 0x01,
   eip1559 = 0x02,
   // Legacy tx type is greater than or equal to 0xc0.
   legacy = 0xc0
-} eth_tx_type_t;
+} eth_tx_type_e;
 
 typedef struct {
-    eth_tx_type_t tx_type;
-    chain_id_t chain_id;
+    eth_tx_type_e tx_type;
+    rlp_t chainId;
     // lets use an anonymous
     // union to hold the 3 possible types of transactions:
     // legacy, eip2930, eip1559

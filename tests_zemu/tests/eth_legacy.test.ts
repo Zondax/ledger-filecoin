@@ -71,6 +71,15 @@ const SIGN_TEST_DATA = [
     },
     chainId: 314,
   },
+  {
+    name: 'erc20_transfer',
+    op: {
+      to: '4E83362442B8d1beC281594CEA3050c8EB01311C',
+      value: '0',
+      data: 'a9059cbb000000000000000000000000422849B355039bC58F2780cc4854919fC9cfaF9400000000000000000000000000000000000000000000000000000000075bca00',
+    },
+    chainId: 314,
+  },
 ]
 
 const rawUnsignedLegacyTransaction = (params: any, chainId: number | undefined) => {
@@ -95,7 +104,6 @@ const rawUnsignedLegacyTransaction = (params: any, chainId: number | undefined) 
     unsignedTx = Buffer.from(rlp.encode(bufArrToArr(unsignedTx)))
 
     return unsignedTx
-
 };
 
 // an alternative verification method for legacy transactions, taken from obsidian
