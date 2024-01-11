@@ -128,7 +128,8 @@ uint16_t formatProtocol(const uint8_t *addressBytes,
 
     // f4 addresses contain actorID
     const uint16_t actorIdSize = (protocol == ADDRESS_PROTOCOL_DELEGATED) ? (addressSize - payloadSize - 1) : 0;
-    if (addressSize != payloadSize + 1 + actorIdSize) {
+    if (addressSize != payloadSize + 1 + actorIdSize
+        || payloadSize > ADDRESS_PROTOCOL_DELEGATED_MAX_SUBADDRESS_LEN) {
         return 0;
     }
     MEMCPY(payload_crc, addressBytes + 1 + actorIdSize, payloadSize);

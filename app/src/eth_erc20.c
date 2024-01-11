@@ -118,7 +118,7 @@ parser_error_t printERC20Value(const rlp_t *data, char *outVal, uint16_t outValL
 
 bool validateERC20(rlp_t data) {
     // Check that data start with ERC20 prefix
-    if (data.rlpLen != ERC20_DATA_LENGTH || memcmp(data.ptr, ERC20_TRANSFER_PREFIX, 4) != 0) {
+    if (data.ptr == NULL || data.rlpLen != ERC20_DATA_LENGTH || memcmp(data.ptr, ERC20_TRANSFER_PREFIX, 4) != 0) {
         return false;
     }
 
