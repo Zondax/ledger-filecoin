@@ -143,15 +143,14 @@ parser_error_t printValue(const struct CborValue *value, char *outVal,
     CborTag tag;
     CHECK_CBOR_MAP_ERR(cbor_value_get_tag(value, &tag))
     if (tag == TAG_CID) {
-      CHECK_CBOR_MAP_ERR(
-          cbor_value_copy_byte_string(value, buff, &buffLen, NULL /* next */))
+      CHECK_CBOR_MAP_ERR(cbor_value_copy_tag(value, buff, &buffLen, NULL /* next */))
       CHECK_APP_CANARY()
-      CHECK_PARSER_ERR(renderByteString(buff, buffLen, outVal, outValLen,
-                                        pageIdx, pageCount))
+      CHECK_PARSER_ERR(renderByteString(buff, buffLen, outVal, outValLen, pageIdx, pageCount))
       break;
     }
     return parser_unexpected_type;
   }
+
   default:
     snprintf(outVal, outValLen, "Type: %d", value->type);
   }
@@ -194,8 +193,7 @@ parser_error_t _printParam(const fil_base_tx_t *tx, uint8_t paramIdx,
                            parser_unexpected_type)
     // Not every ByteStringType must be interpreted as address. Depends on
     // method number and actor.
-    CHECK_PARSER_ERR(
-        printAddress(&tmpAddr, outVal, outValLen, pageIdx, pageCount));
+    CHECK_PARSER_ERR(printAddress(&tmpAddr, outVal, outValLen, pageIdx, pageCount));
     break;
   }
   case CborMapType:

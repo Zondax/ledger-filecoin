@@ -97,12 +97,13 @@ parser_error_t printAddress(const address_t *a, char *outVal,
   char outBuffer[84 + 16];
   MEMZERO(outBuffer, sizeof(outBuffer));
 
-  if (formatProtocol(a->buffer, a->len, (uint8_t *)outBuffer,
-                     sizeof(outBuffer)) == 0) {
+  const uint16_t addressLen = formatProtocol(a->buffer, a->len, (uint8_t *)outBuffer, sizeof(outBuffer));
+  if (addressLen == 0 || addressLen > sizeof(outBuffer)){
     return parser_invalid_address;
   }
 
-  pageString(outVal, outValLen, outBuffer, pageIdx, pageCount);
+
+  pageStringExt(outVal, outValLen, outBuffer, addressLen, pageIdx, pageCount);
   return parser_ok;
 }
 
@@ -301,7 +302,7 @@ parser_error_t parse_check_prefix(CborValue *value, const char *prefix,
   bool is_equal = 0;
   CHECK_CBOR_MAP_ERR(cbor_value_copy_text_string(value, copied, &len, NULL)) {
     char l[100] = {0};
-    snprintf(l, 100, "len: %d", len);
+    snprintf(l, 100, "len: %d", (uint16_t)len);
     zemu_log_stack(l);
   }
   if (len != prefix_len)

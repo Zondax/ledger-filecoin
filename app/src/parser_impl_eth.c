@@ -131,7 +131,7 @@ static parser_error_t readTxnType(parser_context_t *ctx, eth_tx_type_e *type) {
 }
 
 parser_error_t _readEth(parser_context_t *ctx, eth_tx_t *tx_obj) {
-
+    MEMZERO(&eth_tx_obj, sizeof(eth_tx_obj));
     CHECK_PARSER_ERR(readTxnType(ctx, &tx_obj->tx_type))
     // We expect a list with all the fields from the transaction
     rlp_t list = {0};

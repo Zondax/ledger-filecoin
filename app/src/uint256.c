@@ -514,6 +514,10 @@ static void reverseString(char *str, uint32_t length) {
 
 bool tostring128(uint128_t *number, uint32_t baseParam, char *out,
                  uint32_t outLength) {
+    if (number == NULL || out == NULL || outLength == 0) {
+        return false;
+    }
+
     uint128_t rDiv;
     uint128_t rMod;
     uint128_t base;
@@ -532,6 +536,9 @@ bool tostring128(uint128_t *number, uint32_t baseParam, char *out,
         divmod128(&rDiv, &base, &rDiv, &rMod);
         out[offset++] = HEXDIGITS[(uint8_t)LOWER(rMod)];
     } while (!zero128(&rDiv));
+    if (offset >= outLength) {
+        return false;
+    }
     out[offset] = '\0';
     reverseString(out, offset);
     return true;
@@ -539,6 +546,10 @@ bool tostring128(uint128_t *number, uint32_t baseParam, char *out,
 
 bool tostring256(uint256_t *number, uint32_t baseParam, char *out,
                  uint32_t outLength) {
+    if (number == NULL || out == NULL || outLength <= 1) {
+        return false;
+    }
+
     uint256_t rDiv;
     uint256_t rMod;
     uint256_t base;
