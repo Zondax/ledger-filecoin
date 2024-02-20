@@ -41,7 +41,6 @@ static uint32_t msg_counter = 0;
 void
 extractHDPath(uint32_t rx, uint32_t offset, uint32_t path_len)
 {
-
     if ((rx - offset) < sizeof(uint32_t) * path_len) {
         THROW(APDU_CODE_WRONG_LENGTH);
     }
@@ -383,7 +382,7 @@ handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
             break;
 
         default:
-            THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+            THROW(APDU_CODE_COMMAND_NOT_ALLOWED); 
             break;
     }
     CHECK_APP_CANARY()

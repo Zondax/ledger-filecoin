@@ -59,8 +59,8 @@ describe.each(models)('Multisig', function (m) {
 
       const pkResponse = await app.getAddressAndPubKey(PATH_TESTNET);
       console.log(pkResponse);
-      expect(pkResponse.return_code).toEqual(0x9000);
-      expect(pkResponse.error_message).toEqual("No errors");
+      expect(pkResponse.returnCode).toEqual(0x9000);
+      expect(pkResponse.errorMessage).toEqual("No errors");
 
       // do not wait here so we can get snapshots and interact with the app
       const signatureRequest = app.sign(PATH_TESTNET, txBlob);
@@ -72,13 +72,13 @@ describe.each(models)('Multisig', function (m) {
       let resp = await signatureRequest;
       console.log(resp, m.name, name)
 
-      expect(resp.return_code).toEqual(0x9000);
-      expect(resp.error_message).toEqual("No errors");
+      expect(resp.returnCode).toEqual(0x9000);
+      expect(resp.errorMessage).toEqual("No errors");
 
       // Verify signature
       const pk = Uint8Array.from(pkResponse.compressed_pk)
       const digest = getDigest(txBlob);
-      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signature_der));
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signatureDER));
       const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
       expect(signatureOk).toEqual(true);
     } finally {
