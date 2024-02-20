@@ -53,9 +53,9 @@ describe('Standard', function () {
 
       console.log(resp);
 
-      expect(resp.return_code).toEqual(0x9000);
-      expect(resp.error_message).toEqual("No errors");
-      expect(resp).toHaveProperty("test_mode");
+      expect(resp.returnCode).toEqual(0x9000);
+      expect(resp.errorMessage).toEqual("No errors");
+      expect(resp).toHaveProperty("testMode");
       expect(resp).toHaveProperty("major");
       expect(resp).toHaveProperty("minor");
       expect(resp).toHaveProperty("patch");
@@ -74,8 +74,8 @@ describe('Standard', function () {
 
       console.log(resp)
 
-      expect(resp.return_code).toEqual(0x9000);
-      expect(resp.error_message).toEqual("No errors");
+      expect(resp.returnCode).toEqual(0x9000);
+      expect(resp.errorMessage).toEqual("No errors");
 
       const expected_address_string = "f1mk3zcefvlgpay4f32c5vmruk5gqig6dumc7pz6q";
       const expected_pk = "0425d0dbeedb2053e690a58e9456363158836b1361f30dba0332f440558fa803d056042b50d0e70e4a2940428e82c7cea54259d65254aed4663e4d0cffd649f4fb";
@@ -103,8 +103,8 @@ describe('Standard', function () {
 
       const resp = await respRequest;
 
-      expect(resp.return_code).toEqual(0x9000);
-      expect(resp.error_message).toEqual("No errors");
+      expect(resp.returnCode).toEqual(0x9000);
+      expect(resp.errorMessage).toEqual("No errors");
 
       const expected_address_string = "f1mk3zcefvlgpay4f32c5vmruk5gqig6dumc7pz6q";
       const expected_pk = "0425d0dbeedb2053e690a58e9456363158836b1361f30dba0332f440558fa803d056042b50d0e70e4a2940428e82c7cea54259d65254aed4663e4d0cffd649f4fb";
@@ -129,8 +129,8 @@ describe('Standard', function () {
 
       const pkResponse = await app.getAddressAndPubKey(PATH);
       console.log(pkResponse);
-      expect(pkResponse.return_code).toEqual(0x9000);
-      expect(pkResponse.error_message).toEqual("No errors");
+      expect(pkResponse.returnCode).toEqual(0x9000);
+      expect(pkResponse.errorMessage).toEqual("No errors");
 
       // do not wait here..
       const signatureRequest = app.sign(PATH, txBlob);
@@ -142,13 +142,13 @@ describe('Standard', function () {
       let resp = await signatureRequest;
       console.log(resp);
 
-      expect(resp.return_code).toEqual(0x9000);
-      expect(resp.error_message).toEqual("No errors");
+      expect(resp.returnCode).toEqual(0x9000);
+      expect(resp.errorMessage).toEqual("No errors");
 
       // Verify signature
       const pk = Uint8Array.from(pkResponse.compressed_pk)
       const digest = getDigest(txBlob);
-      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signature_der));
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signatureDER));
       const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
       expect(signatureOk).toEqual(true);
     } finally {
@@ -170,15 +170,15 @@ describe('Standard', function () {
 
       const pkResponse = await app.getAddressAndPubKey(PATH);
       console.log(pkResponse);
-      expect(pkResponse.return_code).toEqual(0x9000);
-      expect(pkResponse.error_message).toEqual("No errors");
+      expect(pkResponse.returnCode).toEqual(0x9000);
+      expect(pkResponse.errorMessage).toEqual("No errors");
 
       // do not wait here..
       const signatureResponse = await app.sign(PATH, invalidMessage);
       console.log(signatureResponse);
 
-      expect(signatureResponse.return_code).toEqual(0x6984);
-      expect(signatureResponse.error_message).toEqual("Data is invalid : Unexpected data type");
+      expect(signatureResponse.returnCode).toEqual(0x6984);
+      expect(signatureResponse.errorMessage).toEqual("Data is invalid : Unexpected data type");
     } finally {
       await sim.close();
     }
@@ -200,8 +200,8 @@ describe('Standard', function () {
 
       const pkResponse = await app.getAddressAndPubKey(PATH);
       console.log(pkResponse);
-      expect(pkResponse.return_code).toEqual(0x9000);
-      expect(pkResponse.error_message).toEqual("No errors");
+      expect(pkResponse.returnCode).toEqual(0x9000);
+      expect(pkResponse.errorMessage).toEqual("No errors");
 
       // do not wait here so we can get snapshots and interact with the app
       const signatureRequest = app.sign(PATH, txBlob);
@@ -213,20 +213,19 @@ describe('Standard', function () {
       let resp = await signatureRequest;
       console.log(resp);
 
-      expect(resp.return_code).toEqual(0x9000);
-      expect(resp.error_message).toEqual("No errors");
+      expect(resp.returnCode).toEqual(0x9000);
+      expect(resp.errorMessage).toEqual("No errors");
 
       // Verify signature
       const pk = Uint8Array.from(pkResponse.compressed_pk)
       const digest = getDigest(txBlob);
-      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signature_der));
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signatureDER));
       const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
       expect(signatureOk).toEqual(true);
     } finally {
       await sim.close();
     }
   });
-
 
   test.concurrent.each(models)('sign proposal -- unsupported method', async function (m) {
     const sim = new Zemu(m.path);
@@ -241,15 +240,15 @@ describe('Standard', function () {
 
       const pkResponse = await app.getAddressAndPubKey(PATH);
       console.log(pkResponse);
-      expect(pkResponse.return_code).toEqual(0x9000);
-      expect(pkResponse.error_message).toEqual("No errors");
+      expect(pkResponse.returnCode).toEqual(0x9000);
+      expect(pkResponse.errorMessage).toEqual("No errors");
 
       // do not wait here..
       const signatureResponse = await app.sign(PATH, invalidMessage);
       console.log(signatureResponse);
 
-      expect(signatureResponse.return_code).toEqual(0x6984);
-      expect(signatureResponse.error_message).toEqual("Data is invalid : Unexpected data type");
+      expect(signatureResponse.returnCode).toEqual(0x6984);
+      expect(signatureResponse.errorMessage).toEqual("Data is invalid : Unexpected data type");
 
     } finally {
       await sim.close();
@@ -274,8 +273,8 @@ describe('Standard', function () {
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
       let resp = await signatureRequest;
       console.log(resp);
-      expect(resp.return_code).toEqual(0x6984);
-      expect(resp.error_message).toEqual("Data is invalid : Unexpected data type");
+      expect(resp.returnCode).toEqual(0x6984);
+      expect(resp.errorMessage).toEqual("Data is invalid : Unexpected data type");
     } finally {
       await sim.close();
     }
@@ -294,8 +293,8 @@ describe('Standard', function () {
 
       const pkResponse = await app.getAddressAndPubKey(PATH);
       console.log(pkResponse);
-      expect(pkResponse.return_code).toEqual(0x9000);
-      expect(pkResponse.error_message).toEqual("No errors");
+      expect(pkResponse.returnCode).toEqual(0x9000);
+      expect(pkResponse.errorMessage).toEqual("No errors");
 
       // do not wait here so we can get snapshots and interact with the app
       const signatureRequest = app.sign(PATH, txBlob);
@@ -307,13 +306,13 @@ describe('Standard', function () {
       let resp = await signatureRequest;
       console.log(resp);
 
-      expect(resp.return_code).toEqual(0x9000);
-      expect(resp.error_message).toEqual("No errors");
+      expect(resp.returnCode).toEqual(0x9000);
+      expect(resp.errorMessage).toEqual("No errors");
 
       // Verify signature
       const pk = Uint8Array.from(pkResponse.compressed_pk)
       const digest = getDigest(txBlob);
-      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signature_der));
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signatureDER));
       const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
       expect(signatureOk).toEqual(true);
     } finally {
@@ -334,8 +333,8 @@ describe('Standard', function () {
 
       const pkResponse = await app.getAddressAndPubKey(PATH);
       console.log(pkResponse);
-      expect(pkResponse.return_code).toEqual(0x9000);
-      expect(pkResponse.error_message).toEqual("No errors");
+      expect(pkResponse.returnCode).toEqual(0x9000);
+      expect(pkResponse.errorMessage).toEqual("No errors");
 
       // do not wait here..
       const signatureRequest = app.sign(PATH, txBlob);
@@ -346,13 +345,13 @@ describe('Standard', function () {
       let resp = await signatureRequest;
       console.log(resp);
 
-      expect(resp.return_code).toEqual(0x9000);
-      expect(resp.error_message).toEqual("No errors");
+      expect(resp.returnCode).toEqual(0x9000);
+      expect(resp.errorMessage).toEqual("No errors");
 
       // Verify signature
       const pk = Uint8Array.from(pkResponse.compressed_pk)
       const digest = getDigest(txBlob);
-      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signature_der));
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signatureDER));
       const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
       expect(signatureOk).toEqual(true);
     } finally {
@@ -376,8 +375,8 @@ describe('Standard', function () {
 
       const pkResponse = await app.getAddressAndPubKey(PATH);
       console.log(pkResponse);
-      expect(pkResponse.return_code).toEqual(0x9000);
-      expect(pkResponse.error_message).toEqual("No errors");
+      expect(pkResponse.returnCode).toEqual(0x9000);
+      expect(pkResponse.errorMessage).toEqual("No errors");
 
       // do not wait here..
       const signatureRequest = app.signRemoveDataCap(PATH, txBlob);
@@ -388,13 +387,13 @@ describe('Standard', function () {
       let resp = await signatureRequest;
       console.log(resp);
 
-      expect(resp.return_code).toEqual(0x9000);
-      expect(resp.error_message).toEqual("No errors");
+      expect(resp.returnCode).toEqual(0x9000);
+      expect(resp.errorMessage).toEqual("No errors");
 
       // Verify signature
       const pk = Uint8Array.from(pkResponse.compressed_pk)
       const digest = getDigest(txBlob);
-      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signature_der));
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signatureDER));
       const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
       expect(signatureOk).toEqual(true);
     } finally {
@@ -425,11 +424,10 @@ describe('Standard', function () {
 
       const txBlob = Buffer.from("8bd82a582500017112209fe4ccc6de16724f3a30c7e8f254f3c6471986acb1f8d8cf8e96ce2ad7dbe7fb1a012a174ff555011eaf1c8a4bbfeeb0870b1745b1f57503470b71165501dfe49184d46adc8f89d44638beb45f78fcad259071636c69656e745f6465616c5f6c6162656c1a05f5e1001a0bebc2004044001ea7ad40", 'hex')
 
-
       const pkResponse = await app.getAddressAndPubKey(PATH);
       console.log(pkResponse);
-      expect(pkResponse.return_code).toEqual(0x9000);
-      expect(pkResponse.error_message).toEqual("No errors");
+      expect(pkResponse.returnCode).toEqual(0x9000);
+      expect(pkResponse.errorMessage).toEqual("No errors");
 
       // do not wait here..
       const signatureRequest = app.signClientDeal(PATH, txBlob);
@@ -440,13 +438,13 @@ describe('Standard', function () {
       let resp = await signatureRequest;
       console.log(resp);
 
-      expect(resp.return_code).toEqual(0x9000);
-      expect(resp.error_message).toEqual("No errors");
+      expect(resp.returnCode).toEqual(0x9000);
+      expect(resp.errorMessage).toEqual("No errors");
 
       // Verify signature
       const pk = Uint8Array.from(pkResponse.compressed_pk)
       const digest = getDigest(txBlob);
-      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signature_der));
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signatureDER));
       const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
       expect(signatureOk).toEqual(true);
     } finally {
@@ -475,8 +473,8 @@ describe('Standard', function () {
 
       const pkResponse = await app.getAddressAndPubKey(PATH);
       console.log(pkResponse);
-      expect(pkResponse.return_code).toEqual(0x9000);
-      expect(pkResponse.error_message).toEqual("No errors");
+      expect(pkResponse.returnCode).toEqual(0x9000);
+      expect(pkResponse.errorMessage).toEqual("No errors");
 
       // do not wait here..
       const signatureRequest = app.signRawBytes(PATH, txBlob);
@@ -487,14 +485,14 @@ describe('Standard', function () {
       let resp = await signatureRequest;
       console.log(resp);
 
-      expect(resp.return_code).toEqual(0x9000);
-      expect(resp.error_message).toEqual("No errors");
+      expect(resp.returnCode).toEqual(0x9000);
+      expect(resp.errorMessage).toEqual("No errors");
 
       // Verify signature
       const pk = Uint8Array.from(pkResponse.compressed_pk);
       const digest = getDigest(txBlob);
 
-      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signature_der));
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signatureDER));
       const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
       expect(signatureOk).toEqual(true);
     } finally {
