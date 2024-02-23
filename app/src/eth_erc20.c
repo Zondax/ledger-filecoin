@@ -19,7 +19,6 @@
 
 // Prefix is calculated as: keccak256("transfer(address,uint256)") = 0xa9059cbb
 const uint8_t ERC20_TRANSFER_PREFIX[] = {0xa9, 0x05, 0x9c, 0xbb};
-#define ERC20_DATA_LENGTH 68 // 4 + 32 + 32
 #define ADDRESS_CONTRACT_LENGTH 20
 #define DECIMAL_BASE 10
 const erc20_tokens_t supportedTokens[] = {

@@ -29,6 +29,7 @@
 #include "zxformat.h"
 #include <stdio.h>
 #include <zxmacros.h>
+#include "parser_invoke_evm.h"
 
 #if defined(TARGET_NANOX) || defined(TARGET_NANOS2)
 // For some reason NanoX requires this function
@@ -219,6 +220,12 @@ parser_error_t _getItemFil(const parser_context_t *ctx, uint8_t displayIdx,
 
     if (displayIdx >= numItems) {
         return parser_no_data;
+    }
+
+    // If the transaction is InvokeEVM and it's a transfer from ERC20 token
+    if (isInvokeEVM_ERC20Transfer(&parser_tx_obj.base_tx)) {
+        // return printInvokeEVM();
+        return parser_ok;
     }
 
     uint8_t adjustedIndex = displayIdx;

@@ -720,5 +720,27 @@
             "params": ["d0e30db0"]
         },
         "encoded_tx_hex": "8a0056040a6c297aed654816dc5d211c956de816ba923475d255011eaf1c8a4bbfeeb0870b1745b1f57503470b71160849000de0b6b3a76400001a00da3a90440001899344000185751ae525aa154544d0e30db0"
+    },
+    {
+        "description": "Invoke EVM Transfer ERC20",
+        "encoded_tx": "notAvailable",
+        "valid": true,
+        "error": "",
+        "testnet": true,
+        "message": {
+            "version": 0,
+            "to0x": "0x6c297aed654816dc5d211c956de816ba923475d2",
+            "to": "t410fnquxv3lfjalnyxjbdskw32awxkjdi5osydrtwqi",
+            "from": "t1d2xrzcslx7xlbbylc5c3d5lvandqw4iwl6epxba",
+            "nonce": 7,
+            "value": "1000000000000000000",
+            "gaslimit": 14301840,
+            "gasfeecap": "100755",
+            "gaspremium": "99701",
+            "method": 3844450837,
+            "numparams": 1,
+            "params": ["d0e30db0"]
+        },
+        "encoded_tx_hex": "8a0056040a6c297aed654816dc5d211c956de816ba923475d255011eaf1c8a4bbfeeb0870b1745b1f57503470b71160849000de0b6b3a76400001a00da3a90440001899344000185751ae525aa155844a9059cbb0000000000000000000000006A3F21D2A92A15752912974BBBD5B1469A72B2610000000000000000000000000000000000000000000009780178FBA9D2BD7400"
     }
 ]

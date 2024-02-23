@@ -1,5 +1,5 @@
 /*******************************************************************************
-*  (c) 2018 - 2023 Zondax AG
+*  (c) 2018 - 2024 Zondax AG
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -16,27 +16,20 @@
 #pragma once
 
 #include <stdint.h>
+#include "parser_txdef.h"
 #include "parser_common.h"
-#include "rlp.h"
-#include "coin.h"
-
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define ERC20_DATA_LENGTH 68 // 4 + 32 + 32
-#define MAX_SYMBOL_LEN 10
-typedef struct {
-    uint8_t address[ETH_ADDR_LEN];
-    char symbol[MAX_SYMBOL_LEN];
-    uint8_t decimals;
-} erc20_tokens_t;
+bool isInvokeEVM_ERC20Transfer(const fil_base_tx_t *txObj);
+parser_error_t getNumItemsInvokeEVM(uint8_t *numItems);
 
-bool validateERC20(rlp_t data);
-parser_error_t getERC20Token(const rlp_t *data, char tokenSymbol[MAX_SYMBOL_LEN], uint8_t *decimals);
-parser_error_t printERC20Value(const rlp_t *data, char *outVal, uint16_t outValLen,
-                               uint8_t pageIdx, uint8_t *pageCount);
+parser_error_t printInvokeEVM(const fil_base_tx_t *txObj,
+                            uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
+                            char *outVal, uint16_t outValLen, uint8_t pageIdx,
+                            uint8_t *pageCount);
 
 #ifdef __cplusplus
 }
