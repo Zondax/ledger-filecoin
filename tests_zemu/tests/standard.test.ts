@@ -84,7 +84,10 @@ describe('Standard', function () {
       const expected_pk = "0425d0dbeedb2053e690a58e9456363158836b1361f30dba0332f440558fa803d056042b50d0e70e4a2940428e82c7cea54259d65254aed4663e4d0cffd649f4fb";
 
       expect(resp.addrString).toEqual(expected_address_string);
-      expect(resp.compressed_pk.toString('hex')).toEqual(expected_pk);
+      
+      const compressedPk = resp.compressedPk ?? Buffer.alloc(0)
+      expect(compressedPk.toString('hex')).toEqual(expected_pk)
+
 
     } finally {
       await sim.close();
@@ -118,7 +121,10 @@ describe('Standard', function () {
       const expected_pk = "0425d0dbeedb2053e690a58e9456363158836b1361f30dba0332f440558fa803d056042b50d0e70e4a2940428e82c7cea54259d65254aed4663e4d0cffd649f4fb";
 
       expect(resp.addrString).toEqual(expected_address_string);
-      expect(resp.compressed_pk.toString('hex')).toEqual(expected_pk);
+      
+      const compressedPk = resp.compressedPk ?? Buffer.alloc(0)
+      expect(compressedPk.toString('hex')).toEqual(expected_pk)
+
     } finally {
       await sim.close();
     }
@@ -154,9 +160,9 @@ describe('Standard', function () {
       expect(resp.errorMessage).toEqual("No errors");
 
       // Verify signature
-      const pk = Uint8Array.from(pkResponse.compressed_pk)
+      const pk = Uint8Array.from(pkResponse.compressedPk ?? [])
       const digest = getDigest(txBlob);
-      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signatureDER));
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signatureDER ?? []));
       const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
       expect(signatureOk).toEqual(true);
     } finally {
@@ -225,9 +231,9 @@ describe('Standard', function () {
       expect(resp.errorMessage).toEqual("No errors");
 
       // Verify signature
-      const pk = Uint8Array.from(pkResponse.compressed_pk)
+      const pk = Uint8Array.from(pkResponse.compressedPk ?? [])
       const digest = getDigest(txBlob);
-      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signatureDER));
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signatureDER ?? []));
       const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
       expect(signatureOk).toEqual(true);
     } finally {
@@ -318,9 +324,9 @@ describe('Standard', function () {
       expect(resp.errorMessage).toEqual("No errors");
 
       // Verify signature
-      const pk = Uint8Array.from(pkResponse.compressed_pk)
+      const pk = Uint8Array.from(pkResponse.compressedPk ?? [])
       const digest = getDigest(txBlob);
-      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signatureDER));
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signatureDER ?? []));
       const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
       expect(signatureOk).toEqual(true);
     } finally {
@@ -357,9 +363,9 @@ describe('Standard', function () {
       expect(resp.errorMessage).toEqual("No errors");
 
       // Verify signature
-      const pk = Uint8Array.from(pkResponse.compressed_pk)
+      const pk = Uint8Array.from(pkResponse.compressedPk ?? [])
       const digest = getDigest(txBlob);
-      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signatureDER));
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signatureDER ?? []));
       const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
       expect(signatureOk).toEqual(true);
     } finally {
@@ -399,9 +405,9 @@ describe('Standard', function () {
       expect(resp.errorMessage).toEqual("No errors");
 
       // Verify signature
-      const pk = Uint8Array.from(pkResponse.compressed_pk)
+      const pk = Uint8Array.from(pkResponse.compressedPk ?? [])
       const digest = getDigest(txBlob);
-      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signatureDER));
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signatureDER ?? []));
       const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
       expect(signatureOk).toEqual(true);
     } finally {
@@ -450,9 +456,9 @@ describe('Standard', function () {
       expect(resp.errorMessage).toEqual("No errors");
 
       // Verify signature
-      const pk = Uint8Array.from(pkResponse.compressed_pk)
+      const pk = Uint8Array.from(pkResponse.compressedPk ?? [])
       const digest = getDigest(txBlob);
-      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signatureDER));
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signatureDER ?? []));
       const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
       expect(signatureOk).toEqual(true);
     } finally {
@@ -497,10 +503,10 @@ describe('Standard', function () {
       expect(resp.errorMessage).toEqual("No errors");
 
       // Verify signature
-      const pk = Uint8Array.from(pkResponse.compressed_pk);
+      const pk = Uint8Array.from(pkResponse.compressedPk ?? []);
       const digest = getDigest(txBlob);
 
-      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signatureDER));
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signatureDER ?? []));
       const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
       expect(signatureOk).toEqual(true);
     } finally {

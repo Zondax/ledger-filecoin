@@ -76,9 +76,9 @@ describe.each(models)('Multisig', function (m) {
       expect(resp.errorMessage).toEqual("No errors");
 
       // Verify signature
-      const pk = Uint8Array.from(pkResponse.compressed_pk)
+      const pk = Uint8Array.from(pkResponse.compressedPk?? [])
       const digest = getDigest(txBlob);
-      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signatureDER));
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signatureDER ?? []));
       const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
       expect(signatureOk).toEqual(true);
     } finally {
