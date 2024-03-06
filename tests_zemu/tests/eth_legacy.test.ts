@@ -131,14 +131,11 @@ describe.each(models)('ETH_Legacy', function (m) {
       await sim.start({ ...defaultOptions, model: m.name })
       const app = new FilecoinApp(sim.getTransport());
 
-      // Put the app in expert mode
-      await sim.toggleExpertMode();
-
-      const testcase = `${m.prefix.toLowerCase()}-eth-sign-${data.name}`
-
-      const currentScreen = sim.snapshot()
       const msg = rawUnsignedLegacyTransaction(data.op, data.chainId);
       console.log("tx: ", msg.toString('hex'))
+
+      // Put the app in expert mode
+      await sim.toggleExpertMode();
 
       const respReq = app.signETHTransaction(ETH_PATH, msg.toString('hex'), null);
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
@@ -173,4 +170,26 @@ describe.each(models)('ETH_Legacy', function (m) {
       await sim.close()
     }
   })
+
+
+  test.concurrent.each(models)('blind sign normal mode', async function (m) {
+    const sim = new Zemu(m.path);
+    try {
+      await sim.start({...defaultOptions, model: m.name,});
+      const app = new FilecoinApp(sim.getTransport());
+
+      const msg = rawUnsignedLegacyTransaction(SIGN_TEST_DATA[0].op, SIGN_TEST_DATA[0].chainId);
+      console.log("tx: ", msg.toString('hex'))
+      const ethTx = Buffer.from("eb80856d6e2edc00832dc6c094df073477da421520cf03af261b782282c304ad6684abcdef008082013a8080", 'hex')
+
+      // Try to sign using ETH path in normal mode --> Expect rejection
+      const respError = await app.signETHTransaction(ETH_PATH, ethTx.toString('hex'), null);
+
+    } catch (error) {
+      // Ledger ETH JS package must throw an exception instead of returning an error code
+
+    } finally {
+      await sim.close();
+    }
+  });
 })
