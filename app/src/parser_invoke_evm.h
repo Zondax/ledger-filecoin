@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2019 Zondax GmbH
+*  (c) 2018 - 2024 Zondax AG
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -14,11 +14,25 @@
 *  limitations under the License.
 ********************************************************************************/
 #pragma once
-#include <fstream>
-#include <vector>
-#include <json/json.h>
 
-std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool expertMode);
-std::vector<std::string> ClientDealGenerateExpectedUIOutput(const Json::Value &json, bool expertMode);
-std::vector<std::string> EVMGenerateExpectedUIOutput(const Json::Value &json, bool expertMode);
-std::vector<std::string> InvokeContractGenerateExpectedUIOutput(const Json::Value &json, bool expertMode);
+#include <stdint.h>
+#include "parser_txdef.h"
+#include "parser_common.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define INVOKE_EVM_METHOD 3844450837
+
+bool isInvokeEVM_ERC20Transfer(const fil_base_tx_t *txObj);
+parser_error_t getNumItemsInvokeEVM(uint8_t *numItems, const fil_base_tx_t *txObj);
+
+parser_error_t printInvokeEVM(const fil_base_tx_t *txObj,
+                            uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
+                            char *outVal, uint16_t outValLen, uint8_t pageIdx,
+                            uint8_t *pageCount);
+
+#ifdef __cplusplus
+}
+#endif

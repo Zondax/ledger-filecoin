@@ -22,6 +22,7 @@
 #include "parser_txdef.h"
 #include "zxformat.h"
 #include <zxmacros.h>
+#include "parser_invoke_evm.h"
 
 parser_tx_t parser_tx_obj;
 
@@ -409,19 +410,27 @@ parser_error_t _validateTx(__Z_UNUSED const parser_context_t *c,
 uint8_t _getNumItems(__Z_UNUSED const parser_context_t *c,
                      const fil_base_tx_t *v) {
 
-  uint8_t itemCount = 6;
+    uint8_t itemCount = 6;
 
-  if (app_mode_expert()) {
-    itemCount = 8;
-  }
+    // Items for InvokeEVM + ERC20 transfer
+    if (isInvokeEVM_ERC20Transfer(v)) {
+        if (getNumItemsInvokeEVM(&itemCount, v) != parser_ok) {
+            return 0;
+        }
+        return itemCount;
+    }
 
-  // For f4 addresses dispaly f4 and 0x addresses
-  if (v->from.buffer[0] == ADDRESS_PROTOCOL_DELEGATED) {
-    itemCount++;
-  }
-  if (v->to.buffer[0] == ADDRESS_PROTOCOL_DELEGATED) {
-    itemCount++;
-  }
+    if (app_mode_expert()) {
+        itemCount = 8;
+    }
 
-  return itemCount + v->numparams;
+    // For f4 addresses dispaly f4 and 0x addresses
+    if (v->from.buffer[0] == ADDRESS_PROTOCOL_DELEGATED) {
+        itemCount++;
+    }
+    if (v->to.buffer[0] == ADDRESS_PROTOCOL_DELEGATED) {
+        itemCount++;
+    }
+
+    return itemCount + v->numparams;
 }

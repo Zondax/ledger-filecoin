@@ -119,7 +119,7 @@ parser_error_t printEthAddress(const address_t *a, char *outVal,
     uint64_t actorId = 0;
     const uint16_t actorIdSize = decompressLEB128(a->buffer + 1, a->len - 1, &actorId);
     const uint16_t payloadSize = a->len - 1 - actorIdSize;
-    if (payloadSize != 20) {
+    if (payloadSize != ETH_ADDRESS_LEN) {
         return parser_unexpected_error;
     }
 
@@ -193,6 +193,9 @@ parser_error_t parser_printBigIntFixedPoint(const bigint_t *b, char *outVal,
   }
 
   fpstr_to_str(overlapped.output, sizeof(overlapped.output), bignum, decimals);
+  if (z_str3join(overlapped.output, sizeof(overlapped.output), "FIL ", NULL) != zxerr_ok) {
+    return parser_unexpected_error;
+  }
   pageString(outVal, outValLen, overlapped.output, pageIdx, pageCount);
   return parser_ok;
 }

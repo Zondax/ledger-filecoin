@@ -97,7 +97,7 @@ std::vector<testcase_t> GetJsonTestCases(const std::string &jsonFile, Generator 
 }
 
 void check_testcase(const testcase_t &tc, bool a, parser_context_t ctx) {
-    app_mode_set_expert(true);
+    app_mode_set_expert(a);
 
     parser_error_t err;
 
@@ -180,12 +180,20 @@ class VerifyClientDeal: public JsonTests{};
 
 class VerifyEvmTransactions: public JsonTests{};
 
+class VerifyInvokeContract: public JsonTests{};
+
 GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(VerifyTestVectors);
 
 INSTANTIATE_TEST_SUITE_P(
         EVMTransactions,
         VerifyEvmTransactions,
         ::testing::ValuesIn(GetJsonTestCases("testvectors/evm.json", EVMGenerateExpectedUIOutput)), VerifyTestVectors::PrintToStringParamName()
+);
+
+INSTANTIATE_TEST_SUITE_P(
+        InvokeContract,
+        VerifyInvokeContract,
+        ::testing::ValuesIn(GetJsonTestCases("testvectors/invoke_contracts.json", InvokeContractGenerateExpectedUIOutput)), VerifyTestVectors::PrintToStringParamName()
 );
 
 INSTANTIATE_TEST_SUITE_P(
@@ -200,10 +208,12 @@ INSTANTIATE_TEST_SUITE_P(
         ::testing::ValuesIn(GetJsonTestCases("testvectors/client_deal.json", ClientDealGenerateExpectedUIOutput)), VerifyTestVectors::PrintToStringParamName()
 );
 
-TEST_P(VerifyTestVectors, CheckUIOutput_CurrentTX_Normal) { check_testcase_fil_base(GetParam(), false); }
+TEST_P(VerifyTestVectors, CheckUIOutput_CurrentTX_Normal) { check_testcase_fil_base(GetParam(), true); }
 
 TEST_P(VerifyTestVectors, CheckUIOutput_CurrentTX_Expert) { check_testcase_fil_base(GetParam(), true); }
 
 TEST_P(VerifyClientDeal, ClientDealCheckUIOutput_CurrentTX_Expert) { check_testcase_client_deal(GetParam(), true); }
 
 TEST_P(VerifyEvmTransactions, CheckUIOutput_CurrentTX_Normal) { check_testcase_fil_eth(GetParam(), false); }
+
+TEST_P(VerifyInvokeContract, CheckUIOutput_CurrentTX_Normal) { check_testcase_fil_base(GetParam(), true); }
