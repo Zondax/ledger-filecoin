@@ -1,0 +1,85 @@
+[
+    {
+        "description": "Invoke EVM Transfer ERC20",
+        "encoded_tx": "notAvailable",
+        "valid": true,
+        "error": "",
+        "testnet": false,
+        "message": {
+            "version": 0,
+            "to0x": "0x1969ed81bf20d13b9c235619aa3e4c903b6fc02b",
+            "from": "f137sjdbgunloi7couiy4l5nc7pd6k2jmq32vizpy",
+            "nonce": 1,
+            "value": "SFT 357.518646808779096064",
+            "gaslimit": 1000000,
+            "gasfeecap": "0000000000000002500",
+            "gaspremium": "0000000000000002500",
+            "method": "ERC20 Transfer"
+        },
+        "encoded_tx_hex": "8A0056040AC5EA96DD365983CFEC90E72B6A2DAC9562F458BA5501DFE49184D46ADC8F89D44638BEB45F78FCAD259001401A000F4240430009C4430009C41AE525AA155847A9059CBB0000000000000000000000001969ED81BF20D13B9C235619AA3E4C903B6FC02B0000000000000000000000000000000000000000000000136191630EBF9F000082013A"
+    },
+    {
+        "description": "Invoke EVM Transfer ERC20",
+        "encoded_tx": "notAvailable",
+        "valid": true,
+        "error": "",
+        "testnet": false,
+        "message": {
+            "version": 0,
+            "to0x": "0x578c692a59f3a980d2b88ab3e48a4c26e7b01eb1",
+            "from": "f01369483",
+            "nonce": 1,
+            "value": "iFIL 258.700501816708235264",
+            "gaslimit": 1000000,
+            "gasfeecap": "0000000000000002500",
+            "gaspremium": "0000000000000002500",
+            "method": "ERC20 Transfer"
+        },
+        "encoded_tx_hex": "8A0056040A690908F7FA93AFC040CFBD9FE1DDD2C2668AA0E044008BCB5301401A000F4240430009C4430009C41AE525AA155844A9059CBB000000000000000000000000578C692A59F3A980D2B88AB3E48A4C26E7B01EB100000000000000000000000000000000000000000000000E0630CFBF90310000"
+    },
+    {
+        "description": "Invoke EVM Transfer ERC20",
+        "encoded_tx": "notAvailable",
+        "valid": true,
+        "error": "",
+        "testnet": false,
+        "message": {
+            "version": 0,
+            "to0x": "0x2ca0949685c99337b74b99d9f4fabfa6d6be7979",
+            "from": "f137sjdbgunloi7couiy4l5nc7pd6k2jmq32vizpy",
+            "nonce": 1,
+            "value": "?? 224970872185567215616",
+            "gaslimit": 1000000,
+            "gasfeecap": "0000000000000002500",
+            "gaspremium": "0000000000000002500",
+            "method": "ERC20 Transfer",
+            "Contract": "0x00c6a1694b0fd298423f8797c39d28f595a9eef9",
+            "ContractF4": "f410faddkc2klb7jjqqr7q6l4hhji6wk2t3xzutk27gy"
+        },
+        "encoded_tx_hex": "8A0056040A00C6A1694B0FD298423F8797C39D28F595A9EEF95501DFE49184D46ADC8F89D44638BEB45F78FCAD259001401A000F4240430009C4430009C41AE525AA155847A9059CBB0000000000000000000000002CA0949685C99337B74B99D9F4FABFA6D6BE797900000000000000000000000000000000000000000000000C3219184E568A800082013A"
+    },
+    {
+        "description": "Invoke EVM Transfer ERC20",
+        "encoded_tx": "notAvailable",
+        "valid": true,
+        "error": "",
+        "testnet": false,
+        "message": {
+            "version": 0,
+            "to0x": "0xff00000000000000000000000000000000bc614e",
+            "to": "f012345678",
+            "from": "f01369483",
+            "nonce": 1,
+            "value": "iFIL 258.700501816708235264",
+            "gaslimit": 1000000,
+            "gasfeecap": "0000000000000002500",
+            "gaspremium": "0000000000000002500",
+            "method": "ERC20 Transfer"
+        },
+        "encoded_tx_hex": "8A0056040A690908F7FA93AFC040CFBD9FE1DDD2C2668AA0E044008BCB5301401A000F4240430009C4430009C41AE525AA155844A9059CBB000000000000000000000000ff00000000000000000000000000000000BC614E00000000000000000000000000000000000000000000000E0630CFBF90310000"
+    }
+]
+
+
+
+

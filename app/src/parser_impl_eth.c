@@ -165,7 +165,7 @@ parser_error_t _readEth(parser_context_t *ctx, eth_tx_t *tx_obj) {
 }
 
 parser_error_t _validateTxEth() {
-    if (!validateERC20(eth_tx_obj.legacy.data) && !app_mode_expert()) {
+    if (!validateERC20(&eth_tx_obj) && !app_mode_expert()) {
         return parser_unsupported_tx;
     }
 
@@ -186,25 +186,26 @@ static parser_error_t printERC20(uint8_t displayIdx, char *outKey, uint16_t outK
     const eth_base_t *legacy = &eth_tx_obj.legacy;
     char tokenSymbol[10] = {0};
     uint8_t decimals = 0;
-    CHECK_PARSER_ERR(getERC20Token(&eth_tx_obj.legacy.data, tokenSymbol, &decimals));
+    CHECK_PARSER_ERR(getERC20Token(&eth_tx_obj, tokenSymbol, &decimals));
     bool hideContract  = (memcmp(tokenSymbol, "?? ", 3) != 0);
 
     displayIdx += (displayIdx && hideContract) ? 1 : 0;
     switch (displayIdx) {
         case 0:
             snprintf(outKey, outKeyLen, "To");
-            CHECK_PARSER_ERR(printEVMAddress(&legacy->to, outVal, outValLen, pageIdx, pageCount));
+            rlp_t to = {.kind = RLP_KIND_STRING, .ptr = (eth_tx_obj.legacy.data.ptr + 4 + 12), .rlpLen = ETH_ADDRESS_LEN};
+            CHECK_PARSER_ERR(printEVMAddress(&to, outVal, outValLen, pageIdx, pageCount));
             break;
 
         case 1:
             snprintf(outKey, outKeyLen, "Contract");
-            rlp_t contractAddress = {.kind = RLP_KIND_STRING, .ptr = (legacy->data.ptr + 4 + 12), .rlpLen = 20};
+            rlp_t contractAddress = {.kind = RLP_KIND_STRING, .ptr = eth_tx_obj.legacy.to.ptr, .rlpLen = ETH_ADDRESS_LEN};
             CHECK_PARSER_ERR(printEVMAddress(&contractAddress, outVal, outValLen, pageIdx, pageCount));
             break;
 
         case 2:
             snprintf(outKey, outKeyLen, "Value");
-            CHECK_PARSER_ERR(printERC20Value(&legacy->data, outVal, outValLen, pageIdx, pageCount));
+            CHECK_PARSER_ERR(printERC20Value(&eth_tx_obj, outVal, outValLen, pageIdx, pageCount));
             break;
 
         case 3:
@@ -235,7 +236,7 @@ parser_error_t _getItemEth(const parser_context_t *ctx, uint8_t displayIdx,
                            uint8_t *pageCount) {
 
     // At the moment, clear signing is available only for ERC20
-    if (validateERC20(eth_tx_obj.legacy.data)) {
+    if (validateERC20(&eth_tx_obj)) {
         return printERC20(displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
     }
 
@@ -277,10 +278,10 @@ parser_error_t _getNumItemsEth(uint8_t* numItems) {
     }
     // Verify that tx is ERC20
 
-    if (validateERC20(eth_tx_obj.legacy.data)) {
+    if (validateERC20(&eth_tx_obj)) {
         char tokenSymbol[10] = {0};
         uint8_t decimals = 0;
-        CHECK_PARSER_ERR(getERC20Token(&eth_tx_obj.legacy.data, tokenSymbol, &decimals));
+        CHECK_PARSER_ERR(getERC20Token(&eth_tx_obj, tokenSymbol, &decimals));
         // If token is not recognized, print value address
         *numItems  = (memcmp(tokenSymbol, "?? ", 3) != 0) ? 5 : 6;
         return parser_ok;

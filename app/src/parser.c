@@ -29,6 +29,7 @@
 #include "zxformat.h"
 #include <stdio.h>
 #include <zxmacros.h>
+#include "parser_invoke_evm.h"
 
 #if defined(TARGET_NANOX) || defined(TARGET_NANOS2)
 // For some reason NanoX requires this function
@@ -221,6 +222,11 @@ parser_error_t _getItemFil(const parser_context_t *ctx, uint8_t displayIdx,
         return parser_no_data;
     }
 
+    // If the transaction is InvokeEVM and it's a transfer from ERC20 token
+    if (isInvokeEVM_ERC20Transfer(&parser_tx_obj.base_tx)) {
+        return printInvokeEVM(&parser_tx_obj.base_tx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
+    }
+
     uint8_t adjustedIndex = displayIdx;
     if (parser_tx_obj.base_tx.to.buffer[0] != ADDRESS_PROTOCOL_DELEGATED) {
         adjustedIndex++;
@@ -257,14 +263,23 @@ parser_error_t _getItemFil(const parser_context_t *ctx, uint8_t displayIdx,
                                                 outValLen, pageIdx, pageCount,
                                                 COIN_AMOUNT_DECIMAL_PLACES);
 
-        case 5:
+        case 5: {
+            char tmpBuffer[80] = {0};
             snprintf(outKey, outKeyLen, "Gas Limit ");
-            if (int64_to_str(outVal, outValLen, parser_tx_obj.base_tx.gaslimit) !=
-                NULL) {
-            return parser_unexpected_error;
+            if (int64_to_str(tmpBuffer, sizeof(tmpBuffer), parser_tx_obj.base_tx.gaslimit) != NULL) {
+                return parser_unexpected_error;
             }
-            *pageCount = 1;
+
+            if (insertDecimalPoint(tmpBuffer, sizeof(tmpBuffer), COIN_AMOUNT_DECIMAL_PLACES) != zxerr_ok) {
+                return parser_unexpected_error;
+            }
+            if (z_str3join(tmpBuffer, sizeof(tmpBuffer), "FIL ", NULL) != zxerr_ok) {
+                return parser_unexpected_error;
+            }
+
+            pageString(outVal, outValLen, tmpBuffer, pageIdx, pageCount);
             return parser_ok;
+        }
 
         case 6:
             snprintf(outKey, outKeyLen, "Gas Fee Cap ");

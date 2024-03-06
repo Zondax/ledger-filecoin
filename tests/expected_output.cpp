@@ -83,6 +83,7 @@ std::string FormatAmount(const std::string &amount) {
     char buffer[500];
     MEMZERO(buffer, sizeof(buffer));
     fpstr_to_str(buffer, sizeof(buffer), amount.c_str(), COIN_AMOUNT_DECIMAL_PLACES);
+    z_str3join(buffer, sizeof(buffer), "FIL ", NULL);
     return std::string(buffer);
 }
 
@@ -144,7 +145,7 @@ std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool)
     addTo(answer, "{} | Value : {}", idx, FormatAmount(value));
     idx++;
 
-    addTo(answer, "{} | Gas Limit : {}", idx, gaslimit);
+    addTo(answer, "{} | Gas Limit : {}", idx, FormatAmount(gaslimit));
     idx++;
 
     addTo(answer, "{} | Gas Fee Cap : {}", idx, FormatAmount(gasfeecap));
@@ -273,6 +274,95 @@ std::vector<std::string> EVMGenerateExpectedUIOutput(const Json::Value &json, bo
 
     idx++;
     addTo(answer, "{} | Gas limit: {}", idx, gasLimit);
+
+    return answer;
+}
+
+std::vector<std::string> InvokeContractGenerateExpectedUIOutput(const Json::Value &json, bool expertMode) {
+        auto answer = std::vector<std::string>();
+
+    bool valid = true;
+    if (json.isMember("value")) {
+        valid = json["valid"].asBool();
+    }
+
+    if (!valid) {
+        answer.emplace_back("Test case is not valid!");
+        return answer;
+    }
+
+    ///
+
+    auto message = json["message"];
+    auto from0x = message["from0x"].asString();
+    auto from = message["from"].asString();
+
+    auto to0x = message["to0x"].asString();
+    auto to = message["to"].asString();
+    auto nonce = message["nonce"].asUInt64();
+
+    auto method = message["method"].asString();
+    auto value = message["value"].asString();
+    auto contract = message["Contract"].asString();
+    auto contractF4 = message["ContractF4"].asString();
+
+
+    auto gaslimit = message["gaslimit"].asString();
+    auto gaspremium = message["gaspremium"].asString();
+    auto gasfeecap = message["gasfeecap"].asString();
+
+    ///
+
+    uint8_t idx = 0;
+    addTo(answer, "{} | Method: {}", idx, method);
+    idx++;
+
+    if (!from0x.empty()) {
+        auto fromAddress0x = FormatAddress(idx, "From", from0x);
+        answer.insert(answer.end(), fromAddress0x.begin(), fromAddress0x.end());
+        idx++;
+    }
+
+    auto fromAddress = FormatAddress(idx, "From", from);
+    answer.insert(answer.end(), fromAddress.begin(), fromAddress.end());
+    idx++;
+
+    auto toF0 = FormatAddress(idx, "To", to0x);
+    answer.insert(answer.end(), toF0.begin(), toF0.end());
+    idx++;
+
+    if (!to.empty()) {
+        auto toAddress = FormatAddress(idx, "To", to);
+        answer.insert(answer.end(), toAddress.begin(), toAddress.end());
+        idx++;
+    }
+
+    if (value.starts_with("??")) {
+        auto contractAddress = FormatEthAddress(idx, "Contract", contract);
+        answer.insert(answer.end(), contractAddress.begin(), contractAddress.end());
+        idx++;
+
+        auto contractAddressF4 = FormatEthAddress(idx, "Contract", contractF4);
+        answer.insert(answer.end(), contractAddressF4.begin(), contractAddressF4.end());
+        idx++;
+    }
+
+    addTo(answer, "{} | Value: {}", idx, value);
+    idx++;
+
+    addTo(answer, "{} | Gas Limit: {}", idx, FormatAmount(gaslimit));
+    idx++;
+
+    if (expertMode) {
+        addTo(answer, "{} | Gas Fee Cap: {}", idx, FormatAmount(gasfeecap));
+        idx++;
+
+        addTo(answer, "{} | Gas Premium: {}", idx, FormatAmount(gaspremium));
+        idx++;
+
+        addTo(answer, "{} | Nonce: {}", idx, nonce);
+        idx++;
+    }
 
     return answer;
 }
