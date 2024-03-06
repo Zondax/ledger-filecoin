@@ -501,4 +501,44 @@ describe('Standard', function () {
       await sim.close();
     }
   });
+
+  test.concurrent.each(models)('InvokeEVM_ERC20Transfer', async function (m) {
+    const sim = new Zemu(m.path);
+    try {
+      await sim.start({...defaultOptions, model: m.name,});
+      const app = new FilecoinApp(sim.getTransport());
+
+      const txBlob = Buffer.from(
+        "8A0056040A690908F7FA93AFC040CFBD9FE1DDD2C2668AA0E044008BCB5301401A000F4240430009C4430009C41AE525AA155844A9059CBB000000000000000000000000578C692A59F3A980D2B88AB3E48A4C26E7B01EB100000000000000000000000000000000000000000000000E0630CFBF90310000",
+        "hex",
+      );
+
+      const pkResponse = await app.getAddressAndPubKey(PATH);
+      console.log(pkResponse);
+      expect(pkResponse.return_code).toEqual(0x9000);
+      expect(pkResponse.error_message).toEqual("No errors");
+
+      // do not wait here..
+      const signatureRequest = app.sign(PATH, txBlob);
+      // Wait until we are not in the main menu
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
+
+      await sim.compareSnapshotsAndApprove(".", `${m.prefix.toLowerCase()}-sign_erc20_transfer`)
+
+      let resp = await signatureRequest;
+      console.log(resp);
+
+      expect(resp.return_code).toEqual(0x9000);
+      expect(resp.error_message).toEqual("No errors");
+
+      // Verify signature
+      const pk = Uint8Array.from(pkResponse.compressed_pk)
+      const digest = getDigest(txBlob);
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signature_der));
+      const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
+      expect(signatureOk).toEqual(true);
+    } finally {
+      await sim.close();
+    }
+  });
 })
