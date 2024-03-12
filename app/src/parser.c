@@ -31,7 +31,7 @@
 #include <zxmacros.h>
 #include "parser_invoke_evm.h"
 
-#if defined(TARGET_NANOX) || defined(TARGET_NANOS2)
+#if defined(TARGET_NANOX) || defined(TARGET_NANOS2) || defined(TARGET_STAX)
 // For some reason NanoX requires this function
 void __assert_fail(__Z_UNUSED const char *assertion,
                    __Z_UNUSED const char *file, __Z_UNUSED unsigned int line,

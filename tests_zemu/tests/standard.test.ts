@@ -14,7 +14,8 @@
  *  limitations under the License.
  ******************************************************************************* */
 
-import Zemu from "@zondax/zemu";
+import Zemu, { zondaxMainmenuNavigation, ButtonKind } from '@zondax/zemu'
+
 // @ts-ignore
 import FilecoinApp from "@zondax/ledger-filecoin";
 import {getDigest} from "./utils";
@@ -37,8 +38,9 @@ describe('Standard', function () {
   test.concurrent.each(models)('main menu', async function (m) {
     const sim = new Zemu(m.path);
     try {
-      await sim.start({...defaultOptions, model: m.name,});
-      await sim.navigateAndCompareSnapshots('.', `${m.prefix.toLowerCase()}-mainmenu`, [1, 0, 0, 4, -5])
+        await sim.start({ ...defaultOptions, model: m.name })
+        const nav = zondaxMainmenuNavigation(m.name, [1, 0, 0, 4, -5])
+        await sim.navigateAndCompareSnapshots('.', `${m.prefix.toLowerCase()}-mainmenu`, nav.schedule)
     } finally {
       await sim.close();
     }
@@ -91,7 +93,12 @@ describe('Standard', function () {
   test.concurrent.each(models)('show address', async function (m) {
     const sim = new Zemu(m.path);
     try {
-      await sim.start({...defaultOptions, model: m.name,});
+      await sim.start({
+            ...defaultOptions,
+            model: m.name,
+            approveKeyword: m.name === 'stax' ? 'QR' : '',
+            approveAction: ButtonKind.ApproveTapButton,
+      })
       const app = new FilecoinApp(sim.getTransport());
 
       // Derivation path. First 3 items are automatically hardened!
