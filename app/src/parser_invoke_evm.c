@@ -140,14 +140,14 @@ parser_error_t printInvokeEVM(const fil_base_tx_t *txObj,
         }
 
          case 5: {
-             snprintf(outKey, outKeyLen, "Contract");
+             snprintf(outKey, outKeyLen, "Token Contract");
              rlp_t contractAddress = {.kind = RLP_KIND_STRING, .ptr = (txObj->to.buffer + 2), .rlpLen = ETH_ADDRESS_LEN};
              CHECK_PARSER_ERR(printEVMAddress(&contractAddress, outVal, outValLen, pageIdx, pageCount));
              break;
          }
 
          case 6:
-             snprintf(outKey, outKeyLen, "Contract");
+             snprintf(outKey, outKeyLen, "Token Contract");
              CHECK_PARSER_ERR(printAddress(&txObj->to, outVal, outValLen, pageIdx, pageCount));
              break;
 

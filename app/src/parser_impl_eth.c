@@ -198,7 +198,7 @@ static parser_error_t printERC20(uint8_t displayIdx, char *outKey, uint16_t outK
             break;
 
         case 1:
-            snprintf(outKey, outKeyLen, "Contract");
+            snprintf(outKey, outKeyLen, "Token Contract");
             rlp_t contractAddress = {.kind = RLP_KIND_STRING, .ptr = eth_tx_obj.legacy.to.ptr, .rlpLen = ETH_ADDRESS_LEN};
             CHECK_PARSER_ERR(printEVMAddress(&contractAddress, outVal, outValLen, pageIdx, pageCount));
             break;

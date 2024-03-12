@@ -259,7 +259,7 @@ std::vector<std::string> EVMGenerateExpectedUIOutput(const Json::Value &json, bo
 
     if (value.starts_with("??")) {
         idx++;
-        auto contractAddress = FormatEthAddress(idx, "Contract", contract);
+        auto contractAddress = FormatEthAddress(idx, "Token Contract", contract);
         answer.insert(answer.end(), contractAddress.begin(), contractAddress.end());
     }
 
@@ -338,11 +338,11 @@ std::vector<std::string> InvokeContractGenerateExpectedUIOutput(const Json::Valu
     }
 
     if (value.starts_with("??")) {
-        auto contractAddress = FormatEthAddress(idx, "Contract", contract);
+        auto contractAddress = FormatEthAddress(idx, "Token Contract", contract);
         answer.insert(answer.end(), contractAddress.begin(), contractAddress.end());
         idx++;
 
-        auto contractAddressF4 = FormatEthAddress(idx, "Contract", contractF4);
+        auto contractAddressF4 = FormatEthAddress(idx, "Token Contract", contractF4);
         answer.insert(answer.end(), contractAddressF4.begin(), contractAddressF4.end());
         idx++;
     }
