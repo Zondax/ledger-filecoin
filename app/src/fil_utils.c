@@ -87,6 +87,34 @@ parser_error_t readAddress(address_t *address, CborValue *value) {
   return parser_ok;
 }
 
+parser_error_t print0xToF0(const uint8_t *ethAddress, uint8_t ethAddressLen, char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
+    if (ethAddress == NULL || outVal == NULL || pageCount == NULL || ethAddressLen != ETH_ADDRESS_LEN) {
+        return parser_unexpected_error;
+    }
+
+    if (*ethAddress != 0xFF) {
+        return parser_unexpected_error;
+    }
+
+    uint64_t id = 0;
+    for (uint8_t i = 1; i < ETH_ADDRESS_LEN; i++) {
+        id = (id << 8) + *(ethAddress + i);
+    }
+    if (id > UINT64_MAX) {
+        return parser_value_out_of_range;
+    }
+
+    char to_f0[30] = {0};
+    to_f0[0] = isTestnet() ? 't' : 'f';
+    to_f0[1] = '0';
+    if (uint64_to_str(to_f0 + 2, sizeof(to_f0) - 2, id) != NULL) {
+        return parser_unexpected_error;
+    }
+    pageStringExt(outVal, outValLen, to_f0, strnlen(to_f0, sizeof(to_f0)), pageIdx, pageCount);
+
+    return parser_ok;
+}
+
 parser_error_t printAddress(const address_t *a, char *outVal,
                             uint16_t outValLen, uint8_t pageIdx,
                             uint8_t *pageCount) {
@@ -119,7 +147,7 @@ parser_error_t printEthAddress(const address_t *a, char *outVal,
     uint64_t actorId = 0;
     const uint16_t actorIdSize = decompressLEB128(a->buffer + 1, a->len - 1, &actorId);
     const uint16_t payloadSize = a->len - 1 - actorIdSize;
-    if (payloadSize != 20) {
+    if (payloadSize != ETH_ADDRESS_LEN) {
         return parser_unexpected_error;
     }
 
@@ -193,6 +221,9 @@ parser_error_t parser_printBigIntFixedPoint(const bigint_t *b, char *outVal,
   }
 
   fpstr_to_str(overlapped.output, sizeof(overlapped.output), bignum, decimals);
+  if (z_str3join(overlapped.output, sizeof(overlapped.output), "FIL ", NULL) != zxerr_ok) {
+    return parser_unexpected_error;
+  }
   pageString(outVal, outValLen, overlapped.output, pageIdx, pageCount);
   return parser_ok;
 }

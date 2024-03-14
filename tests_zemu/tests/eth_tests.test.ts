@@ -14,7 +14,7 @@
  *  limitations under the License.
  ******************************************************************************* */
 
-import Zemu from "@zondax/zemu";
+import Zemu, {ButtonKind} from "@zondax/zemu";
 // @ts-ignore
 import FilecoinApp from "@zondax/ledger-filecoin";
 import { models, defaultOptions, ETH_PATH, EXPECTED_ETH_ADDRESS, EXPECTED_ETH_PK} from './common'
@@ -165,7 +165,12 @@ describe('EthAddress', function () {
   test.concurrent.each(models)('show address', async function (m) {
     const sim = new Zemu(m.path);
     try {
-      await sim.start({...defaultOptions, model: m.name,});
+      await sim.start({
+            ...defaultOptions,
+            model: m.name,
+            approveKeyword: m.name === 'stax' ? 'QR' : '',
+            approveAction: ButtonKind.ApproveTapButton,
+      })
       const app = new FilecoinApp(sim.getTransport());
 
       const resp = app.getETHAddress(ETH_PATH, true)

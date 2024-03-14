@@ -107,6 +107,7 @@ file(GLOB_RECURSE LIB_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/rlp.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/uint256.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/eth_erc20.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser_invoke_evm.c
         )
 
 add_library(app_lib STATIC
