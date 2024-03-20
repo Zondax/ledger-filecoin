@@ -585,7 +585,9 @@
         "testnet": false,
         "message": {
             "version": 0,
+            "to0x": "0xd4224267c4ab4a184bd1aa066b3361e70efbbeaf",
             "to": "f410f2qreez6evnfbqs6rvidgwm3b44hpxpvpeuoddga",
+            "from0x": "0xd4224267c4ab4a184bd1aa066b3361e70efbbeaf",
             "from": "f410f2qreez6evnfbqs6rvidgwm3b44hpxpvpeuoddga",
             "nonce": 1,
             "value": "100000",
@@ -685,6 +687,7 @@
         "testnet": true,
         "message": {
             "version": 0,
+            "to0x": "0xea71f8dc046717b8b14c18005186d03495a0e492",
             "to": "t410f5jy7rxaem4l3rmkmdaafdbwqgsk2bzess6wu5qq",
             "from": "t1d2xrzcslx7xlbbylc5c3d5lvandqw4iwl6epxba",
             "nonce": 3,
@@ -704,6 +707,7 @@
         "testnet": true,
         "message": {
             "version": 0,
+            "to0x": "0x6c297aed654816dc5d211c956de816ba923475d2",
             "to": "t410fnquxv3lfjalnyxjbdskw32awxkjdi5osydrtwqi",
             "from": "t1d2xrzcslx7xlbbylc5c3d5lvandqw4iwl6epxba",
             "nonce": 8,

@@ -1,4 +1,7 @@
 [app]
-build_directory = "./app"
+build_directory = "./app/"
 sdk = "C"
-devices = ["nanos", "nanox", "nanos+"]
+devices = ["nanos", "nanox", "nanos+", "stax"]
+
+[tests]
+unit_directory = "./tests/"

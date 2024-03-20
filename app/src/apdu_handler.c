@@ -341,7 +341,7 @@ handleGetAddrEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
     if (with_code != P2_CHAINCODE && with_code != P2_NO_CHAINCODE)
         THROW(APDU_CODE_INVALIDP1P2);
 
-    chain_code = with_code;
+    fil_chain_code = with_code;
 
     zxerr_t zxerr = app_fill_eth_address();
     if (zxerr != zxerr_ok) {

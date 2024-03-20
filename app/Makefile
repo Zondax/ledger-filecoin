@@ -50,7 +50,6 @@ endif
 
 APP_LOAD_PARAMS =  --curve secp256k1 $(COMMON_LOAD_PARAMS) --path $(APPPATH)
 
-NANOS_STACK_SIZE := 1950
 include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.devices
 
 $(info TARGET_NAME  = [$(TARGET_NAME)])
@@ -61,8 +60,6 @@ $(error ICONNAME is not set)
 endif
 
 include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.platform
-
-DEFINES       += UNUSED\(x\)=\(void\)x
 
 # App specific
 DEFINES += CBOR_NO_FLOATING_POINT

@@ -22,6 +22,7 @@
 #include "parser_txdef.h"
 #include "zxformat.h"
 #include <zxmacros.h>
+#include "parser_invoke_evm.h"
 
 parser_tx_t parser_tx_obj;
 
@@ -38,8 +39,8 @@ const char *parser_getErrorDescription(parser_error_t err) {
     return "display_idx_out_of_range";
   case parser_display_page_out_of_range:
     return "display_page_out_of_range";
-  case parser_unexepected_error:
-    return "Unexepected internal error";
+  case parser_unexpected_error:
+    return "Unexpected internal error";
     // cbor
   case parser_cbor_unexpected:
     return "unexpected CBOR error";
@@ -143,15 +144,14 @@ parser_error_t printValue(const struct CborValue *value, char *outVal,
     CborTag tag;
     CHECK_CBOR_MAP_ERR(cbor_value_get_tag(value, &tag))
     if (tag == TAG_CID) {
-      CHECK_CBOR_MAP_ERR(
-          cbor_value_copy_byte_string(value, buff, &buffLen, NULL /* next */))
+      CHECK_CBOR_MAP_ERR(cbor_value_copy_tag(value, buff, &buffLen, NULL /* next */))
       CHECK_APP_CANARY()
-      CHECK_PARSER_ERR(renderByteString(buff, buffLen, outVal, outValLen,
-                                        pageIdx, pageCount))
+      CHECK_PARSER_ERR(renderByteString(buff, buffLen, outVal, outValLen, pageIdx, pageCount))
       break;
     }
     return parser_unexpected_type;
   }
+
   default:
     snprintf(outVal, outValLen, "Type: %d", value->type);
   }
@@ -194,8 +194,7 @@ parser_error_t _printParam(const fil_base_tx_t *tx, uint8_t paramIdx,
                            parser_unexpected_type)
     // Not every ByteStringType must be interpreted as address. Depends on
     // method number and actor.
-    CHECK_PARSER_ERR(
-        printAddress(&tmpAddr, outVal, outValLen, pageIdx, pageCount));
+    CHECK_PARSER_ERR(printAddress(&tmpAddr, outVal, outValLen, pageIdx, pageCount));
     break;
   }
   case CborMapType:
@@ -411,11 +410,27 @@ parser_error_t _validateTx(__Z_UNUSED const parser_context_t *c,
 uint8_t _getNumItems(__Z_UNUSED const parser_context_t *c,
                      const fil_base_tx_t *v) {
 
-  uint8_t itemCount = 6;
+    uint8_t itemCount = 6;
 
-  if (app_mode_expert()) {
-    itemCount = 8;
-  }
+    // Items for InvokeEVM + ERC20 transfer
+    if (isInvokeEVM_ERC20Transfer(v)) {
+        if (getNumItemsInvokeEVM(&itemCount, v) != parser_ok) {
+            return 0;
+        }
+        return itemCount;
+    }
 
-  return itemCount + v->numparams;
+    if (app_mode_expert()) {
+        itemCount = 8;
+    }
+
+    // For f4 addresses dispaly f4 and 0x addresses
+    if (v->from.buffer[0] == ADDRESS_PROTOCOL_DELEGATED) {
+        itemCount++;
+    }
+    if (v->to.buffer[0] == ADDRESS_PROTOCOL_DELEGATED) {
+        itemCount++;
+    }
+
+    return itemCount + v->numparams;
 }

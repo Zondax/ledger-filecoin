@@ -16,6 +16,10 @@
 #include "eth_utils.h"
 #include <stdio.h>
 #include <zxmacros.h>
+#include "zxerror.h"
+#include "rlp.h"
+#include "zxformat.h"
+#include "coin.h"
 
 #define CHECK_RLP_LEN(BUFF_LEN, RLP_LEN)                                       \
     {                                                                          \
@@ -48,11 +52,9 @@ saturating_add_u32(uint32_t a, uint32_t b)
     return num;
 }
 
-int
-be_bytes_to_u64(const uint8_t *bytes, uint8_t len, uint64_t *num)
-{
+parser_error_t be_bytes_to_u64(const uint8_t *bytes, uint8_t len, uint64_t *num) {
     if (bytes == NULL || num == NULL || len == 0 || len > sizeof(uint64_t)) {
-        return -1;
+        return parser_unexpected_error;
     }
 
     *num = 0;
@@ -69,7 +71,7 @@ be_bytes_to_u64(const uint8_t *bytes, uint8_t len, uint64_t *num)
         num_ptr++;
     }
 
-    return 0;
+    return parser_ok;
 }
 
 rlp_error_t
@@ -132,76 +134,37 @@ get_tx_rlp_len(const uint8_t *buffer, uint32_t len, uint64_t *read, uint64_t *to
     return rlp_invalid_data;
 }
 
-rlp_error_t
-parse_rlp_item(const uint8_t *data,
-               uint32_t dataLen,
-               uint32_t *read,
-               uint32_t *item_len)
-{
-    *item_len = 0;
-    *read = 0;
-
-    if (dataLen == 0)
-        return rlp_no_data;
-
-    uint8_t marker = data[0];
-
-    if (marker <= 0x7F) {
-        // first case item is just one byte
-        *read = 0;
-        *item_len = 1;
-        return rlp_ok;
-
-    } else if (marker <= 0xB7) {
-        // second case it is a string with a fixed length
-        uint8_t len = marker - 0x80;
-        *read = 1;
-        CHECK_RLP_LEN(dataLen, len + 1)
-        *item_len = len;
-        return rlp_ok;
-
-    } else if (marker <= 0xBF) {
-        // For strings longer than 55 bytes the length is encoded
-        // differently.
-        // The number of bytes that compose the length is encoded
-        // in the marker
-        // And then the length is just the number BE encoded
-        uint8_t num_bytes = marker - 0xB7;
-        uint64_t len = 0;
-        if (be_bytes_to_u64(&data[1], num_bytes, &len) != 0)
-            return rlp_invalid_data;
-
-        CHECK_RLP_LEN(dataLen, len + 1 + num_bytes)
-        *read = 1 + num_bytes;
-        *item_len = len;
-
-        return rlp_ok;
-
-    } else if (marker <= 0xF7) {
-        // simple list
-        uint8_t len = marker - 0xC0;
-
-        *read = 1;
-        CHECK_RLP_LEN(dataLen, len + 1)
-        *item_len = len;
-        return rlp_ok;
+parser_error_t printRLPNumber(const rlp_t *num, char* outVal, uint16_t outValLen,
+                              uint8_t pageIdx, uint8_t *pageCount) {
+    if (num == NULL || outVal == NULL || pageCount == NULL) {
+        return parser_unexpected_error;
     }
 
-    // marker >= 0xF8
-    // For lists longer than 55 bytes the length is encoded
-    // differently.
-    // The number of bytes that compose the length is encoded
-    // in the marker
-    // And then the length is just the number BE encoded
-    uint8_t num_bytes = marker - 0xF7;
-    uint64_t len = 0;
-    if (be_bytes_to_u64(&data[1], num_bytes, &len) != 0)
-        return rlp_invalid_data;
+    uint256_t tmpUint256 = {0};
+    char tmpBuffer[100] = {0};
 
-    CHECK_RLP_LEN(dataLen, len + 1 + num_bytes)
+    CHECK_PARSER_ERR(rlp_readUInt256(num, &tmpUint256));
+    if (!tostring256(&tmpUint256, 10, tmpBuffer, sizeof(tmpBuffer))) {
+        return parser_unexpected_error;
+    }
+    pageString(outVal, outValLen, tmpBuffer, pageIdx, pageCount);
 
-    *read = 1 + num_bytes;
-    *item_len = len;
+    return parser_ok;
+}
 
-    return rlp_ok;
+parser_error_t printEVMAddress(const rlp_t *address, char* outVal, uint16_t outValLen,
+                               uint8_t pageIdx, uint8_t *pageCount) {
+    if (address == NULL || address->ptr == NULL || outVal == NULL || pageCount == NULL || address->rlpLen != ETH_ADDR_LEN) {
+        return parser_unexpected_error;
+    }
+
+    char tmpBuffer[67] = {0};
+    tmpBuffer[0] = '0';
+    tmpBuffer[1] = 'x';
+    if (!array_to_hexstr(tmpBuffer + 2, sizeof(tmpBuffer) - 2, address->ptr, address->rlpLen)) {
+        return parser_unexpected_error;
+    }
+    pageString(outVal, outValLen, tmpBuffer, pageIdx, pageCount);
+
+    return parser_ok;
 }

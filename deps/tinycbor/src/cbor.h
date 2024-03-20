@@ -443,6 +443,13 @@ CBOR_INLINE_API CborError cbor_value_copy_byte_string(const CborValue *value, ui
     return _cbor_value_copy_string(value, buffer, buflen, next);
 }
 
+CBOR_INLINE_API CborError cbor_value_copy_tag(const CborValue *value, uint8_t *buffer,
+                                                      size_t *buflen, CborValue *next)
+{
+    assert(cbor_value_is_tag(value));
+    return _cbor_value_copy_string(value, buffer, buflen, next);
+}
+
 CBOR_INLINE_API CborError cbor_value_dup_text_string(const CborValue *value, char **buffer,
                                                      size_t *buflen, CborValue *next)
 {
