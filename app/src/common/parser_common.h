@@ -70,6 +70,8 @@ typedef enum {
   parser_invalid_deal_duration,
   parser_invalid_prefix,
   parser_invalid_datacap_prefix,
+  // Customs
+  parser_expert_mode_required,
 } parser_error_t;
 
 // Define the three types

@@ -108,6 +108,9 @@ __Z_INLINE void app_reply_address() {
 }
 
 __Z_INLINE void app_reply_error() {
+// Not used but we need to define this function
+#if 0
     set_code(G_io_apdu_buffer, 0, APDU_CODE_DATA_INVALID);
     io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
+#endif
 }

@@ -99,6 +99,8 @@ const char *parser_getErrorDescription(parser_error_t err) {
     return "Invalid raw-bytes prefix";
   case parser_invalid_datacap_prefix:
     return "Invalid datacap prefix";
+  case parser_expert_mode_required:
+    return "ExpertModeRequired";
   default:
     return "Unrecognized error code";
   }
@@ -223,14 +225,6 @@ parser_error_t _printParam(const fil_base_tx_t *tx, uint8_t paramIdx,
   return parser_ok;
 }
 
-parser_error_t checkMethod(uint64_t methodValue) {
-  if (methodValue <= MAX_SUPPORT_METHOD) {
-    return parser_ok;
-  }
-
-  return parser_unexpected_method;
-}
-
 __Z_INLINE parser_error_t readMethod(fil_base_tx_t *tx, CborValue *value) {
 
   uint64_t methodValue;
@@ -240,8 +234,6 @@ __Z_INLINE parser_error_t readMethod(fil_base_tx_t *tx, CborValue *value) {
 
   tx->numparams = 0;
   MEMZERO(tx->params, sizeof(tx->params));
-
-  CHECK_PARSER_ERR(checkMethod(methodValue))
 
   // This area reads the entire params byte string (if present) into the
   // txn->params and sets txn->numparams to the number of params within cbor
