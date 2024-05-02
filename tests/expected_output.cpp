@@ -157,13 +157,16 @@ std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool)
     addTo(answer, "{} | Nonce : {}", idx, nonce);
     idx++;
 
-    if (method != 0) {
-        addTo(answer, "{} | Method : {}", idx, method);
-        idx++;
-    } else {
+    // Transfer method
+    if (method == 0) {
         addTo(answer, "{} | Method : Transfer", idx, method);
-        idx++;
+    // Invoke EVM method
+    } else if (method == 3844450837) {
+        addTo(answer, "{} | Method : Invoke EVM", idx, method);
+    } else {
+        addTo(answer, "{} | Method : {}", idx, method);
     }
+    idx++;
 
     int paramIdx = 1;
     for(auto value : params) {

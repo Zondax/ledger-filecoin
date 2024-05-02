@@ -31,6 +31,8 @@
 #include <zxmacros.h>
 #include "parser_invoke_evm.h"
 
+#define TRANSFER_METHOD 0
+
 #if defined(TARGET_NANOX) || defined(TARGET_NANOS2) || defined(TARGET_STAX)
 // For some reason NanoX requires this function
 void __assert_fail(__Z_UNUSED const char *assertion,
@@ -189,15 +191,23 @@ static parser_error_t printMethod(char *outKey, uint16_t outKeyLen,
   snprintf(outKey, outKeyLen, "Method ");
   *pageCount = 1;
 
-  CHECK_PARSER_ERR(checkMethod(parser_tx_obj.base_tx.method));
-  if (parser_tx_obj.base_tx.method == 0) {
-    snprintf(outVal, outValLen, "Transfer ");
-  } else {
-    char buffer[100];
-    MEMZERO(buffer, sizeof(buffer));
-    fpuint64_to_str(buffer, sizeof(buffer), parser_tx_obj.base_tx.method, 0);
-    pageString(outVal, outValLen, buffer, pageIdx, pageCount);
+  switch (parser_tx_obj.base_tx.method) {
+    case TRANSFER_METHOD:
+      snprintf(outVal, outValLen, "Transfer ");
+      break;
+    case INVOKE_EVM_METHOD:
+      snprintf(outVal, outValLen, "Invoke EVM ");
+      break;
+
+    default: {
+      char buffer[100];
+      MEMZERO(buffer, sizeof(buffer));
+      fpuint64_to_str(buffer, sizeof(buffer), parser_tx_obj.base_tx.method, 0);
+      pageString(outVal, outValLen, buffer, pageIdx, pageCount);
+      break;
+    }
   }
+
   return parser_ok;
 }
 
@@ -225,6 +235,11 @@ parser_error_t _getItemFil(const parser_context_t *ctx, uint8_t displayIdx,
     // If the transaction is InvokeEVM and it's a transfer from ERC20 token
     if (isInvokeEVM_ERC20Transfer(&parser_tx_obj.base_tx)) {
         return printInvokeEVM(&parser_tx_obj.base_tx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
+    }
+
+    // For InvokeEVM methods, expert mode is required
+    if (parser_tx_obj.base_tx.method == INVOKE_EVM_METHOD && !app_mode_expert()) {
+      return parser_expert_mode_required;
     }
 
     uint8_t adjustedIndex = displayIdx;
