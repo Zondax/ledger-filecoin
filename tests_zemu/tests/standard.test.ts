@@ -14,13 +14,14 @@
  *  limitations under the License.
  ******************************************************************************* */
 
-import Zemu, { zondaxMainmenuNavigation, ButtonKind } from '@zondax/zemu'
+import Zemu, { zondaxMainmenuNavigation, ButtonKind, TouchNavigation, ClickNavigation } from '@zondax/zemu'
 
 // @ts-ignore
 import FilecoinApp from "@zondax/ledger-filecoin";
 import {getDigest} from "./utils";
 import * as secp256k1 from "secp256k1";
 import { models, defaultOptions, PATH } from './common'
+import { IButton } from '@zondax/zemu/dist/types';
 
 jest.setTimeout(180000)
 
@@ -531,6 +532,73 @@ describe('Standard', function () {
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
       await sim.compareSnapshotsAndApprove(".", `${m.prefix.toLowerCase()}-sign_erc20_transfer`)
+
+      let resp = await signatureRequest;
+      console.log(resp);
+
+      expect(resp.return_code).toEqual(0x9000);
+      expect(resp.error_message).toEqual("No errors");
+
+      // Verify signature
+      const pk = Uint8Array.from(pkResponse.compressed_pk)
+      const digest = getDigest(txBlob);
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signature_der));
+      const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
+      expect(signatureOk).toEqual(true);
+    } finally {
+      await sim.close();
+    }
+  });
+
+  test.concurrent.each(models)('InvokeEVM', async function (m) {
+    const sim = new Zemu(m.path);
+    try {
+      await sim.start({...defaultOptions, model: m.name,});
+      const app = new FilecoinApp(sim.getTransport());
+
+      const txBlob = Buffer.from(
+        "8A0056040AEA71F8DC046717B8B14C18005186D03495A0E49255011EAF1C8A4BBFEEB0870B1745B1F57503470B71160349000DE0B6B3A76400001A0022F6F34400018A9D440001867F1AE525AA1540",
+        "hex",
+      );
+
+      const pkResponse = await app.getAddressAndPubKey(PATH);
+      console.log(pkResponse);
+      expect(pkResponse.return_code).toEqual(0x9000);
+      expect(pkResponse.error_message).toEqual("No errors");
+
+      const signNonExpert = await app.sign(PATH, txBlob);
+      console.log(signNonExpert);
+      expect(signNonExpert.return_code).toEqual(0x6984)
+      expect(signNonExpert.error_message).toEqual("Data is invalid : ExpertModeRequired");
+
+      await Zemu.sleep(500);
+
+      // Wait until we are not in the main menu
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
+      let nav = undefined;
+      if (m.name === 'stax') {
+        const okButton: IButton = {
+          x: 200,
+          y: 540,
+          delay: 0.25,
+        };
+        nav = new TouchNavigation([
+          ButtonKind.ConfirmYesButton,
+        ]);
+        nav.schedule[0].button = okButton;
+      } else {
+        nav = new ClickNavigation([1, 0]);
+      }
+      await sim.navigate('.', `${m.prefix.toLowerCase()}-invoke_evm`, nav.schedule);
+
+
+      await sim.toggleExpertMode();
+
+      // // do not wait here..
+      const signatureRequest = app.sign(PATH, txBlob);
+      // // Wait until we are not in the main menu
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
+      await sim.compareSnapshotsAndApprove(".", `${m.prefix.toLowerCase()}-invoke_evm`, true, 2)
 
       let resp = await signatureRequest;
       console.log(resp);
