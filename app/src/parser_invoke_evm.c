@@ -20,7 +20,6 @@
 #include "app_mode.h"
 #include "eth_utils.h"
 
-#define INVOKE_EVM_METHOD 3844450837
 #define F4_ETH_ADDRESS_IDENTIFIER 0x040A
 
 parser_error_t getNumItemsInvokeEVM(uint8_t *numItems, const fil_base_tx_t *txObj) {
