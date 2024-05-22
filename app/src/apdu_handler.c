@@ -341,7 +341,7 @@ handleGetAddrEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
     if (with_code != P2_CHAINCODE && with_code != P2_NO_CHAINCODE)
         THROW(APDU_CODE_INVALIDP1P2);
 
-    chain_code = with_code;
+    fil_chain_code = with_code;
 
     zxerr_t zxerr = app_fill_eth_address();
     if (zxerr != zxerr_ok) {
@@ -368,17 +368,17 @@ handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
     const uint8_t instruction = G_io_apdu_buffer[OFFSET_INS];
     switch (instruction) {
         case INS_SIGN_SECP256K1:
-            ZEMU_LOGF(50, "HandleSignFil")
+            ZEMU_LOGF(50, "HandleSignFil\n")
             tx_context_fil();
             break;
 
         case INS_SIGN_DATACAP:
-            ZEMU_LOGF(50, "HandleSignDatacap")
+            ZEMU_LOGF(50, "HandleSignDatacap\n")
             tx_context_datacap();
             break;
 
         case INS_CLIENT_DEAL:
-            ZEMU_LOGF(50, "HandleSignClientDeal")
+            ZEMU_LOGF(50, "HandleSignClientDeal\n")
             tx_context_client_deal();
             break;
 
@@ -391,10 +391,17 @@ handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
     const char *error_msg = tx_parse();
     CHECK_APP_CANARY()
 
+
+
     if (error_msg != NULL) {
         const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
         MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
         *tx += (error_msg_length);
+
+        // Check if expert mode is needed
+        if (error_msg_length == 18 && strcmp(error_msg, "ExpertModeRequired") == 0) {
+            view_custom_error_show("Expert Mode", "Required");
+        }
         THROW(APDU_CODE_DATA_INVALID);
     }
 

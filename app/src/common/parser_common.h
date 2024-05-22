@@ -37,7 +37,7 @@ typedef enum {
   parser_init_context_empty,
   parser_display_idx_out_of_range,
   parser_display_page_out_of_range,
-  parser_unexepected_error,
+  parser_unexpected_error,
   // Cbor
   parser_cbor_unexpected,
   parser_cbor_unexpected_EOF,
@@ -70,6 +70,8 @@ typedef enum {
   parser_invalid_deal_duration,
   parser_invalid_prefix,
   parser_invalid_datacap_prefix,
+  // Customs
+  parser_expert_mode_required,
 } parser_error_t;
 
 // Define the three types

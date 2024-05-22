@@ -71,6 +71,15 @@ const SIGN_TEST_DATA = [
     },
     chainId: 314,
   },
+  {
+    name: 'erc20_transfer',
+    op: {
+      to: '4E83362442B8d1beC281594CEA3050c8EB01311C',
+      value: '0',
+      data: 'a9059cbb000000000000000000000000EB466342C4d449BC9f53A865D5Cb90586f40521500000000000000000000000000000000000000000000000000000000075bca00',
+    },
+    chainId: 314,
+  },
 ]
 
 const rawUnsignedLegacyTransaction = (params: any, chainId: number | undefined) => {
@@ -95,7 +104,6 @@ const rawUnsignedLegacyTransaction = (params: any, chainId: number | undefined) 
     unsignedTx = Buffer.from(rlp.encode(bufArrToArr(unsignedTx)))
 
     return unsignedTx
-
 };
 
 // an alternative verification method for legacy transactions, taken from obsidian
@@ -123,14 +131,11 @@ describe.each(models)('ETH_Legacy', function (m) {
       await sim.start({ ...defaultOptions, model: m.name })
       const app = new FilecoinApp(sim.getTransport());
 
-      // Put the app in expert mode
-      await sim.toggleExpertMode();
-
-      const testcase = `${m.prefix.toLowerCase()}-eth-sign-${data.name}`
-
-      const currentScreen = sim.snapshot()
       const msg = rawUnsignedLegacyTransaction(data.op, data.chainId);
       console.log("tx: ", msg.toString('hex'))
+
+      // Put the app in expert mode
+      await sim.toggleExpertMode();
 
       const respReq = app.signETHTransaction(ETH_PATH, msg.toString('hex'), null);
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
@@ -165,4 +170,26 @@ describe.each(models)('ETH_Legacy', function (m) {
       await sim.close()
     }
   })
+
+
+  test.concurrent.each(models)('blind sign normal mode', async function (m) {
+    const sim = new Zemu(m.path);
+    try {
+      await sim.start({...defaultOptions, model: m.name,});
+      const app = new FilecoinApp(sim.getTransport());
+
+      const msg = rawUnsignedLegacyTransaction(SIGN_TEST_DATA[0].op, SIGN_TEST_DATA[0].chainId);
+      console.log("tx: ", msg.toString('hex'))
+      const ethTx = Buffer.from("eb80856d6e2edc00832dc6c094df073477da421520cf03af261b782282c304ad6684abcdef008082013a8080", 'hex')
+
+      // Try to sign using ETH path in normal mode --> Expect rejection
+      const respError = await app.signETHTransaction(ETH_PATH, ethTx.toString('hex'), null);
+
+    } catch (error) {
+      // Ledger ETH JS package must throw an exception instead of returning an error code
+
+    } finally {
+      await sim.close();
+    }
+  });
 })

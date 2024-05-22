@@ -18,6 +18,8 @@
 
 #include <stdio.h>
 #include <zxmacros.h>
+#include "parser_common.h"
+#include "rlp.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,7 +30,6 @@ typedef enum RlpError {
   rlp_no_data,
   rlp_invalid_data,
 } rlp_error_t;
-
 
 
 // Add two numbers returning UINT64_MAX if overflows
@@ -51,8 +52,13 @@ rlp_error_t parse_rlp_item(const uint8_t *data, uint32_t dataLen, uint32_t *read
 
 // converts a big endian stream of bytes to an u64 number.
 // returns 0 on success, a negative number otherwise
-int be_bytes_to_u64(const uint8_t *bytes, uint8_t len, uint64_t *num);
+parser_error_t be_bytes_to_u64(const uint8_t *bytes, uint8_t len, uint64_t *num);
 
+parser_error_t printRLPNumber(const rlp_t *num, char* outVal, uint16_t outValLen,
+                              uint8_t pageIdx, uint8_t *pageCount);
+
+parser_error_t printEVMAddress(const rlp_t *address, char* outVal, uint16_t outValLen,
+                               uint8_t pageIdx, uint8_t *pageCount);
 #ifdef __cplusplus
 }
 #endif

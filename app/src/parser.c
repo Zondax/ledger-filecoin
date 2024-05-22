@@ -29,8 +29,11 @@
 #include "zxformat.h"
 #include <stdio.h>
 #include <zxmacros.h>
+#include "parser_invoke_evm.h"
 
-#if defined(TARGET_NANOX) || defined(TARGET_NANOS2)
+#define TRANSFER_METHOD 0
+
+#if defined(TARGET_NANOX) || defined(TARGET_NANOS2) || defined(TARGET_STAX)
 // For some reason NanoX requires this function
 void __assert_fail(__Z_UNUSED const char *assertion,
                    __Z_UNUSED const char *file, __Z_UNUSED unsigned int line,
@@ -79,10 +82,6 @@ parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data,
     return _read(ctx, &(parser_tx_obj.base_tx));
   }
   case eth_tx: {
-    // Ethereum Transactions valid only in expert mode
-    if (!app_mode_expert())
-      return parser_unsupported_tx;
-
     CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
     return _readEth(ctx, &eth_tx_obj);
   }
@@ -116,7 +115,7 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
     break;
   }
   case eth_tx: {
-    CHECK_PARSER_ERR(_validateTxEth(ctx))
+    CHECK_PARSER_ERR(_validateTxEth())
     break;
   }
   case datacap_tx: {
@@ -135,15 +134,9 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
     return parser_unsupported_tx;
   }
 
-  zemu_log("parser_validate::validated\n");
-
   // Iterate through all items to check that all can be shown and are valid
   uint8_t numItems = 0;
   CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems));
-
-  char log_tmp[100];
-  snprintf(log_tmp, sizeof(log_tmp), "parser_validate %d\n", numItems);
-  zemu_log(log_tmp);
 
   char tmpKey[40] = {0};
   char tmpVal[40] = {0};
@@ -154,21 +147,18 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
                                     sizeof(tmpVal), 0, &pageCount))
   }
 
-  zemu_log("parser_validate::ok\n");
   return parser_ok;
 }
 
 parser_error_t parser_getNumItems(const parser_context_t *ctx,
                                   uint8_t *num_items) {
-  zemu_log("parser_getNumItems\n");
-
   switch (ctx->tx_type) {
   case fil_tx: {
     *num_items = _getNumItems(ctx, &parser_tx_obj.base_tx);
     break;
   }
   case eth_tx: {
-    *num_items = _getNumItemsEth(ctx);
+    CHECK_PARSER_ERR(_getNumItemsEth(num_items));
     break;
   }
   case datacap_tx: {
@@ -201,15 +191,23 @@ static parser_error_t printMethod(char *outKey, uint16_t outKeyLen,
   snprintf(outKey, outKeyLen, "Method ");
   *pageCount = 1;
 
-  CHECK_PARSER_ERR(checkMethod(parser_tx_obj.base_tx.method));
-  if (parser_tx_obj.base_tx.method == 0) {
-    snprintf(outVal, outValLen, "Transfer ");
-  } else {
-    char buffer[100];
-    MEMZERO(buffer, sizeof(buffer));
-    fpuint64_to_str(buffer, sizeof(buffer), parser_tx_obj.base_tx.method, 0);
-    pageString(outVal, outValLen, buffer, pageIdx, pageCount);
+  switch (parser_tx_obj.base_tx.method) {
+    case TRANSFER_METHOD:
+      snprintf(outVal, outValLen, "Transfer ");
+      break;
+    case INVOKE_EVM_METHOD:
+      snprintf(outVal, outValLen, "Invoke EVM ");
+      break;
+
+    default: {
+      char buffer[100];
+      MEMZERO(buffer, sizeof(buffer));
+      fpuint64_to_str(buffer, sizeof(buffer), parser_tx_obj.base_tx.method, 0);
+      pageString(outVal, outValLen, buffer, pageIdx, pageCount);
+      break;
+    }
   }
+
   return parser_ok;
 }
 
@@ -217,118 +215,150 @@ parser_error_t _getItemFil(const parser_context_t *ctx, uint8_t displayIdx,
                            char *outKey, uint16_t outKeyLen, char *outVal,
                            uint16_t outValLen, uint8_t pageIdx,
                            uint8_t *pageCount) {
-  char log_tmp[100];
-  snprintf(log_tmp, sizeof(log_tmp), "getItem %d\n", displayIdx);
-  zemu_log(log_tmp);
-  const bool expert_mode = app_mode_expert();
 
-  MEMZERO(outKey, outKeyLen);
-  MEMZERO(outVal, outValLen);
-  snprintf(outKey, outKeyLen, "?");
-  snprintf(outVal, outValLen, " ");
-  *pageCount = 0;
+    const bool expert_mode = app_mode_expert();
 
-  uint8_t numItems = 0;
-  CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems))
-  CHECK_APP_CANARY()
+    MEMZERO(outKey, outKeyLen);
+    MEMZERO(outVal, outValLen);
+    snprintf(outKey, outKeyLen, "?");
+    snprintf(outVal, outValLen, " ");
+    *pageCount = 0;
 
-  if (displayIdx >= numItems) {
-    return parser_no_data;
-  }
+    uint8_t numItems = 0;
+    CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems))
+    CHECK_APP_CANARY()
 
-  // Normal mode: 6 fields [To | From | Value | Gas Limit | Gas Fee Cap |
-  // Method] + Params (variable length) Expert mode: 8 fields [To | From | Value
-  // | Gas Limit | Gas Fee Cap | Gas Premium | Nonce | Method] + Params
-  // (variable length)
-  switch (displayIdx) {
-  case 0:
-    snprintf(outKey, outKeyLen, "To ");
-    return printAddress(&parser_tx_obj.base_tx.to, outVal, outValLen, pageIdx,
-                        pageCount);
-
-  case 1:
-    snprintf(outKey, outKeyLen, "From ");
-    return printAddress(&parser_tx_obj.base_tx.from, outVal, outValLen, pageIdx,
-                        pageCount);
-
-  case 2:
-    snprintf(outKey, outKeyLen, "Value ");
-    return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.value, outVal,
-                                        outValLen, pageIdx, pageCount,
-                                        COIN_AMOUNT_DECIMAL_PLACES);
-
-  case 3:
-    snprintf(outKey, outKeyLen, "Gas Limit ");
-    if (int64_to_str(outVal, outValLen, parser_tx_obj.base_tx.gaslimit) !=
-        NULL) {
-      return parser_unexepected_error;
+    if (displayIdx >= numItems) {
+        return parser_no_data;
     }
+
+    // If the transaction is InvokeEVM and it's a transfer from ERC20 token
+    if (isInvokeEVM_ERC20Transfer(&parser_tx_obj.base_tx)) {
+        return printInvokeEVM(&parser_tx_obj.base_tx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
+    }
+
+    // For InvokeEVM methods, expert mode is required
+    if (parser_tx_obj.base_tx.method == INVOKE_EVM_METHOD && !app_mode_expert()) {
+      return parser_expert_mode_required;
+    }
+
+    uint8_t adjustedIndex = displayIdx;
+    if (parser_tx_obj.base_tx.to.buffer[0] != ADDRESS_PROTOCOL_DELEGATED) {
+        adjustedIndex++;
+    }
+
+    if (adjustedIndex >= 2 && parser_tx_obj.base_tx.from.buffer[0] != ADDRESS_PROTOCOL_DELEGATED) {
+        adjustedIndex++;
+    }
+
+    // Normal mode: 6 fields [To | From | Value | Gas Limit | Gas Fee Cap |
+    // Method] + Params (variable length) Expert mode: 8 fields [To | From | Value
+    // | Gas Limit | Gas Fee Cap | Gas Premium | Nonce | Method] + Params
+    // (variable length)
+    switch (adjustedIndex) {
+        case 0:
+            snprintf(outKey, outKeyLen, "To ");
+            return printEthAddress(&parser_tx_obj.base_tx.to, outVal, outValLen, pageIdx,
+                                pageCount);
+        case 1:
+            snprintf(outKey, outKeyLen, "To ");
+            return printAddress(&parser_tx_obj.base_tx.to, outVal, outValLen, pageIdx,
+                                pageCount);
+        case 2:
+            snprintf(outKey, outKeyLen, "From ");
+            return printEthAddress(&parser_tx_obj.base_tx.from, outVal, outValLen, pageIdx,
+                                pageCount);
+        case 3:
+            snprintf(outKey, outKeyLen, "From ");
+            return printAddress(&parser_tx_obj.base_tx.from, outVal, outValLen, pageIdx,
+                                pageCount);
+        case 4:
+            snprintf(outKey, outKeyLen, "Value ");
+            return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.value, outVal,
+                                                outValLen, pageIdx, pageCount,
+                                                COIN_AMOUNT_DECIMAL_PLACES);
+
+        case 5: {
+            char tmpBuffer[80] = {0};
+            snprintf(outKey, outKeyLen, "Gas Limit ");
+            if (int64_to_str(tmpBuffer, sizeof(tmpBuffer), parser_tx_obj.base_tx.gaslimit) != NULL) {
+                return parser_unexpected_error;
+            }
+
+            if (insertDecimalPoint(tmpBuffer, sizeof(tmpBuffer), COIN_AMOUNT_DECIMAL_PLACES) != zxerr_ok) {
+                return parser_unexpected_error;
+            }
+            if (z_str3join(tmpBuffer, sizeof(tmpBuffer), "FIL ", NULL) != zxerr_ok) {
+                return parser_unexpected_error;
+            }
+
+            pageString(outVal, outValLen, tmpBuffer, pageIdx, pageCount);
+            return parser_ok;
+        }
+
+        case 6:
+            snprintf(outKey, outKeyLen, "Gas Fee Cap ");
+            return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.gasfeecap,
+                                                outVal, outValLen, pageIdx, pageCount,
+                                                COIN_AMOUNT_DECIMAL_PLACES);
+
+        case 7:
+            if (expert_mode) {
+            snprintf(outKey, outKeyLen, "Gas Premium ");
+            return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.gaspremium,
+                                                outVal, outValLen, pageIdx, pageCount,
+                                                COIN_AMOUNT_DECIMAL_PLACES);
+            }
+            return printMethod(outKey, outKeyLen, outVal, outValLen, pageIdx,
+                            pageCount);
+
+        case 8:
+            if (expert_mode) {
+            snprintf(outKey, outKeyLen, "Nonce ");
+            if (uint64_to_str(outVal, outValLen, parser_tx_obj.base_tx.nonce) !=
+                NULL) {
+                return parser_unexpected_error;
+            }
+            *pageCount = 1;
+            return parser_ok;
+            }
+            // For non expert mode this index represent params field.
+            break;
+
+        case 9:
+            if (expert_mode) {
+            return printMethod(outKey, outKeyLen, outVal, outValLen, pageIdx,
+                                pageCount);
+            }
+            // For non expert mode this index represent params field.
+            break;
+
+        default:
+            break;
+    }
+
+    if (parser_tx_obj.base_tx.numparams == 0) {
+        snprintf(outKey, outKeyLen, "Params ");
+        snprintf(outVal, outValLen, "- NONE -");
+        return parser_ok;
+    }
+
+    // remaining display pages show the params
+    int32_t paramIdxSigned =
+        displayIdx - (numItems - parser_tx_obj.base_tx.numparams);
+
+    // end of params
+    if (paramIdxSigned < 0 || paramIdxSigned >= parser_tx_obj.base_tx.numparams) {
+        return parser_unexpected_field;
+    }
+
+    uint8_t paramIdx = (uint8_t)paramIdxSigned;
     *pageCount = 1;
-    return parser_ok;
+    snprintf(outKey, outKeyLen, "Params |%d| ", paramIdx + 1);
 
-  case 4:
-    snprintf(outKey, outKeyLen, "Gas Fee Cap ");
-    return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.gasfeecap,
-                                        outVal, outValLen, pageIdx, pageCount,
-                                        COIN_AMOUNT_DECIMAL_PLACES);
-
-  case 5:
-    if (expert_mode) {
-      snprintf(outKey, outKeyLen, "Gas Premium ");
-      return parser_printBigIntFixedPoint(&parser_tx_obj.base_tx.gaspremium,
-                                          outVal, outValLen, pageIdx, pageCount,
-                                          COIN_AMOUNT_DECIMAL_PLACES);
-    }
-    return printMethod(outKey, outKeyLen, outVal, outValLen, pageIdx,
-                       pageCount);
-
-  case 6:
-    if (expert_mode) {
-      snprintf(outKey, outKeyLen, "Nonce ");
-      if (uint64_to_str(outVal, outValLen, parser_tx_obj.base_tx.nonce) !=
-          NULL) {
-        return parser_unexepected_error;
-      }
-      *pageCount = 1;
-      return parser_ok;
-    }
-    // For non expert mode this index represent params field.
-    break;
-
-  case 7:
-    if (expert_mode) {
-      return printMethod(outKey, outKeyLen, outVal, outValLen, pageIdx,
-                         pageCount);
-    }
-    // For non expert mode this index represent params field.
-    break;
-
-  default:
-    break;
-  }
-
-  if (parser_tx_obj.base_tx.numparams == 0) {
-    snprintf(outKey, outKeyLen, "Params ");
-    snprintf(outVal, outValLen, "- NONE -");
-    return parser_ok;
-  }
-
-  // remaining display pages show the params
-  int32_t paramIdxSigned =
-      displayIdx - (numItems - parser_tx_obj.base_tx.numparams);
-
-  // end of params
-  if (paramIdxSigned < 0 || paramIdxSigned >= parser_tx_obj.base_tx.numparams) {
-    return parser_unexpected_field;
-  }
-
-  uint8_t paramIdx = (uint8_t)paramIdxSigned;
-  *pageCount = 1;
-  snprintf(outKey, outKeyLen, "Params |%d| ", paramIdx + 1);
-
-  zemu_log_stack(outKey);
-  return parser_printParam(&parser_tx_obj.base_tx, paramIdx, outVal, outValLen,
-                           pageIdx, pageCount);
+    zemu_log_stack(outKey);
+    return parser_printParam(&parser_tx_obj.base_tx, paramIdx, outVal, outValLen,
+                            pageIdx, pageCount);
 }
 
 parser_error_t parser_getItem(const parser_context_t *ctx, uint8_t displayIdx,
@@ -342,11 +372,6 @@ parser_error_t parser_getItem(const parser_context_t *ctx, uint8_t displayIdx,
                        pageIdx, pageCount);
   }
   case eth_tx: {
-    // Ethereum Transactions only valid in expert mode
-    if (!app_mode_expert())
-      return parser_unsupported_tx;
-
-    // for now just display the hash
     return _getItemEth(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen,
                        pageIdx, pageCount);
   }

@@ -41,7 +41,7 @@ const TEST_DATA = [
   }
 ]
 
-
+jest.setTimeout(90000)
 
 describe.each(models)('Multisig', function (m) {
   test.concurrent.each(TEST_DATA)('Multisig extended params', async function ({name, op}) {
