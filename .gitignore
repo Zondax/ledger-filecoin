@@ -65,7 +65,6 @@ googletest-build/
 CMakeFiles/
 CMakeCache.txt
 unittests
-*.cmake
 Testing/
 cmake-build-fuzz/
 
