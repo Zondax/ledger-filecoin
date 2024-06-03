@@ -7,20 +7,23 @@ on:
     branches:
       - main
       - develop
+      - master # for safety reasons
+      - dev  # for safety reasons
 
 jobs:
   analyse:
     name: Analyse
+    if: github.event.repository.private == false
     strategy:
       matrix:
-        sdk: ["$NANOS_SDK", "$NANOX_SDK", "$NANOSP_SDK"]
-    runs-on: ubuntu-latest
+        sdk: ["$NANOS_SDK", "$NANOX_SDK", "$NANOSP_SDK", "$STAX_SDK"]
+    runs-on: zondax-runners
     container:
       image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder-legacy:latest
 
     steps:
       - name: Clone
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
