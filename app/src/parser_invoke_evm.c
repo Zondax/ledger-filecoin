@@ -79,6 +79,8 @@ parser_error_t printInvokeEVM(const fil_base_tx_t *txObj,
         return parser_value_out_of_range;
     }
 
+    *pageCount = 1;
+
     const uint16_t addressIdentifier = txObj->to.buffer[0] << 8 | txObj->to.buffer[1];
     if (txObj->value.len != 0 || txObj->to.len != F4_ETH_ADDRESS_BYTES_LEN || addressIdentifier != F4_ETH_ADDRESS_IDENTIFIER) {
         return parser_unexpected_error;;

@@ -23,6 +23,7 @@ TESTS_JS_DIR =
 
 ifeq ($(BOLOS_SDK),)
 ZXLIB_COMPILE_STAX ?= 1
+PRODUCTION_BUILD ?= 0
 include $(CURDIR)/deps/ledger-zxlib/dockerized_build.mk
 else
 default:
@@ -33,6 +34,6 @@ default:
 endif
 
 test_all:
-	make
+	PRODUCTION_BUILD=1 make
 	make zemu_install
 	make zemu_test
