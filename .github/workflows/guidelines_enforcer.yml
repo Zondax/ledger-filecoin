@@ -11,12 +11,12 @@ name: Ensure compliance with Ledger guidelines
 on:
   workflow_dispatch:
   push:
+  pull_request:
     branches:
       - main
       - develop
       - master # for safety reasons
       - dev  # for safety reasons
-  pull_request:
 
 jobs:
   guidelines_enforcer:
