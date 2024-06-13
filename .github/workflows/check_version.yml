@@ -11,7 +11,7 @@ on:
 
 jobs:
   configure:
-    runs-on: zondax-runners
+    runs-on: ubuntu-latest
     outputs:
       uid_gid: ${{ steps.get-user.outputs.uid_gid }}
     steps:
@@ -20,7 +20,7 @@ jobs:
 
   get_version:
     needs: configure
-    runs-on: zondax-runners
+    runs-on: ubuntu-latest
     container:
       image: zondax/ledger-app-builder:latest
       options: --user ${{ needs.configure.outputs.uid_gid }}
@@ -39,7 +39,7 @@ jobs:
 
   check_app_version:
     needs: get_version
-    runs-on: zondax-runners
+    runs-on: ubuntu-latest
     steps:
       - id: checkTag
         uses: mukunku/tag-exists-action@v1.0.0

@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         sdk: ["$NANOS_SDK", "$NANOX_SDK", "$NANOSP_SDK", "$STAX_SDK"]
-    runs-on: zondax-runners
+    runs-on: ubuntu-latest
     container:
       image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder-legacy:latest
 
