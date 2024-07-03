@@ -6,6 +6,8 @@ on:
     branches:
       - main
       - develop
+      - master # for safety reasons
+      - dev  # for safety reasons
 
 jobs:
   configure:
@@ -22,11 +24,13 @@ jobs:
     container:
       image: zondax/ledger-app-builder:latest
       options: --user ${{ needs.configure.outputs.uid_gid }}
+    env:
+      SDK_VARNAME: NANOSP_SDK
     outputs:
       version: ${{ steps.store-version.outputs.version }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: true
       - run: make version

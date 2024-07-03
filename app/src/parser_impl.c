@@ -23,7 +23,9 @@
 #include "zxformat.h"
 #include <zxmacros.h>
 #include "parser_invoke_evm.h"
+#include "eth_erc20.h"
 
+extern const uint8_t ERC20_TRANSFER_PREFIX[4];
 parser_tx_t parser_tx_obj;
 
 const char *parser_getErrorDescription(parser_error_t err) {
@@ -286,6 +288,14 @@ __Z_INLINE parser_error_t readMethod(fil_base_tx_t *tx, CborValue *value) {
       // Only one parameter is expected when ByteStringType is received.
       PARSER_ASSERT_OR_ERROR(itParams.remaining == 1, parser_value_out_of_range)
       tx->numparams = 1;
+
+      // If Invoke + ERC20 Transfer discard encoded cbor bytes at the beginning
+      if (methodValue == INVOKE_EVM_METHOD
+          && tx->params[0] == 0x58 && tx->params[1] == ERC20_TRANSFER_DATA_LENGTH
+          && memcmp(tx->params+2, ERC20_TRANSFER_PREFIX, sizeof(ERC20_TRANSFER_PREFIX)) == 0) {
+
+          MEMMOVE(tx->params, tx->params+2, ERC20_TRANSFER_DATA_LENGTH);
+      }
       break;
     }
     case CborInvalidType:
