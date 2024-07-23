@@ -198,3 +198,37 @@ jobs:
           tag_name: ${{ steps.stax.outputs.tag_name }}
           draft: false
           prerelease: false
+
+  build_package_flex:
+    needs: [configure, build, build_ledger, test_zemu]
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    container:
+      image: zondax/ledger-app-builder:latest
+      options: --user ${{ needs.configure.outputs.uid_gid }}
+      env:
+        BOLOS_SDK: /opt/flex-secure-sdk
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install deps
+        run: pip install ledgerblue
+
+      - name: Build Flex
+        shell: bash -l {0}
+        run: make
+      - name: Set tag
+        id: flex
+        run: echo "tag_name=$(./app/pkg/installer_flex.sh version)" >> $GITHUB_OUTPUT
+      - name: Update Release
+        id: update_release_2
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          files: ./app/pkg/installer_flex.sh
+          tag_name: ${{ steps.flex.outputs.tag_name }}
+          draft: false
+          prerelease: false

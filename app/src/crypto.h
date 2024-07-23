@@ -37,7 +37,7 @@ zxerr_t keccak_digest(const unsigned char *in, unsigned int inLen,
 zxerr_t blake_hash_cid(const unsigned char *in, unsigned int inLen,
                               unsigned char *out, unsigned int outLen);
 
-#if defined(TARGET_NANOS) || defined(TARGET_NANOX) || defined(TARGET_NANOS2) || defined(TARGET_STAX)
+#if defined(TARGET_NANOS) || defined(TARGET_NANOX) || defined(TARGET_NANOS2) || defined(TARGET_STAX) || defined(TARGET_FLEX)
 #else
 #include "blake2.h"
 typedef struct {
