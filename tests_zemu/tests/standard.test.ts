@@ -1,5 +1,5 @@
 /** ******************************************************************************
- *  (c) 2018 - 2022 Zondax AG
+ *  (c) 2018 - 2024 Zondax AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -14,23 +14,23 @@
  *  limitations under the License.
  ******************************************************************************* */
 
-import Zemu, { zondaxMainmenuNavigation, ButtonKind, TouchNavigation, ClickNavigation } from '@zondax/zemu'
+import Zemu, { zondaxMainmenuNavigation, ButtonKind, TouchNavigation, ClickNavigation, isTouchDevice } from '@zondax/zemu'
 
 // @ts-ignore
 import FilecoinApp from "@zondax/ledger-filecoin";
-import {getDigest} from "./utils";
+import { getDigest } from "./utils";
 import * as secp256k1 from "secp256k1";
 import { models, defaultOptions, PATH } from './common'
-import { IButton } from '@zondax/zemu/dist/types';
+import { IButton, SwipeDirection } from '@zondax/zemu/dist/types';
 
-jest.setTimeout(180000)
+jest.setTimeout(600000)
 
 describe('Standard', function () {
   test.concurrent.each(models)('can start and stop container', async function (m) {
     const sim = new Zemu(m.path);
     try {
       console.log("model: ", m.name)
-      await sim.start({...defaultOptions, model: m.name,});
+      await sim.start({ ...defaultOptions, model: m.name, });
     } finally {
       await sim.close();
     }
@@ -39,9 +39,9 @@ describe('Standard', function () {
   test.concurrent.each(models)('main menu', async function (m) {
     const sim = new Zemu(m.path);
     try {
-        await sim.start({ ...defaultOptions, model: m.name })
-        const nav = zondaxMainmenuNavigation(m.name, [1, 0, 0, 4, -5])
-        await sim.navigateAndCompareSnapshots('.', `${m.prefix.toLowerCase()}-mainmenu`, nav.schedule)
+      await sim.start({ ...defaultOptions, model: m.name })
+      const nav = zondaxMainmenuNavigation(m.name, [1, 0, 0, 4, -5])
+      await sim.navigateAndCompareSnapshots('.', `${m.prefix.toLowerCase()}-mainmenu`, nav.schedule)
     } finally {
       await sim.close();
     }
@@ -50,7 +50,7 @@ describe('Standard', function () {
   test.concurrent.each(models)('get app version', async function (m) {
     const sim = new Zemu(m.path);
     try {
-      await sim.start({...defaultOptions, model: m.name,});
+      await sim.start({ ...defaultOptions, model: m.name, });
       const app = new FilecoinApp(sim.getTransport());
       const resp = await app.getVersion();
 
@@ -70,7 +70,7 @@ describe('Standard', function () {
   test.concurrent.each(models)('get address', async function (m) {
     const sim = new Zemu(m.path);
     try {
-      await sim.start({...defaultOptions, model: m.name,});
+      await sim.start({ ...defaultOptions, model: m.name, });
       const app = new FilecoinApp(sim.getTransport());
 
       const resp = await app.getAddressAndPubKey("m/44'/461'/5'/0/3");
@@ -95,10 +95,10 @@ describe('Standard', function () {
     const sim = new Zemu(m.path);
     try {
       await sim.start({
-            ...defaultOptions,
-            model: m.name,
-            approveKeyword: m.name === 'stax' ? 'QR' : '',
-            approveAction: ButtonKind.ApproveTapButton,
+        ...defaultOptions,
+        model: m.name,
+        approveKeyword: isTouchDevice(m.name) ? 'Confirm' : '',
+        approveAction: ButtonKind.DynamicTapButton,
       })
       const app = new FilecoinApp(sim.getTransport());
 
@@ -127,7 +127,7 @@ describe('Standard', function () {
   test.concurrent.each(models)('sign basic & verify', async function (m) {
     const sim = new Zemu(m.path);
     try {
-      await sim.start({...defaultOptions, model: m.name,});
+      await sim.start({ ...defaultOptions, model: m.name, });
       const app = new FilecoinApp(sim.getTransport());
 
       const txBlob = Buffer.from(
@@ -167,7 +167,7 @@ describe('Standard', function () {
   test.concurrent.each(models)('sign basic - invalid', async function (m) {
     const sim = new Zemu(m.path);
     try {
-      await sim.start({...defaultOptions, model: m.name,});
+      await sim.start({ ...defaultOptions, model: m.name, });
       const app = new FilecoinApp(sim.getTransport());
 
       let invalidMessage = Buffer.from(
@@ -195,7 +195,7 @@ describe('Standard', function () {
   test.concurrent.each(models)('sign proposal expert ', async function (m) {
     const sim = new Zemu(m.path);
     try {
-      await sim.start({...defaultOptions, model: m.name,});
+      await sim.start({ ...defaultOptions, model: m.name, });
       const app = new FilecoinApp(sim.getTransport());
 
       // Put the app in expert mode
@@ -239,7 +239,7 @@ describe('Standard', function () {
   test.concurrent.each(models)('sign proposal -- unsupported method', async function (m) {
     const sim = new Zemu(m.path);
     try {
-      await sim.start({...defaultOptions, model: m.name,});
+      await sim.start({ ...defaultOptions, model: m.name, });
       const app = new FilecoinApp(sim.getTransport());
 
       const invalidMessage = Buffer.from(
@@ -264,30 +264,30 @@ describe('Standard', function () {
     }
   });
 
-/*
-  Should reject BLS signature
-  test.concurrent.each(models)('try signing using BLS - fail', async function (m) {
-    const sim = new Zemu(m.path);
-    try {
-      await sim.start({...defaultOptions, model: m.name,});
-      const app = new FilecoinApp(sim.getTransport());
-      const path = "m/44'/461'/0'/0/1";
-      const txBlob = Buffer.from(
-        "8a00583103a7726b038022f75a384617585360cee629070a2d9d28712965e5f26ecc40858382803724ed34f2720336f09db631f074583103ad58df696e2d4e91ea86c881e938ba4ea81b395e12797b84b9cf314b9546705e839c7a99d606b247ddb4f9ac7a3414dd0144000186a01961a8420000430009c40040",
-        "hex",
-      );
-      // do not wait here so we can get snapshots and interact with the app
-      const signatureRequest = app.sign(path, txBlob);
-      // Wait until we are not in the main menu
-      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
-      let resp = await signatureRequest;
-      console.log(resp);
-      expect(resp.return_code).toEqual(0x6984);
-      expect(resp.error_message).toEqual("Data is invalid : Unexpected data type");
-    } finally {
-      await sim.close();
-    }
-  });*/
+  /*
+    Should reject BLS signature
+    test.concurrent.each(models)('try signing using BLS - fail', async function (m) {
+      const sim = new Zemu(m.path);
+      try {
+        await sim.start({...defaultOptions, model: m.name,});
+        const app = new FilecoinApp(sim.getTransport());
+        const path = "m/44'/461'/0'/0/1";
+        const txBlob = Buffer.from(
+          "8a00583103a7726b038022f75a384617585360cee629070a2d9d28712965e5f26ecc40858382803724ed34f2720336f09db631f074583103ad58df696e2d4e91ea86c881e938ba4ea81b395e12797b84b9cf314b9546705e839c7a99d606b247ddb4f9ac7a3414dd0144000186a01961a8420000430009c40040",
+          "hex",
+        );
+        // do not wait here so we can get snapshots and interact with the app
+        const signatureRequest = app.sign(path, txBlob);
+        // Wait until we are not in the main menu
+        await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
+        let resp = await signatureRequest;
+        console.log(resp);
+        expect(resp.return_code).toEqual(0x6984);
+        expect(resp.error_message).toEqual("Data is invalid : Unexpected data type");
+      } finally {
+        await sim.close();
+      }
+    });*/
 
   test.concurrent.each(models)('test change owner', async function (m) {
     const sim = new Zemu(m.path);
@@ -332,7 +332,7 @@ describe('Standard', function () {
   test.concurrent.each(models)('transfer using protocol 4 addresses', async function (m) {
     const sim = new Zemu(m.path);
     try {
-      await sim.start({...defaultOptions, model: m.name,});
+      await sim.start({ ...defaultOptions, model: m.name, });
       const app = new FilecoinApp(sim.getTransport());
 
       const txBlob = Buffer.from(
@@ -371,7 +371,7 @@ describe('Standard', function () {
   test.concurrent.each(models)('RemoveDataCap', async function (m) {
     const sim = new Zemu(m.path);
     try {
-      await sim.start({...defaultOptions, model: m.name,});
+      await sim.start({ ...defaultOptions, model: m.name, });
       const app = new FilecoinApp(sim.getTransport());
 
       // The data to sign for this transaction is:
@@ -413,7 +413,7 @@ describe('Standard', function () {
   test.concurrent.each(models)('ClientDeal', async function (m) {
     const sim = new Zemu(m.path);
     try {
-      await sim.start({...defaultOptions, model: m.name,});
+      await sim.start({ ...defaultOptions, model: m.name, });
       const app = new FilecoinApp(sim.getTransport());
 
       // Put the app in expert mode
@@ -465,7 +465,7 @@ describe('Standard', function () {
   test.concurrent.each(models)('RawBytes', async function (m) {
     const sim = new Zemu(m.path);
     try {
-      await sim.start({...defaultOptions, model: m.name,});
+      await sim.start({ ...defaultOptions, model: m.name, });
       const app = new FilecoinApp(sim.getTransport());
 
       // Put the app in expert mode
@@ -513,7 +513,7 @@ describe('Standard', function () {
   test.concurrent.each(models)('InvokeEVM_ERC20Transfer', async function (m) {
     const sim = new Zemu(m.path);
     try {
-      await sim.start({...defaultOptions, model: m.name,});
+      await sim.start({ ...defaultOptions, model: m.name, });
       const app = new FilecoinApp(sim.getTransport());
 
       const txBlob = Buffer.from(
@@ -553,7 +553,7 @@ describe('Standard', function () {
   test.concurrent.each(models)('InvokeEVM', async function (m) {
     const sim = new Zemu(m.path);
     try {
-      await sim.start({...defaultOptions, model: m.name,});
+      await sim.start({ ...defaultOptions, model: m.name, });
       const app = new FilecoinApp(sim.getTransport());
 
       const txBlob = Buffer.from(
@@ -576,13 +576,14 @@ describe('Standard', function () {
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
       let nav = undefined;
-      if (m.name === 'stax') {
+      if (isTouchDevice(m.name)) {
         const okButton: IButton = {
           x: 200,
           y: 540,
           delay: 0.25,
+          direction: SwipeDirection.NoSwipe,
         };
-        nav = new TouchNavigation([
+        nav = new TouchNavigation(m.name, [
           ButtonKind.ConfirmYesButton,
         ]);
         nav.schedule[0].button = okButton;
