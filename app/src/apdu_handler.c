@@ -424,7 +424,7 @@ handleSignRawBytes(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
         if ((msg_counter % 5) == 0) {
             char prompt[] = {"RawBytes:"};
             view_message_show(prompt, message);
-            #if !defined(TARGET_STAX)
+            #if !defined(TARGET_STAX) && !defined(TARGET_FLEX)
             UX_WAIT_DISPLAYED();
             #endif
         }
