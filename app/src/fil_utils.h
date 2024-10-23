@@ -29,7 +29,12 @@ extern "C" {
 
 #define MAX_PREFIX_LEN 40
 
+#if defined(TARGET_NANOS)
 #define STR_BUF_LEN 200
+#else
+#define STR_BUF_LEN 1256
+#endif
+
 // special CBOR type that holds
 // a CID, bellow the custom tag for this type
 #define TAG_CID 42
