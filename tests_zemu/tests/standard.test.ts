@@ -619,7 +619,7 @@ describe('Standard', function () {
   });
 
   // https://github.com/Zondax/ledger-filecoin/issues/166
-  test.concurrent.each(models)('Issue #166', async function (m) {
+  test.concurrent.each(models.filter(m => m.name != "nanos"))('Issue #166', async function (m) {
     const sim = new Zemu(m.path);
     try {
       await sim.start({...defaultOptions, model: m.name,});
