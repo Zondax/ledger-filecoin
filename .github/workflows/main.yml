@@ -113,7 +113,7 @@ jobs:
       - name: Build NanoS
         shell: bash -l {0}
         run: |
-          make
+          PRODUCTION_BUILD=0 make buildS
           mv ./app/pkg/installer_s.sh ./app/pkg/installer_nanos.sh
       - name: Set tag
         id: nanos
@@ -149,7 +149,7 @@ jobs:
       - name: Build NanoSP
         shell: bash -l {0}
         run: |
-          make
+          PRODUCTION_BUILD=0 make buildS2
           mv ./app/pkg/installer_s2.sh ./app/pkg/installer_nanos_plus.sh
       - name: Set tag
         id: nanosp
@@ -184,7 +184,8 @@ jobs:
 
       - name: Build Stax
         shell: bash -l {0}
-        run: make
+        run: |
+          PRODUCTION_BUILD=0 make buildST
       - name: Set tag
         id: stax
         run: echo "tag_name=$(./app/pkg/installer_stax.sh version)" >> $GITHUB_OUTPUT
@@ -218,7 +219,8 @@ jobs:
 
       - name: Build Flex
         shell: bash -l {0}
-        run: make
+        run: |
+          PRODUCTION_BUILD=0 make buildFL
       - name: Set tag
         id: flex
         run: echo "tag_name=$(./app/pkg/installer_flex.sh version)" >> $GITHUB_OUTPUT
