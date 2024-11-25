@@ -84,7 +84,7 @@ const char *parser_getErrorDescription(parser_error_t err) {
   case parser_required_method:
     return "Required field method";
   case parser_unsupported_tx:
-    return "Usupported transaction type";
+    return "Unsupported transaction type";
   case parser_invalid_rlp_data:
     return "Invalid rlp data";
   case parser_invalid_chain_id:
