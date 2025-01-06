@@ -644,4 +644,31 @@ describe('Standard', function () {
       await sim.close();
     }
   });
+
+  // Test to cover issue https://github.com/Zondax/ledger-filecoin/issues/173
+   test.concurrent.each(models)('Parse Bytes Params - issue #173', async function (m) {
+    const sim = new Zemu(m.path);
+    try {
+      await sim.start({...defaultOptions, model: m.name,});
+      const app = new FilecoinApp(sim.getTransport());
+
+      const txBlob = Buffer.from(
+          "8a00550191519a1de64c30be61381ac8168aa411770d0984550178b407e26c1825b937b85d8e506f492beff267f81905a24200011a001776a74400019c634400019845004b68656c6c6f20776f726c64",
+          "hex",
+      );
+
+      // // do not wait here..
+      const signatureRequest = app.sign(PATH, txBlob);
+      // // Wait until we are not in the main menu
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
+      await sim.compareSnapshotsAndApprove(".", `${m.prefix.toLowerCase()}-issue-173`)
+
+      let resp = await signatureRequest;
+      console.log(resp);
+      expect(resp.return_code).toEqual(0x9000);
+      expect(resp.error_message).toEqual("No errors");
+    } finally {
+      await sim.close();
+    }
+  });
 })

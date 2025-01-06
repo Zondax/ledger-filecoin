@@ -720,5 +720,25 @@
             "params": ["d0e30db0"]
         },
         "encoded_tx_hex": "8a0056040a6c297aed654816dc5d211c956de816ba923475d255011eaf1c8a4bbfeeb0870b1745b1f57503470b71160849000de0b6b3a76400001a00da3a90440001899344000185751ae525aa154544d0e30db0"
+    },
+    {
+        "description": "Params with simple bytes",
+        "encoded_tx": "igBVAQkVGa0a1c0u4wGgGgYh6gqQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cHcQh7cH",
+        "valid": true,
+        "testnet": false,
+        "error": "",
+        "message": {
+            "version": 0,
+            "to": "f1sfizuhpgjqyl4yjydlebncvecf3q2cmeeathzwi",
+            "from": "f1pc2apytmdas3sn5ylwhfa32jfpx7ez7ykieelna",
+            "nonce": 1442,
+            "value": "1",
+            "gaslimit": "1537703",
+            "gaspremium": "104517",
+            "gasfeecap": "105571",
+            "method": 0,
+            "params": ["hello world"]
+        },
+        "encoded_tx_hex": "8a00550191519a1de64c30be61381ac8168aa411770d0984550178b407e26c1825b937b85d8e506f492beff267f81905a24200011a001776a74400019c634400019845004b68656c6c6f20776f726c64"
     }
 ]
