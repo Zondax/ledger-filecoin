@@ -202,8 +202,7 @@ parser_error_t _printParam(const fil_base_tx_t *tx, uint8_t paramIdx,
     break;
   }
   case CborMapType:
-  case CborArrayType:
-  default: {
+  case CborArrayType: {
     /// Enter container?
     CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&itContainer, &itParams))
     CHECK_APP_CANARY()
@@ -222,6 +221,12 @@ parser_error_t _printParam(const fil_base_tx_t *tx, uint8_t paramIdx,
     CHECK_CBOR_MAP_ERR(cbor_value_leave_container(&itContainer, &itParams))
     CHECK_APP_CANARY()
     break;
+  }
+
+  // In the process of parsing the params the default was to treat it as an array of bytes.
+  // Here we can simply copy the params byte array to outVal and set the pageCount to 1.
+  default: {
+    pageString(outVal, outValLen, (char *)tx->params, pageIdx, pageCount);
   }
   }
   return parser_ok;
@@ -298,9 +303,17 @@ __Z_INLINE parser_error_t readMethod(fil_base_tx_t *tx, CborValue *value) {
       }
       break;
     }
+
+    // If the type is unknown, treat it as an array of bytes and copy it directly to params.
+    // This implies that the current container on value is the last valid one, and ParamsBufferSize indicates the length of the params byte array.
+    // The itParams container is already positioned within the params content, which may lead to unexpected results.
+    // Set numparams to 1 to indicate that there is a single array of bytes present.
     case CborInvalidType:
-    default:
-      return parser_unexpected_type;
+    default:{
+      MEMCPY(tx->params, itParams.ptr, paramsBufferSize);
+      tx->numparams = 1;
+      break;  
+    }
     }
   }
   tx->method = methodValue;
