@@ -117,8 +117,8 @@ parser_error_t _validateRawBytes(__Z_UNUSED const parser_context_t *ctx) {
 }
 
 uint8_t _getNumItemsRawBytes(__Z_UNUSED const parser_context_t *ctx) {
-  // Warning message and raw-bytes data hash as an hex string
-  return 2;
+  // Raw-bytes data hash as an hex string
+  return 1;
 }
 
 parser_error_t _getItemRawBytes(__Z_UNUSED const parser_context_t *ctx,
