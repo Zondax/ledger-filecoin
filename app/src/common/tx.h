@@ -54,7 +54,7 @@ uint8_t *tx_get_buffer();
 /// Parse message stored in transaction buffer
 /// This function should be called as soon as full buffer data is loaded.
 /// \return It returns NULL if data is valid or error message otherwise.
-const char *tx_parse();
+const char *tx_parse(uint8_t *error_code);
 
 /// Return the number of items in the transaction
 zxerr_t tx_getNumItems(uint8_t *num_items);

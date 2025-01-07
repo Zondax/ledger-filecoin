@@ -78,6 +78,7 @@ parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data,
   switch (ctx->tx_type) {
   case fil_tx: {
     CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
+    app_mode_skip_blindsign_ui(); 
     return _read(ctx, &(parser_tx_obj.base_tx));
   }
   case eth_tx: {
@@ -86,12 +87,13 @@ parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data,
   }
   case clientdeal_tx: {
     CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
+    app_mode_skip_blindsign_ui(); 
     return _readClientDeal(ctx, &parser_tx_obj.client_deal_tx);
   }
   case raw_bytes: {
     // Processing raw-bytes is valid only in expert mode
-    if (!app_mode_expert())
-      return parser_expert_mode_required;
+    if (!app_mode_blindsign())
+      return parser_blindsign_required;
 
     return _readRawBytes(ctx, &parser_tx_obj.raw_bytes_tx);
   }

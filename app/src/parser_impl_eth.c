@@ -165,8 +165,8 @@ parser_error_t _readEth(parser_context_t *ctx, eth_tx_t *tx_obj) {
 }
 
 parser_error_t _validateTxEth() {
-    if (!validateERC20(&eth_tx_obj) && !app_mode_expert()) {
-        return parser_unsupported_tx;
+    if (!validateERC20(&eth_tx_obj) && !app_mode_blindsign()) {
+        return parser_blindsign_required;
     }
 
     return parser_ok;
@@ -240,18 +240,13 @@ parser_error_t _getItemEth(const parser_context_t *ctx, uint8_t displayIdx,
         return printERC20(displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
     }
 
-    // Otherwise, check that ExpertMode is enabled
-    if (!app_mode_expert())
-      return parser_unsupported_tx;
+    // Otherwise, check that Blindsign is enabled
+    if (!app_mode_blindsign()) {
+      return parser_blindsign_required;
+    }
 
     if (displayIdx > 1) {
         return parser_display_idx_out_of_range;
-    }
-
-    if (displayIdx == 0) {
-        snprintf(outKey, outKeyLen, "Warning:");
-        pageString(outVal, outValLen, "Blind-signing EVM Tx", pageIdx, pageCount);
-        return parser_ok;
     }
 
     // we need to get keccak hash of the transaction data
@@ -287,8 +282,8 @@ parser_error_t _getNumItemsEth(uint8_t* numItems) {
         return parser_ok;
     }
 
-    // Warning message and the eth transaction hash for now.
-    *numItems = 2;
+    // Eth transaction hash.
+    *numItems = 1;
     return parser_ok;
 }
 

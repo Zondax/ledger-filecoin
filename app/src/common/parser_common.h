@@ -70,6 +70,7 @@ typedef enum {
   parser_invalid_prefix,
   // Customs
   parser_expert_mode_required,
+  parser_blindsign_required,
 } parser_error_t;
 
 // Define the three types
