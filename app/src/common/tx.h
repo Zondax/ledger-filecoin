@@ -22,7 +22,6 @@
 // transaction initializer for the buffer and transaction type.
 void tx_context_fil();
 void tx_context_eth();
-void tx_context_datacap();
 void tx_context_client_deal();
 void tx_context_raw_bytes();
 

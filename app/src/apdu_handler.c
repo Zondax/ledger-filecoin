@@ -372,11 +372,6 @@ handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
             tx_context_fil();
             break;
 
-        case INS_SIGN_DATACAP:
-            ZEMU_LOGF(50, "HandleSignDatacap\n")
-            tx_context_datacap();
-            break;
-
         case INS_CLIENT_DEAL:
             ZEMU_LOGF(50, "HandleSignClientDeal\n")
             tx_context_client_deal();
@@ -538,11 +533,6 @@ handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
                 }
 
                 case INS_SIGN_SECP256K1: {
-                    CHECK_PIN_VALIDATED()
-                    handleSign(flags, tx, rx);
-                    break;
-                }
-                case INS_SIGN_DATACAP: {
                     CHECK_PIN_VALIDATED()
                     handleSign(flags, tx, rx);
                     break;
