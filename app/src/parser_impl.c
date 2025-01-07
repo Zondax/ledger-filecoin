@@ -225,7 +225,17 @@ parser_error_t _printParam(const fil_base_tx_t *tx, uint8_t paramIdx,
 
   // In the process of parsing the params the default was to treat it as an array of bytes.
   // Here we can simply copy the params byte array to outVal and set the pageCount to 1.
+  // If the array hold non printable bytes we print the hex array.
   default: {
+
+    for (size_t i = 0; i < tx->params_len; i++)
+    {
+      if (!IS_PRINTABLE(tx->params[i])) {
+        pageStringHex(outVal, outValLen, (const char *)tx->params, tx->params_len, pageIdx, pageCount);
+        return parser_ok;
+      }
+    }
+    
     pageString(outVal, outValLen, (char *)tx->params, pageIdx, pageCount);
   }
   }
@@ -308,9 +318,11 @@ __Z_INLINE parser_error_t readMethod(fil_base_tx_t *tx, CborValue *value) {
     // This implies that the current container on value is the last valid one, and ParamsBufferSize indicates the length of the params byte array.
     // The itParams container is already positioned within the params content, which may lead to unexpected results.
     // Set numparams to 1 to indicate that there is a single array of bytes present.
+    // Set params_len to the length of the params byte array so we print later
     case CborInvalidType:
     default:{
       MEMCPY(tx->params, itParams.ptr, paramsBufferSize);
+      tx->params_len = paramsBufferSize;
       tx->numparams = 1;
       break;  
     }

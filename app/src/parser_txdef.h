@@ -115,6 +115,7 @@ typedef struct {
     uint64_t method;
     uint8_t numparams;
     uint8_t params[MAX_PARAMS_BUFFER_SIZE];
+    size_t params_len;
 } fil_base_tx_t;
 
 typedef struct {

@@ -517,8 +517,8 @@
     {
         "description": "Change owner address",
         "encoded_tx": "notAvailable",
-        "valid": false,
-        "error": "Unexpected data type",
+        "valid": true,
+        "error": "",
         "testnet": false,
         "message": {
             "version": 0,
