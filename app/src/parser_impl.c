@@ -91,16 +91,12 @@ const char *parser_getErrorDescription(parser_error_t err) {
     return "Invalid eth chainId";
   case parser_invalid_rs_values:
     return "Invalid rs values";
-  case parser_invalid_datacap_tx:
-    return "Invalid remove allowance tx";
   case parser_invalid_cid:
     return "Invalid CID";
   case parser_invalid_deal_duration:
     return "Client deal duration must be >= 518400";
   case parser_invalid_prefix:
     return "Invalid raw-bytes prefix";
-  case parser_invalid_datacap_prefix:
-    return "Invalid datacap prefix";
   case parser_expert_mode_required:
     return "ExpertModeRequired";
   default:

@@ -21,7 +21,6 @@
 #include "common/parser_common.h"
 #include "fil_utils.h"
 #include "parser_client_deal.h"
-#include "parser_data_cap.h"
 #include "parser_impl.h"
 #include "parser_impl_eth.h"
 #include "parser_raw_bytes.h"
@@ -85,10 +84,6 @@ parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data,
     CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
     return _readEth(ctx, &eth_tx_obj);
   }
-  case datacap_tx: {
-    CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
-    return _readDataCap(ctx, &parser_tx_obj.rem_datacap_tx);
-  }
   case clientdeal_tx: {
     CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
     return _readClientDeal(ctx, &parser_tx_obj.client_deal_tx);
@@ -116,10 +111,6 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
   }
   case eth_tx: {
     CHECK_PARSER_ERR(_validateTxEth())
-    break;
-  }
-  case datacap_tx: {
-    CHECK_PARSER_ERR(_validateDataCap(ctx))
     break;
   }
   case clientdeal_tx: {
@@ -159,10 +150,6 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx,
   }
   case eth_tx: {
     CHECK_PARSER_ERR(_getNumItemsEth(num_items));
-    break;
-  }
-  case datacap_tx: {
-    *num_items = _getNumItemsDataCap(ctx);
     break;
   }
   case clientdeal_tx: {
@@ -374,10 +361,6 @@ parser_error_t parser_getItem(const parser_context_t *ctx, uint8_t displayIdx,
   case eth_tx: {
     return _getItemEth(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen,
                        pageIdx, pageCount);
-  }
-  case datacap_tx: {
-    return _getItemDataCap(ctx, displayIdx, outKey, outKeyLen, outVal,
-                           outValLen, pageIdx, pageCount);
   }
   case clientdeal_tx: {
     return _getItemClientDeal(ctx, displayIdx, outKey, outKeyLen, outVal,

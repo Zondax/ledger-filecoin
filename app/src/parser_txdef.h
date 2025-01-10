@@ -63,15 +63,6 @@ typedef struct {
     size_t len;
 } bigint_t;
 
-// To hold information
-// about the Remove DataCap
-// command.
-typedef struct {
-    uint64_t proposal_id;
-    bigint_t amount;
-    address_t client;
-} remove_datacap_t;
-
 // https://github.com/filecoin-project/go-state-types/blob/master/builtin/v9/market/deal.go#L40
 typedef struct {
     // add 1-byte for the null terminated string
@@ -128,7 +119,6 @@ typedef struct {
 typedef struct {
     union {
         fil_base_tx_t base_tx;
-        remove_datacap_t rem_datacap_tx;
         client_deal_t client_deal_tx;
         raw_bytes_state_t raw_bytes_tx;
     };

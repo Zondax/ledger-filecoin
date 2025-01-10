@@ -368,47 +368,6 @@ describe('Standard', function () {
     }
   });
 
-  test.concurrent.each(models)('RemoveDataCap', async function (m) {
-    const sim = new Zemu(m.path);
-    try {
-      await sim.start({ ...defaultOptions, model: m.name, });
-      const app = new FilecoinApp(sim.getTransport());
-
-      // The data to sign for this transaction is:
-      // proposalID = 1
-      // allowance_to_remove = 34359738368
-      // cliens_address = t0102
-      // encoded: 66696c5f72656d6f7665646174616361703a83420066460008000000008101
-
-      const txBlob = Buffer.from("66696c5f72656d6f7665646174616361703a83420066460008000000008101", 'hex')
-
-      const pkResponse = await app.getAddressAndPubKey(PATH);
-      console.log(pkResponse);
-      expect(pkResponse.return_code).toEqual(0x9000);
-      expect(pkResponse.error_message).toEqual("No errors");
-
-      // do not wait here..
-      const signatureRequest = app.signRemoveDataCap(PATH, txBlob);
-
-      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
-      await sim.compareSnapshotsAndApprove(".", `${m.prefix.toLowerCase()}-sign_remove_datacap`)
-
-      let resp = await signatureRequest;
-      console.log(resp);
-
-      expect(resp.return_code).toEqual(0x9000);
-      expect(resp.error_message).toEqual("No errors");
-
-      // Verify signature
-      const pk = Uint8Array.from(pkResponse.compressed_pk)
-      const digest = getDigest(txBlob);
-      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signature_der));
-      const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
-      expect(signatureOk).toEqual(true);
-    } finally {
-      await sim.close();
-    }
-  });
 
   test.concurrent.each(models)('ClientDeal', async function (m) {
     const sim = new Zemu(m.path);
