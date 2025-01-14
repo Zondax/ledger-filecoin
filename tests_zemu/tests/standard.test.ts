@@ -368,59 +368,6 @@ describe('Standard', function () {
     }
   });
 
-
-  test.concurrent.each(models)('ClientDeal', async function (m) {
-    const sim = new Zemu(m.path);
-    try {
-      await sim.start({ ...defaultOptions, model: m.name, });
-      const app = new FilecoinApp(sim.getTransport());
-
-      // Put the app in expert mode
-      await sim.toggleExpertMode();
-
-      // cid: hex(bytes("bafyreie74tgmnxqwojhtumgh5dzfj46gi4mynlfr7dmm7duwzyvnpw7h7m")) // but displayed as byteString(hex)
-      // piece_size = 19535695
-      // client := "t1d2xrzcslx7xlbbylc5c3d5lvandqw4iwl6epxba"
-      // provider := "t137sjdbgunloi7couiy4l5nc7pd6k2jmq32vizpy"
-      // label: ["client_deal_label", true]
-      // const start_epoch =100000000
-      // const end_epoch =200000000
-      // storage_price = 0
-      // provider_collateral = 2009005
-      // client_collateral = 0"
-      // verified_deal = true
-
-      const txBlob = Buffer.from("8bd82a582500017112209fe4ccc6de16724f3a30c7e8f254f3c6471986acb1f8d8cf8e96ce2ad7dbe7fb1a012a174ff555011eaf1c8a4bbfeeb0870b1745b1f57503470b71165501dfe49184d46adc8f89d44638beb45f78fcad259071636c69656e745f6465616c5f6c6162656c1a05f5e1001a0bebc2004044001ea7ad40", 'hex')
-
-
-      const pkResponse = await app.getAddressAndPubKey(PATH);
-      console.log(pkResponse);
-      expect(pkResponse.return_code).toEqual(0x9000);
-      expect(pkResponse.error_message).toEqual("No errors");
-
-      // do not wait here..
-      const signatureRequest = app.signClientDeal(PATH, txBlob);
-
-      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
-      await sim.compareSnapshotsAndApprove(".", `${m.prefix.toLowerCase()}-sign_client_deal`)
-
-      let resp = await signatureRequest;
-      console.log(resp);
-
-      expect(resp.return_code).toEqual(0x9000);
-      expect(resp.error_message).toEqual("No errors");
-
-      // Verify signature
-      const pk = Uint8Array.from(pkResponse.compressed_pk)
-      const digest = getDigest(txBlob);
-      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signature_der));
-      const signatureOk = secp256k1.ecdsaVerify(signature, digest, pk);
-      expect(signatureOk).toEqual(true);
-    } finally {
-      await sim.close();
-    }
-  });
-
   test.concurrent.each(models)('RawBytes', async function (m) {
     const sim = new Zemu(m.path);
     try {
