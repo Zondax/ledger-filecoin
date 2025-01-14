@@ -78,21 +78,6 @@ typedef struct {
     size_t len;
 } cid_t;
 
-// https://github.com/filecoin-project/lotus/blob/master/node/impl/client/client.go#L238-L265
-typedef struct {
-    cid_t cid;
-    uint64_t piece_size;
-    address_t client;
-    address_t provider;
-    deal_label_t label;
-    int64_t start_epoch;
-    int64_t end_epoch;
-    bigint_t storage_price_x_epoch;
-    bigint_t provider_collateral;
-    bigint_t client_collateral;
-    uint8_t verified_deal;
-} client_deal_t;
-
 // https://github.com/filecoin-project/lotus/blob/eb4f4675a5a765e4898ec6b005ba2e80da8e7e1a/chain/types/message.go#L24-L39
 typedef struct {
     int64_t version;
@@ -119,7 +104,6 @@ typedef struct {
 typedef struct {
     union {
         fil_base_tx_t base_tx;
-        client_deal_t client_deal_tx;
         raw_bytes_state_t raw_bytes_tx;
     };
 } parser_tx_t;

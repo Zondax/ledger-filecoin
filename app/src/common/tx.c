@@ -62,10 +62,6 @@ void tx_context_eth() {
   ctx_parsed_tx.tx_type = eth_tx;
 }
 
-void tx_context_client_deal() {
-  ctx_parsed_tx.tx_type = clientdeal_tx;
-}
-
 void tx_context_raw_bytes() {
   ctx_parsed_tx.tx_type = raw_bytes;
 }
