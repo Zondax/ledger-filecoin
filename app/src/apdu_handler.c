@@ -365,22 +365,9 @@ handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
         THROW(APDU_CODE_OK);
     }
 
-    const uint8_t instruction = G_io_apdu_buffer[OFFSET_INS];
-    switch (instruction) {
-        case INS_SIGN_SECP256K1:
-            ZEMU_LOGF(50, "HandleSignFil\n")
-            tx_context_fil();
-            break;
+    ZEMU_LOGF(50, "HandleSignFil\n")
+    tx_context_fil();
 
-        case INS_CLIENT_DEAL:
-            ZEMU_LOGF(50, "HandleSignClientDeal\n")
-            tx_context_client_deal();
-            break;
-
-        default:
-            THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
-            break;
-    }
     CHECK_APP_CANARY()
 
     uint8_t error_code;
@@ -546,11 +533,7 @@ handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
                     handleSign(flags, tx, rx);
                     break;
                 }
-                case INS_CLIENT_DEAL: {
-                    CHECK_PIN_VALIDATED()
-                    handleSign(flags, tx, rx);
-                    break;
-                }
+
                 case INS_SIGN_RAW_BYTES: {
                     CHECK_PIN_VALIDATED()
                     handleSignRawBytes(flags, tx, rx);

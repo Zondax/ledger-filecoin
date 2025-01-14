@@ -20,7 +20,6 @@
 #include "coin.h"
 #include "common/parser_common.h"
 #include "fil_utils.h"
-#include "parser_client_deal.h"
 #include "parser_impl.h"
 #include "parser_impl_eth.h"
 #include "parser_raw_bytes.h"
@@ -85,11 +84,6 @@ parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data,
     CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
     return _readEth(ctx, &eth_tx_obj);
   }
-  case clientdeal_tx: {
-    CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
-    app_mode_skip_blindsign_ui(); 
-    return _readClientDeal(ctx, &parser_tx_obj.client_deal_tx);
-  }
   case raw_bytes: {
     // Processing raw-bytes is valid only in expert mode
     if (!app_mode_blindsign())
@@ -113,10 +107,6 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
   }
   case eth_tx: {
     CHECK_PARSER_ERR(_validateTxEth())
-    break;
-  }
-  case clientdeal_tx: {
-    CHECK_PARSER_ERR(_validateClientDeal(ctx))
     break;
   }
   case raw_bytes: {
@@ -152,10 +142,6 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx,
   }
   case eth_tx: {
     CHECK_PARSER_ERR(_getNumItemsEth(num_items));
-    break;
-  }
-  case clientdeal_tx: {
-    *num_items = _getNumItemsClientDeal(ctx);
     break;
   }
   case raw_bytes: {
@@ -363,10 +349,6 @@ parser_error_t parser_getItem(const parser_context_t *ctx, uint8_t displayIdx,
   case eth_tx: {
     return _getItemEth(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen,
                        pageIdx, pageCount);
-  }
-  case clientdeal_tx: {
-    return _getItemClientDeal(ctx, displayIdx, outKey, outKeyLen, outVal,
-                              outValLen, pageIdx, pageCount);
   }
   case raw_bytes: {
     // for now just display the hash

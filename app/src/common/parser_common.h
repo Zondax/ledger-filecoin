@@ -81,7 +81,6 @@ typedef enum {
 typedef enum {
   fil_tx = 0,
   eth_tx,
-  clientdeal_tx,
   raw_bytes,
 } tx_type_t;
 
