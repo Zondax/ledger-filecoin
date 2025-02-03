@@ -65,13 +65,12 @@ typedef enum {
   parser_invalid_rlp_data,
   parser_invalid_chain_id,
   parser_invalid_rs_values,
-  parser_invalid_datacap_tx,
   parser_invalid_cid,
   parser_invalid_deal_duration,
   parser_invalid_prefix,
-  parser_invalid_datacap_prefix,
   // Customs
   parser_expert_mode_required,
+  parser_blindsign_required,
 } parser_error_t;
 
 // Define the three types
@@ -82,8 +81,6 @@ typedef enum {
 typedef enum {
   fil_tx = 0,
   eth_tx,
-  datacap_tx,
-  clientdeal_tx,
   raw_bytes,
 } tx_type_t;
 
