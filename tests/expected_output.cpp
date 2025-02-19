@@ -179,60 +179,6 @@ std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool)
     return answer;
 }
 
-std::vector<std::string> ClientDealGenerateExpectedUIOutput(const Json::Value &json, bool) {
-    auto answer = std::vector<std::string>();
-
-    auto valid = json["valid"].asBool();
-
-    if (!valid) {
-        answer.emplace_back("Test case is not valid!");
-        return answer;
-    }
-
-    ///
-    ///
-
-    auto message = json["message"];
-
-    auto pieceCID = message["PieceCID"].asString();
-    auto client = message["Client"].asString();
-    auto provider = message["Provider"].asString();
-
-    auto pieceSize = message["PieceSize(B)"].asUInt64();
-    auto dealLabel = message["DealLabel"].asString();
-    auto startEpoch = message["StartEpoch"].asUInt64();
-    auto endEpoch = message["EndEpoch"].asUInt64();
-    auto provCollateral = message["ProvCollateral"].asString();
-    auto clientCollateral = message["ClientCollateral"].asString();
-    auto verifiedDeal = message["VerifiedDeal"].asBool();
-
-    auto cid = FormatAddress(0, "PieceCID ", pieceCID);
-    answer.insert(answer.end(), cid.begin(), cid.end());
-
-    auto clientAddress = FormatAddress(1, "Client ", client);
-    answer.insert(answer.end(), clientAddress.begin(), clientAddress.end());
-
-    auto providerAddress = FormatAddress(2, "Provider ", provider);
-    answer.insert(answer.end(), providerAddress.begin(), providerAddress.end());
-
-
-    addTo(answer, "3 | PieceSize(B): {}", pieceSize);
-
-    addTo(answer, "4 | DealLabel: {}", dealLabel);
-
-    addTo(answer, "5 | StartEpoch: {}", startEpoch);
-
-    addTo(answer, "6 | EndEpoch: {}", endEpoch);
-
-    addTo(answer, "7 | ProvCollateral: {}", FormatAmount(provCollateral));
-
-    addTo(answer, "8 | ClientCollateral: {}", FormatAmount( clientCollateral ));
-
-    addTo(answer, "9 | VerifiedDeal : {}", verifiedDeal);
-
-    return answer;
-}
-
 std::vector<std::string> EVMGenerateExpectedUIOutput(const Json::Value &json, bool) {
     auto answer = std::vector<std::string>();
 

@@ -117,8 +117,8 @@ parser_error_t _validateRawBytes(__Z_UNUSED const parser_context_t *ctx) {
 }
 
 uint8_t _getNumItemsRawBytes(__Z_UNUSED const parser_context_t *ctx) {
-  // Warning message and raw-bytes data hash as an hex string
-  return 2;
+  // Raw-bytes data hash as an hex string
+  return 1;
 }
 
 parser_error_t _getItemRawBytes(__Z_UNUSED const parser_context_t *ctx,
@@ -127,14 +127,14 @@ parser_error_t _getItemRawBytes(__Z_UNUSED const parser_context_t *ctx,
                                 uint16_t outValLen, uint8_t pageIdx,
                                 uint8_t *pageCount) {
 
-  if (displayIdx > 1)
+  if (displayIdx > 1) {
     return parser_display_idx_out_of_range;
-
-  if (displayIdx == 0) {
-    snprintf(outKey, outKeyLen, "Warning:");
-    pageString(outVal, outValLen, "Signing Raw-bytes data", pageIdx, pageCount);
-    return parser_ok;
   }
+
+    // Check that Blindsign is enabled
+    if (!app_mode_blindsign()) {
+      return parser_blindsign_required;
+    }
 
   // get the hash of the buffer
   uint8_t hex[BLAKE2B_256_SIZE * 2 + 1] = {0};
