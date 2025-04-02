@@ -17,18 +17,41 @@ jobs:
     steps:
       - id: get-user
         run: echo "uid_gid=$(id -u):$(id -g)" >> $GITHUB_OUTPUT
+  
+  build_application:
+    name: Build application using the reusable workflow
+    uses: LedgerHQ/ledger-app-workflows/.github/workflows/reusable_build.yml@v1
+    with:
+      upload_app_binaries_artifact: "compiled_app_binaries"
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.repository_owner == 'zondax' && 'zondax-runners' || 'ubuntu-latest' }}
     steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl protobuf-compiler build-essential git wget unzip python3 python3-pip \
+            libssl-dev libffi-dev libreadline-dev zlib1g-dev libbz2-dev libsqlite3-dev libncurses5-dev \
+            libgdbm-dev libnss3-dev liblzma-dev libxml2-dev libxmlsec1-dev libffi-dev libyaml-dev
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: true
+      - name: Install CMake 3.28
+        run: |
+          wget https://github.com/Kitware/CMake/releases/download/v3.28.0/cmake-3.28.0-linux-x86_64.sh
+          sudo mkdir /opt/cmake
+          sudo sh cmake-3.28.0-linux-x86_64.sh --skip-license --prefix=/opt/cmake
+          sudo ln -sf /opt/cmake/bin/cmake /usr/local/bin/cmake
+          sudo ln -sf /opt/cmake/bin/ctest /usr/local/bin/ctest
+      - name: Verify CMake version
+        run: cmake --version
       - name: Install deps
         run: |
           sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10
           make deps
+      - name: Run CMake
+        run: mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug .. && make
       - run: make cpp_test
 
   build_ledger:
