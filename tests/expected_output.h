@@ -16,8 +16,8 @@
 #pragma once
 #include <fstream>
 #include <vector>
-#include <json/json.h>
+#include <nlohmann/json.hpp>
 
-std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool expertMode);
-std::vector<std::string> EVMGenerateExpectedUIOutput(const Json::Value &json, bool expertMode);
-std::vector<std::string> InvokeContractGenerateExpectedUIOutput(const Json::Value &json, bool expertMode);
+std::vector<std::string> GenerateExpectedUIOutput(const nlohmann::json &json, bool expertMode);
+std::vector<std::string> EVMGenerateExpectedUIOutput(const nlohmann::json &json, bool expertMode);
+std::vector<std::string> InvokeContractGenerateExpectedUIOutput(const nlohmann::json &json, bool expertMode);

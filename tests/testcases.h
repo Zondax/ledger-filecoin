@@ -14,7 +14,7 @@
 *  limitations under the License.
 ********************************************************************************/
 #pragma once
-#include <json/json.h>
+#include <nlohmann/json.hpp>
 #include <fstream>
 
 typedef struct {
