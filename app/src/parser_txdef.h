@@ -32,11 +32,7 @@ extern "C" {
 
 #define MAX_SUPPORT_METHOD      UINT64_MAX
 
-#if defined(TARGET_NANOS)
-#define MAX_PARAMS_BUFFER_SIZE 200
-#else
 #define MAX_PARAMS_BUFFER_SIZE 1256
-#endif
 
 #define ETH_ADDRESS_LEN         20
 #define MAX_CHAIN_LEN           UINT64_MAX
