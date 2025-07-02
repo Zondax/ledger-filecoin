@@ -20,6 +20,7 @@
 
 #include "base32.h"
 #include "coin.h"
+#include "coin_evm.h"
 #include "cx.h"
 #include "cx_blake2b.h"
 #include "tx.h"

@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  (c) 2018 - 2023 Zondax AG
+ *   (c) 2018 - 2024 Zondax AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,30 +15,39 @@
  ********************************************************************************/
 #pragma once
 
-#include <stdint.h>
-
-#include "coin.h"
-#include "parser_common.h"
-#include "parser_txdef.h"
-#include "rlp.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define ERC20_TRANSFER_DATA_LENGTH 68  // 4 + 32 + 32
-#define MAX_SYMBOL_LEN 10
-typedef struct {
-    uint8_t address[ETH_ADDR_LEN];
-    char symbol[MAX_SYMBOL_LEN];
-    uint8_t decimals;
-} erc20_tokens_t;
+#define CLA_ETH 0xE0
 
-bool validateERC20(eth_tx_t *ethObj);
-parser_error_t getERC20Token(const eth_tx_t *ethObj, char tokenSymbol[MAX_SYMBOL_LEN], uint8_t *decimals);
-parser_error_t printERC20Value(const eth_tx_t *ethObj, char *outVal, uint16_t outValLen, uint8_t pageIdx,
-                               uint8_t *pageCount);
+#define HDPATH_ETH_0_DEFAULT (0x80000000u | 0x2cu)
+#define HDPATH_ETH_1_DEFAULT (0x80000000u | 0x3cu)
 
+// transaction is sent as a blob of rlp encoded bytes,
+#define P1_ETH_FIRST 0x00
+#define P1_ETH_MORE 0x80
+// eth address chain_code allowed valuec
+#define P2_NO_CHAINCODE 0x00
+#define P2_CHAINCODE 0x01
+
+#define ETH_ADDR_LEN 20u
+#define SELECTOR_LENGTH 4
+#define BIGINT_LENGTH 32
+#define DATA_BYTES_TO_PRINT 10
+
+#define SECP256K1_PK_LEN 65u
+#define SECP256K1_SK_LEN 64u
+#define PK_LEN_SECP256K1_UNCOMPRESSED 65u
+#define SK_LEN_25519 64u
+
+#define INS_SIGN_ETH 0x04
+#define INS_GET_ADDR_ETH 0x02
+#define INS_SIGN_PERSONAL_MESSAGE 0x08
+
+#define VIEW_ADDRESS_OFFSET_ETH (SECP256K1_PK_LEN + 1 + 1)
+
+#define COIN_DECIMALS 18
 #ifdef __cplusplus
 }
 #endif

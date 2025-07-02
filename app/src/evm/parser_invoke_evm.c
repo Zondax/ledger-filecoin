@@ -16,8 +16,9 @@
 #include "parser_invoke_evm.h"
 
 #include "app_mode.h"
-#include "eth_erc20.h"
-#include "eth_utils.h"
+#include "evm_erc20.h"
+#include "evm_utils.h"
+#include "coin_evm.h"
 #include "fil_utils.h"
 #include "rlp.h"
 
@@ -107,7 +108,6 @@ parser_error_t printInvokeEVM(const fil_base_tx_t *txObj, uint8_t displayIdx, ch
     if (txObj->value.len != 0 || txObj->to.len != F4_ETH_ADDRESS_BYTES_LEN ||
         addressIdentifier != F4_ETH_ADDRESS_IDENTIFIER) {
         return parser_unexpected_error;
-        ;
     }
     rlp_t tmpValue = {0};
     rlp_t tokenContract = {.ptr = txObj->to.buffer + 2, .rlpLen = ETH_ADDRESS_LEN, .kind = RLP_KIND_STRING};

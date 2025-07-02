@@ -22,6 +22,7 @@
 #include <iostream>
 
 #include "crypto_helper.h"
+#include "coin_evm.h"
 #include "gmock/gmock.h"
 
 extern const char *crypto_testPubKey;

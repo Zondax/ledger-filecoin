@@ -126,17 +126,19 @@ file(GLOB_RECURSE LIB_SRC
         ####
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser_impl.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser_impl_eth.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/fil_utils.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser_raw_bytes.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/eth_utils.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/crypto_helper.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/crypto_test.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/base32.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/rlp.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/uint256.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/eth_erc20.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser_invoke_evm.c
+
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/evm/parser_impl_evm.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/evm/parser_evm.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/evm/parser_invoke_evm.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/evm/rlp.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/evm/uint256.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/evm/evm_erc20.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/evm/evm_utils.c
         )
 
 add_library(app_lib STATIC
@@ -151,6 +153,7 @@ target_include_directories(app_lib PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/lib
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/common
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/evm
         )
 
 ##############################################################

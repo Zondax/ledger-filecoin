@@ -15,28 +15,29 @@
  ********************************************************************************/
 #pragma once
 
-#include "parser_common.h"
-#include "crypto.h"
+#include <stdint.h>
+
+#include "coin_evm.h"
 #include "parser_common.h"
 #include "parser_txdef.h"
+#include "rlp.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-extern parser_tx_t parser_tx_obj;
+#define ERC20_TRANSFER_DATA_LENGTH 68  // 4 + 32 + 32
+#define MAX_SYMBOL_LEN 10
+typedef struct {
+    uint8_t address[ETH_ADDR_LEN];
+    char symbol[MAX_SYMBOL_LEN];
+    uint8_t decimals;
+} erc20_tokens_t;
 
-parser_error_t raw_bytes_init(uint8_t *buf, size_t buf_len);
-parser_error_t raw_bytes_update(uint8_t *buf, size_t buf_len);
-
-parser_error_t _readRawBytes(const parser_context_t *ctx, raw_bytes_state_t *tx);
-
-parser_error_t _validateRawBytes(const parser_context_t *ctx);
-
-uint8_t _getNumItemsRawBytes(const parser_context_t *ctx);
-
-parser_error_t _getItemRawBytes(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
-                                char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount);
+bool validateERC20(eth_tx_t *ethObj);
+parser_error_t getERC20Token(const eth_tx_t *ethObj, char tokenSymbol[MAX_SYMBOL_LEN], uint8_t *decimals);
+parser_error_t printERC20Value(const eth_tx_t *ethObj, char *outVal, uint16_t outValLen, uint8_t pageIdx,
+                               uint8_t *pageCount);
 
 #ifdef __cplusplus
 }

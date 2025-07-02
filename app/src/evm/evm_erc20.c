@@ -14,7 +14,7 @@
  *  limitations under the License.
  ********************************************************************************/
 
-#include "eth_erc20.h"
+#include "evm_erc20.h"
 
 #include "zxformat.h"
 

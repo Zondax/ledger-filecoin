@@ -13,12 +13,12 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  ********************************************************************************/
-#include "eth_utils.h"
+#include "evm_utils.h"
 
 #include <stdio.h>
 #include <zxmacros.h>
 
-#include "coin.h"
+#include "coin_evm.h"
 #include "rlp.h"
 #include "zxerror.h"
 #include "zxformat.h"

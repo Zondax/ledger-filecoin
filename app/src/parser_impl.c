@@ -20,8 +20,8 @@
 
 #include "app_mode.h"
 #include "cbor.h"
-#include "common/parser_common.h"
-#include "eth_erc20.h"
+#include "parser_common.h"
+#include "evm_erc20.h"
 #include "fil_utils.h"
 #include "parser_invoke_evm.h"
 #include "parser_txdef.h"

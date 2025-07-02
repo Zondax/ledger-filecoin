@@ -22,7 +22,7 @@
 
 #include "app_mode.h"
 #include "cbor.h"
-#include "common/parser_common.h"
+#include "parser_common.h"
 #include "crypto.h"
 #include "fil_utils.h"
 #include "parser_impl.h"
