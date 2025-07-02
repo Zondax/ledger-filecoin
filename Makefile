@@ -1,5 +1,5 @@
 #*******************************************************************************
-#*   (c) 2019 Zondax GmbH
+#*   (c) 2018 -2024 Zondax AG
 #*
 #*  Licensed under the Apache License, Version 2.0 (the "License");
 #*  you may not use this file except in compliance with the License.
@@ -23,6 +23,12 @@ TESTS_JS_DIR =
 
 ifeq ($(BOLOS_SDK),)
 PRODUCTION_BUILD ?= 1
+SKIP_NANOS = 1
+
+ifeq ($(SKIP_NANOS), 0)
+$(error "NanoS device is not supported")
+endif
+
 include $(CURDIR)/deps/ledger-zxlib/dockerized_build.mk
 else
 default:
@@ -33,6 +39,7 @@ default:
 endif
 
 test_all:
+	make clean
+	PRODUCTION_BUILD=1 make
 	make zemu_install
-	make
 	make zemu_test

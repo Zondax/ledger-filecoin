@@ -18,7 +18,7 @@
 
 #include <iostream>
 #include <fstream>
-#include <json/json.h>
+#include <nlohmann/json.hpp>
 #include <hexutils.h>
 #include <app_mode.h>
 #include "parser.h"
@@ -53,9 +53,6 @@ template <typename Generator>
 std::vector<testcase_t> GetJsonTestCases(const std::string &jsonFile, Generator gen_ui_output) {
     auto answer = std::vector<testcase_t>();
 
-    Json::CharReaderBuilder builder;
-    Json::Value obj;
-
     std::string fullPathJsonFile = std::string(TESTVECTORS_DIR) + jsonFile;
 
     std::ifstream inFile(fullPathJsonFile);
@@ -64,8 +61,8 @@ std::vector<testcase_t> GetJsonTestCases(const std::string &jsonFile, Generator 
     }
 
     // Retrieve all test cases
-    JSONCPP_STRING errs;
-    Json::parseFromStream(builder, inFile, &obj, &errs);
+    nlohmann::json obj;
+    inFile >> obj;
     std::cout << "Number of testcases: " << obj.size() << std::endl;
 
     for (auto &i : obj) {
@@ -74,20 +71,17 @@ std::vector<testcase_t> GetJsonTestCases(const std::string &jsonFile, Generator 
         auto outputs = gen_ui_output(i, false);
         auto outputs_expert = gen_ui_output(i, true);
 
-        bool valid = true;
-        if (i.isMember("valid")) {
-            valid = i["valid"].asBool();
-        }
+        bool valid = i.value("valid", true);
 
-        auto name = CleanTestname(i["description"].asString());
+        auto name = CleanTestname(i.value("description", std::string("")));
 
         answer.push_back(testcase_t{
                 answer.size() + 1,
                 name,
-                i["encoded_tx_hex"].asString(),
+                i.value("encoded_tx_hex", std::string("")),
                 valid,
-                i["testnet"].asBool(),
-                i["error"].asString(),
+                i.value("testnet", false),
+                i.value("error", std::string("")),
                 outputs,
                 outputs_expert
         });
