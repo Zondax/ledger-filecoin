@@ -117,7 +117,7 @@ parser_error_t _getItemRawBytes(__Z_UNUSED const parser_context_t *ctx, uint8_t 
 
     // Check that Blindsign is enabled
     if (!app_mode_blindsign()) {
-        return parser_blindsign_required;
+        return parser_blindsign_mode_required;
     }
 
     // get the hash of the buffer

@@ -13,27 +13,17 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  ********************************************************************************/
-
 #pragma once
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+#include <stdint.h>
 
-#include <sigutils.h>
-#include <stdbool.h>
+void handleGetAddrEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx);
+void handleSignEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx);
+void handleSignEip191(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx);
 
-#include "coin.h"
-#include "zxerror.h"
-extern uint8_t evm_chain_code;
-extern uint32_t hdPathEth[HDPATH_LEN_DEFAULT];
-extern uint32_t hdPathEth_len;
-
-zxerr_t crypto_fillEthAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrLen);
-zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen,
-                        uint16_t *sigSize, bool hash);
-
-zxerr_t keccak_digest(const unsigned char *in, unsigned int inLen, unsigned char *out, unsigned int outLen);
 #ifdef __cplusplus
 }
 #endif

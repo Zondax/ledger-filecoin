@@ -82,7 +82,7 @@ parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data, size_t d
         }
         case raw_bytes: {
             // Processing raw-bytes is valid only in expert mode
-            if (!app_mode_blindsign()) return parser_blindsign_required;
+            if (!app_mode_blindsign()) return parser_blindsign_mode_required;
 
             return _readRawBytes(ctx, &parser_tx_obj.raw_bytes_tx);
         }

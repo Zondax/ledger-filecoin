@@ -22,7 +22,7 @@
 #include "zxformat.h"
 #include "zxmacros.h"
 
-uint8_t fil_chain_code;
+uint8_t evm_chain_code;
 uint32_t hdPathEth[HDPATH_LEN_DEFAULT];
 uint32_t hdPathEth_len;
 
@@ -181,7 +181,7 @@ zxerr_t crypto_fillEthAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *ad
     answer_eth_t *const answer = (answer_eth_t *)buffer;
 
     CHECK_ZXERR(crypto_extractUncompressedPublicKey(&answer->publicKey[1], sizeof_field(answer_eth_t, publicKey) - 1,
-                                                    &fil_chain_code))
+                                                    &evm_chain_code))
 
     answer->publicKey[0] = SECP256K1_PK_LEN;
 

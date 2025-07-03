@@ -101,6 +101,8 @@ const char *parser_getErrorDescription(parser_error_t err) {
             return "Invalid raw-bytes prefix";
         case parser_expert_mode_required:
             return "ExpertModeRequired";
+        case parser_blindsign_mode_required:
+            return "Blindsign Mode Required";
         default:
             return "Unrecognized error code";
     }

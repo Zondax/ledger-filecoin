@@ -167,7 +167,7 @@ parser_error_t _readEth(parser_context_t *ctx, eth_tx_t *tx_obj) {
 
 parser_error_t _validateTxEth() {
     if (!validateERC20(&eth_tx_obj) && !app_mode_blindsign()) {
-        return parser_blindsign_required;
+        return parser_blindsign_mode_required;
     }
 
     return parser_ok;
@@ -240,7 +240,7 @@ parser_error_t _getItemEth(const parser_context_t *ctx, uint8_t displayIdx, char
 
     // Otherwise, check that Blindsign is enabled
     if (!app_mode_blindsign()) {
-        return parser_blindsign_required;
+        return parser_blindsign_mode_required;
     }
 
     if (displayIdx > 1) {
