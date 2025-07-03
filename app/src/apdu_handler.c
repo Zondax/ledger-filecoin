@@ -26,7 +26,6 @@
 #include "app_main.h"
 #include "coin.h"
 #include "coin_evm.h"
-#include "tx.h"
 #include "crypto.h"
 #include "evm_addr.h"
 #include "evm_utils.h"

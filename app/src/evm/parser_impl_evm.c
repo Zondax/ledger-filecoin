@@ -20,10 +20,10 @@
 #include <zxmacros.h>
 
 #include "app_mode.h"
-#include "parser_common.h"
 #include "crypto.h"
 #include "evm_erc20.h"
 #include "evm_utils.h"
+#include "parser_common.h"
 #include "parser_txdef.h"
 #include "rlp.h"
 #include "uint256.h"

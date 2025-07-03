@@ -16,9 +16,9 @@
 #include "parser_invoke_evm.h"
 
 #include "app_mode.h"
+#include "coin_evm.h"
 #include "evm_erc20.h"
 #include "evm_utils.h"
-#include "coin_evm.h"
 #include "fil_utils.h"
 #include "rlp.h"
 
