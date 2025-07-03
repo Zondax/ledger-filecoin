@@ -22,7 +22,7 @@ extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 
-#define CHECK_PARSER_ERR(__CALL)              \
+#define CHECK_ERROR(__CALL)              \
     {                                         \
         parser_error_t __err = __CALL;        \
         CHECK_APP_CANARY()                    \

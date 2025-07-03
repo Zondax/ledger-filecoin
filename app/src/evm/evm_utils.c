@@ -129,7 +129,7 @@ parser_error_t printRLPNumber(const rlp_t *num, char *outVal, uint16_t outValLen
     uint256_t tmpUint256 = {0};
     char tmpBuffer[100] = {0};
 
-    CHECK_PARSER_ERR(rlp_readUInt256(num, &tmpUint256));
+    CHECK_ERROR(rlp_readUInt256(num, &tmpUint256));
     if (!tostring256(&tmpUint256, 10, tmpBuffer, sizeof(tmpBuffer))) {
         return parser_unexpected_error;
     }

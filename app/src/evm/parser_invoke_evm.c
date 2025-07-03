@@ -43,7 +43,7 @@ parser_error_t getNumItemsInvokeEVM(uint8_t *numItems, const fil_base_tx_t *txOb
     rlp_t data = {.ptr = txObj->params, .rlpLen = ERC20_TRANSFER_DATA_LENGTH, .kind = RLP_KIND_STRING};
     eth_tx_t tmpEthObj = {.tx.value = tmpValue, .tx.to = tokenContract, .tx.data = data};
 
-    CHECK_PARSER_ERR(getERC20Token(&tmpEthObj, tokenSymbol, &decimals));
+    CHECK_ERROR(getERC20Token(&tmpEthObj, tokenSymbol, &decimals));
     const bool unknownToken = (memcmp(tokenSymbol, "?? ", 3) == 0);
 
     *numItems = 5;
@@ -116,7 +116,7 @@ parser_error_t printInvokeEVM(const fil_base_tx_t *txObj, uint8_t displayIdx, ch
 
     char tokenSymbol[10] = {0};
     uint8_t decimals = 0;
-    CHECK_PARSER_ERR(getERC20Token(&tmpEthObj, tokenSymbol, &decimals));
+    CHECK_ERROR(getERC20Token(&tmpEthObj, tokenSymbol, &decimals));
     const bool knownToken = (memcmp(tokenSymbol, "?? ", 3) != 0);
 
     // Check if the from identifier is an F4 address.
@@ -148,12 +148,12 @@ parser_error_t printInvokeEVM(const fil_base_tx_t *txObj, uint8_t displayIdx, ch
 
         case 1:
             snprintf(outKey, outKeyLen, "From");
-            CHECK_PARSER_ERR(printEthAddress(&txObj->from, outVal, outValLen, pageIdx, pageCount));
+            CHECK_ERROR(printEthAddress(&txObj->from, outVal, outValLen, pageIdx, pageCount));
             break;
 
         case 2:
             snprintf(outKey, outKeyLen, "From");
-            CHECK_PARSER_ERR(printAddress(&txObj->from, outVal, outValLen, pageIdx, pageCount));
+            CHECK_ERROR(printAddress(&txObj->from, outVal, outValLen, pageIdx, pageCount));
             break;
 
         case 3:
@@ -161,31 +161,31 @@ parser_error_t printInvokeEVM(const fil_base_tx_t *txObj, uint8_t displayIdx, ch
             rlp_t to = {.kind = RLP_KIND_STRING,
                         .ptr = (txObj->params + SELECTOR_LENGTH + (BIGINT_LENGTH - ETH_ADDRESS_LEN)),
                         .rlpLen = ETH_ADDRESS_LEN};
-            CHECK_PARSER_ERR(printEVMAddress(&to, outVal, outValLen, pageIdx, pageCount));
+            CHECK_ERROR(printEVMAddress(&to, outVal, outValLen, pageIdx, pageCount));
             break;
 
         case 4: {
             snprintf(outKey, outKeyLen, "To");
             const uint8_t *toPtr = txObj->params + SELECTOR_LENGTH + (BIGINT_LENGTH - ETH_ADDRESS_LEN);
-            CHECK_PARSER_ERR(print0xToF0(toPtr, ETH_ADDRESS_LEN, outVal, outValLen, pageIdx, pageCount));
+            CHECK_ERROR(print0xToF0(toPtr, ETH_ADDRESS_LEN, outVal, outValLen, pageIdx, pageCount));
             break;
         }
 
         case 5: {
             snprintf(outKey, outKeyLen, "Token Contract");
             rlp_t contractAddress = {.kind = RLP_KIND_STRING, .ptr = (txObj->to.buffer + 2), .rlpLen = ETH_ADDRESS_LEN};
-            CHECK_PARSER_ERR(printEVMAddress(&contractAddress, outVal, outValLen, pageIdx, pageCount));
+            CHECK_ERROR(printEVMAddress(&contractAddress, outVal, outValLen, pageIdx, pageCount));
             break;
         }
 
         case 6:
             snprintf(outKey, outKeyLen, "Token Contract");
-            CHECK_PARSER_ERR(printAddress(&txObj->to, outVal, outValLen, pageIdx, pageCount));
+            CHECK_ERROR(printAddress(&txObj->to, outVal, outValLen, pageIdx, pageCount));
             break;
 
         case 7:
             snprintf(outKey, outKeyLen, "Value");
-            CHECK_PARSER_ERR(printERC20Value(&tmpEthObj, outVal, outValLen, pageIdx, pageCount));
+            CHECK_ERROR(printERC20Value(&tmpEthObj, outVal, outValLen, pageIdx, pageCount));
             break;
 
         case 8: {
@@ -206,13 +206,13 @@ parser_error_t printInvokeEVM(const fil_base_tx_t *txObj, uint8_t displayIdx, ch
 
         case 9:
             snprintf(outKey, outKeyLen, "Gas Fee Cap");
-            CHECK_PARSER_ERR(parser_printBigIntFixedPoint(&txObj->gasfeecap, outVal, outValLen, pageIdx, pageCount,
+            CHECK_ERROR(parser_printBigIntFixedPoint(&txObj->gasfeecap, outVal, outValLen, pageIdx, pageCount,
                                                           COIN_AMOUNT_DECIMAL_PLACES));
             break;
 
         case 10:
             snprintf(outKey, outKeyLen, "Gas Premium");
-            CHECK_PARSER_ERR(parser_printBigIntFixedPoint(&txObj->gaspremium, outVal, outValLen, pageIdx, pageCount,
+            CHECK_ERROR(parser_printBigIntFixedPoint(&txObj->gaspremium, outVal, outValLen, pageIdx, pageCount,
                                                           COIN_AMOUNT_DECIMAL_PLACES));
             break;
 

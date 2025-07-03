@@ -27,30 +27,30 @@
 #include "parser_impl_evm.h"
 
 parser_error_t parser_parse_eth(parser_context_t *ctx, const uint8_t *data, size_t dataLen) {
-    CHECK_PARSER_ERR(parser_init_context(ctx, data, dataLen))
+    CHECK_ERROR(parser_init_context(ctx, data, dataLen))
     return _readEth(ctx, &eth_tx_obj);
 }
 
 parser_error_t parser_validate_eth(parser_context_t *ctx) {
-    CHECK_PARSER_ERR(_validateTxEth())
+    CHECK_ERROR(_validateTxEth())
 
     // Iterate through all items to check that all can be shown and are valid
     uint8_t numItems = 0;
-    CHECK_PARSER_ERR(_getNumItemsEth(&numItems));
+    CHECK_ERROR(_getNumItemsEth(&numItems));
 
     char tmpKey[40] = {0};
     char tmpVal[40] = {0};
 
     for (uint8_t idx = 0; idx < numItems; idx++) {
         uint8_t pageCount = 0;
-        CHECK_PARSER_ERR(parser_getItemEth(ctx, idx, tmpKey, sizeof(tmpKey), tmpVal, sizeof(tmpVal), 0, &pageCount))
+        CHECK_ERROR(parser_getItemEth(ctx, idx, tmpKey, sizeof(tmpKey), tmpVal, sizeof(tmpVal), 0, &pageCount))
     }
     return parser_ok;
 }
 
 parser_error_t parser_getNumItemsEth(const parser_context_t *ctx, uint8_t *num_items) {
     UNUSED(ctx);
-    CHECK_PARSER_ERR(_getNumItemsEth(num_items));
+    CHECK_ERROR(_getNumItemsEth(num_items));
     if (*num_items == 0) {
         return parser_unexpected_buffer_end;
     }
@@ -74,10 +74,10 @@ static parser_error_t checkSanity(uint8_t numItems, uint8_t displayIdx) {
 parser_error_t parser_getItemEth(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
                                  char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
     uint8_t numItems = 0;
-    CHECK_PARSER_ERR(parser_getNumItemsEth(ctx, &numItems))
+    CHECK_ERROR(parser_getNumItemsEth(ctx, &numItems))
     CHECK_APP_CANARY()
 
-    CHECK_PARSER_ERR(checkSanity(numItems, displayIdx))
+    CHECK_ERROR(checkSanity(numItems, displayIdx))
     cleanOutput(outKey, outKeyLen, outVal, outValLen);
 
     return _getItemEth(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);

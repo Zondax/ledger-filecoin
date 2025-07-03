@@ -119,7 +119,7 @@ parser_error_t printValue(const struct CborValue *value, char *outVal, uint16_t 
             CHECK_APP_CANARY()
 
             if (buffLen > 0) {
-                CHECK_PARSER_ERR(renderByteString(buff, buffLen, outVal, outValLen, pageIdx, pageCount))
+                CHECK_ERROR(renderByteString(buff, buffLen, outVal, outValLen, pageIdx, pageCount))
             }
             break;
         }
@@ -146,7 +146,7 @@ parser_error_t printValue(const struct CborValue *value, char *outVal, uint16_t 
             if (tag == TAG_CID) {
                 CHECK_CBOR_MAP_ERR(cbor_value_copy_tag(value, buff, &buffLen, NULL /* next */))
                 CHECK_APP_CANARY()
-                CHECK_PARSER_ERR(renderByteString(buff, buffLen, outVal, outValLen, pageIdx, pageCount))
+                CHECK_ERROR(renderByteString(buff, buffLen, outVal, outValLen, pageIdx, pageCount))
                 break;
             }
             return parser_unexpected_type;
@@ -191,7 +191,7 @@ parser_error_t _printParam(const fil_base_tx_t *tx, uint8_t paramIdx, char *outV
             PARSER_ASSERT_OR_ERROR(itContainer.type != CborInvalidType, parser_unexpected_type)
             // Not every ByteStringType must be interpreted as address. Depends on
             // method number and actor.
-            CHECK_PARSER_ERR(printAddress(&tmpAddr, outVal, outValLen, pageIdx, pageCount));
+            CHECK_ERROR(printAddress(&tmpAddr, outVal, outValLen, pageIdx, pageCount));
             break;
         }
         case CborMapType:
@@ -204,7 +204,7 @@ parser_error_t _printParam(const fil_base_tx_t *tx, uint8_t paramIdx, char *outV
                 CHECK_APP_CANARY()
             }
 
-            CHECK_PARSER_ERR(printValue(&itParams, outVal, outValLen, pageIdx, pageCount))
+            CHECK_ERROR(printValue(&itParams, outVal, outValLen, pageIdx, pageCount))
 
             /// Leave container
             while (!cbor_value_at_end(&itParams)) {
@@ -342,12 +342,12 @@ parser_error_t _read(const parser_context_t *c, fil_base_tx_t *v) {
     }
 
     // "to" field
-    CHECK_PARSER_ERR(readAddress(&v->to, &arrayContainer))
+    CHECK_ERROR(readAddress(&v->to, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // "from" field
-    CHECK_PARSER_ERR(readAddress(&v->from, &arrayContainer))
+    CHECK_ERROR(readAddress(&v->from, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
@@ -358,7 +358,7 @@ parser_error_t _read(const parser_context_t *c, fil_base_tx_t *v) {
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // "value" field
-    CHECK_PARSER_ERR(readBigInt(&v->value, &arrayContainer))
+    CHECK_ERROR(readBigInt(&v->value, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
@@ -369,17 +369,17 @@ parser_error_t _read(const parser_context_t *c, fil_base_tx_t *v) {
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // "gasFeeCap" field
-    CHECK_PARSER_ERR(readBigInt(&v->gasfeecap, &arrayContainer))
+    CHECK_ERROR(readBigInt(&v->gasfeecap, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // "gasPremium" field
-    CHECK_PARSER_ERR(readBigInt(&v->gaspremium, &arrayContainer))
+    CHECK_ERROR(readBigInt(&v->gaspremium, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 
     // "method" field
-    CHECK_PARSER_ERR(readMethod(v, &arrayContainer))
+    CHECK_ERROR(readMethod(v, &arrayContainer))
     PARSER_ASSERT_OR_ERROR(arrayContainer.type != CborInvalidType, parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_advance(&arrayContainer))
 

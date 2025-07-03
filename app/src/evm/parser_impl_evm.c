@@ -38,9 +38,9 @@ static parser_error_t readChainID(parser_context_t *ctx, rlp_t *chainId) {
         return parser_unexpected_error;
     }
 
-    CHECK_PARSER_ERR(rlp_read(ctx, chainId));
+    CHECK_ERROR(rlp_read(ctx, chainId));
     uint64_t tmpChainId = 0;
-    CHECK_PARSER_ERR(be_bytes_to_u64(chainId->ptr, chainId->rlpLen, &tmpChainId))
+    CHECK_ERROR(be_bytes_to_u64(chainId->ptr, chainId->rlpLen, &tmpChainId))
 
     // Check allowed values for chain id
     if (tmpChainId != FILECOIN_MAINNET_CHAINID && tmpChainId != FILECOIN_CALIBRATION_CHAINID) {
@@ -55,12 +55,12 @@ static parser_error_t parse_legacy_tx(parser_context_t *ctx, eth_tx_t *tx_obj) {
         return parser_unexpected_error;
     }
 
-    CHECK_PARSER_ERR(rlp_read(ctx, &tx_obj->tx.nonce));
-    CHECK_PARSER_ERR(rlp_read(ctx, &(tx_obj->tx.gasPrice)));
-    CHECK_PARSER_ERR(rlp_read(ctx, &(tx_obj->tx.gasLimit)));
-    CHECK_PARSER_ERR(rlp_read(ctx, &(tx_obj->tx.to)));
-    CHECK_PARSER_ERR(rlp_read(ctx, &(tx_obj->tx.value)));
-    CHECK_PARSER_ERR(rlp_read(ctx, &(tx_obj->tx.data)));
+    CHECK_ERROR(rlp_read(ctx, &tx_obj->tx.nonce));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.gasPrice)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.gasLimit)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.to)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.value)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.data)));
 
     // Check for legacy no EIP155 which means no chain_id
     // There is not more data no eip155 compliant tx
@@ -73,14 +73,14 @@ static parser_error_t parse_legacy_tx(parser_context_t *ctx, eth_tx_t *tx_obj) {
 
     // Otherwise legacy EIP155 in which case should come with empty r and s values
     // Transaction comes with a chainID so it is EIP155 compliant
-    CHECK_PARSER_ERR(readChainID(ctx, &tx_obj->chainId));
+    CHECK_ERROR(readChainID(ctx, &tx_obj->chainId));
 
     // Check R and S fields
     rlp_t sig_r = {0};
-    CHECK_PARSER_ERR(rlp_read(ctx, &sig_r));
+    CHECK_ERROR(rlp_read(ctx, &sig_r));
 
     rlp_t sig_s = {0};
-    CHECK_PARSER_ERR(rlp_read(ctx, &sig_s));
+    CHECK_ERROR(rlp_read(ctx, &sig_s));
 
     // R and S values should be either 0 or 0x80
     if ((sig_r.rlpLen == 0 && sig_s.rlpLen == 0) ||
@@ -93,7 +93,7 @@ static parser_error_t parse_legacy_tx(parser_context_t *ctx, eth_tx_t *tx_obj) {
 static parser_error_t parse_2930(parser_context_t *ctx, eth_tx_t *tx_obj) {
     // the chain_id is the first field for this transaction
     // later we can implement the parser for the other fields
-    CHECK_PARSER_ERR(readChainID(ctx, &tx_obj->chainId));
+    CHECK_ERROR(readChainID(ctx, &tx_obj->chainId));
 
     return parser_ok;
 }
@@ -101,7 +101,7 @@ static parser_error_t parse_2930(parser_context_t *ctx, eth_tx_t *tx_obj) {
 static parser_error_t parse_1559(parser_context_t *ctx, eth_tx_t *tx_obj) {
     // the chain_id is the first field for this transaction
     // later we can implement the parser for the other fields
-    CHECK_PARSER_ERR(readChainID(ctx, &tx_obj->chainId));
+    CHECK_ERROR(readChainID(ctx, &tx_obj->chainId));
 
     return parser_ok;
 }
@@ -133,10 +133,10 @@ static parser_error_t readTxnType(parser_context_t *ctx, eth_tx_type_e *type) {
 
 parser_error_t _readEth(parser_context_t *ctx, eth_tx_t *tx_obj) {
     MEMZERO(&eth_tx_obj, sizeof(eth_tx_obj));
-    CHECK_PARSER_ERR(readTxnType(ctx, &tx_obj->tx_type))
+    CHECK_ERROR(readTxnType(ctx, &tx_obj->tx_type))
     // We expect a list with all the fields from the transaction
     rlp_t list = {0};
-    CHECK_PARSER_ERR(rlp_read(ctx, &list));
+    CHECK_ERROR(rlp_read(ctx, &list));
 
     // Check that the first RLP element is a list
     if (list.kind != RLP_KIND_LIST) {
@@ -185,7 +185,7 @@ static parser_error_t printERC20(uint8_t displayIdx, char *outKey, uint16_t outK
     const eth_base_t *legacy = &eth_tx_obj.tx;
     char tokenSymbol[10] = {0};
     uint8_t decimals = 0;
-    CHECK_PARSER_ERR(getERC20Token(&eth_tx_obj, tokenSymbol, &decimals));
+    CHECK_ERROR(getERC20Token(&eth_tx_obj, tokenSymbol, &decimals));
     bool hideContract = (memcmp(tokenSymbol, "?? ", 3) != 0);
 
     displayIdx += (displayIdx && hideContract) ? 1 : 0;
@@ -193,33 +193,33 @@ static parser_error_t printERC20(uint8_t displayIdx, char *outKey, uint16_t outK
         case 0:
             snprintf(outKey, outKeyLen, "To");
             rlp_t to = {.kind = RLP_KIND_STRING, .ptr = (eth_tx_obj.tx.data.ptr + 4 + 12), .rlpLen = ETH_ADDRESS_LEN};
-            CHECK_PARSER_ERR(printEVMAddress(&to, outVal, outValLen, pageIdx, pageCount));
+            CHECK_ERROR(printEVMAddress(&to, outVal, outValLen, pageIdx, pageCount));
             break;
 
         case 1:
             snprintf(outKey, outKeyLen, "Token Contract");
             rlp_t contractAddress = {.kind = RLP_KIND_STRING, .ptr = eth_tx_obj.tx.to.ptr, .rlpLen = ETH_ADDRESS_LEN};
-            CHECK_PARSER_ERR(printEVMAddress(&contractAddress, outVal, outValLen, pageIdx, pageCount));
+            CHECK_ERROR(printEVMAddress(&contractAddress, outVal, outValLen, pageIdx, pageCount));
             break;
 
         case 2:
             snprintf(outKey, outKeyLen, "Value");
-            CHECK_PARSER_ERR(printERC20Value(&eth_tx_obj, outVal, outValLen, pageIdx, pageCount));
+            CHECK_ERROR(printERC20Value(&eth_tx_obj, outVal, outValLen, pageIdx, pageCount));
             break;
 
         case 3:
             snprintf(outKey, outKeyLen, "Nonce");
-            CHECK_PARSER_ERR(printRLPNumber(&legacy->nonce, outVal, outValLen, pageIdx, pageCount));
+            CHECK_ERROR(printRLPNumber(&legacy->nonce, outVal, outValLen, pageIdx, pageCount));
             break;
 
         case 4:
             snprintf(outKey, outKeyLen, "Gas price");
-            CHECK_PARSER_ERR(printRLPNumber(&legacy->gasPrice, outVal, outValLen, pageIdx, pageCount));
+            CHECK_ERROR(printRLPNumber(&legacy->gasPrice, outVal, outValLen, pageIdx, pageCount));
             break;
 
         case 5:
             snprintf(outKey, outKeyLen, "Gas limit");
-            CHECK_PARSER_ERR(printRLPNumber(&legacy->gasLimit, outVal, outValLen, pageIdx, pageCount));
+            CHECK_ERROR(printRLPNumber(&legacy->gasLimit, outVal, outValLen, pageIdx, pageCount));
             break;
 
         default:
@@ -272,7 +272,7 @@ parser_error_t _getNumItemsEth(uint8_t *numItems) {
     if (validateERC20(&eth_tx_obj)) {
         char tokenSymbol[10] = {0};
         uint8_t decimals = 0;
-        CHECK_PARSER_ERR(getERC20Token(&eth_tx_obj, tokenSymbol, &decimals));
+        CHECK_ERROR(getERC20Token(&eth_tx_obj, tokenSymbol, &decimals));
         // If token is not recognized, print value address
         *numItems = (memcmp(tokenSymbol, "?? ", 3) != 0) ? 5 : 6;
         return parser_ok;
@@ -309,7 +309,7 @@ parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int i
 
     } else {
         uint64_t id = 0;
-        CHECK_PARSER_ERR(be_bytes_to_u64(tx_obj->chainId.ptr, tx_obj->chainId.rlpLen, &id));
+        CHECK_ERROR(be_bytes_to_u64(tx_obj->chainId.ptr, tx_obj->chainId.rlpLen, &id));
 
         uint32_t cv = 35 + parity;
         cv = saturating_add_u32(cv, (uint32_t)id * 2);

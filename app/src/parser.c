@@ -63,7 +63,7 @@ parser_error_t parser_init_context(parser_context_t *ctx, const uint8_t *buffer,
 }
 
 parser_error_t parser_init(parser_context_t *ctx, const uint8_t *buffer, uint16_t bufferSize) {
-    CHECK_PARSER_ERR(parser_init_context(ctx, buffer, bufferSize))
+    CHECK_ERROR(parser_init_context(ctx, buffer, bufferSize))
     return parser_ok;
 }
 
@@ -72,12 +72,12 @@ parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data, size_t d
 
     switch (ctx->tx_type) {
         case fil_tx: {
-            CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
+            CHECK_ERROR(parser_init(ctx, data, dataLen))
             app_mode_skip_blindsign_ui();
             return _read(ctx, &(parser_tx_obj.base_tx));
         }
         case eth_tx: {
-            CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
+            CHECK_ERROR(parser_init(ctx, data, dataLen))
             return _readEth(ctx, &eth_tx_obj);
         }
         case raw_bytes: {
@@ -97,15 +97,15 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
     // Call especific fil transaction implementation for data validation
     switch (ctx->tx_type) {
         case fil_tx: {
-            CHECK_PARSER_ERR(_validateTx(ctx, &parser_tx_obj.base_tx))
+            CHECK_ERROR(_validateTx(ctx, &parser_tx_obj.base_tx))
             break;
         }
         case eth_tx: {
-            CHECK_PARSER_ERR(_validateTxEth())
+            CHECK_ERROR(_validateTxEth())
             break;
         }
         case raw_bytes: {
-            CHECK_PARSER_ERR(_validateRawBytes(ctx))
+            CHECK_ERROR(_validateRawBytes(ctx))
             break;
         }
         default:
@@ -114,14 +114,14 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
 
     // Iterate through all items to check that all can be shown and are valid
     uint8_t numItems = 0;
-    CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems));
+    CHECK_ERROR(parser_getNumItems(ctx, &numItems));
 
     char tmpKey[40] = {0};
     char tmpVal[40] = {0};
 
     for (uint8_t idx = 0; idx < numItems; idx++) {
         uint8_t pageCount = 0;
-        CHECK_PARSER_ERR(parser_getItem(ctx, idx, tmpKey, sizeof(tmpKey), tmpVal, sizeof(tmpVal), 0, &pageCount))
+        CHECK_ERROR(parser_getItem(ctx, idx, tmpKey, sizeof(tmpKey), tmpVal, sizeof(tmpVal), 0, &pageCount))
     }
 
     return parser_ok;
@@ -134,7 +134,7 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_item
             break;
         }
         case eth_tx: {
-            CHECK_PARSER_ERR(_getNumItemsEth(num_items));
+            CHECK_ERROR(_getNumItemsEth(num_items));
             break;
         }
         case raw_bytes: {
@@ -188,7 +188,7 @@ parser_error_t _getItemFil(const parser_context_t *ctx, uint8_t displayIdx, char
     *pageCount = 0;
 
     uint8_t numItems = 0;
-    CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems))
+    CHECK_ERROR(parser_getNumItems(ctx, &numItems))
     CHECK_APP_CANARY()
 
     if (displayIdx >= numItems) {

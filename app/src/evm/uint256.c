@@ -43,8 +43,8 @@ parser_error_t readu128BE(parser_context_t *ctx, uint128_t *value) {
         return parser_unexpected_error;
     }
 
-    CHECK_PARSER_ERR(readUint64BE(ctx, &UPPER_P(value)));
-    CHECK_PARSER_ERR(readUint64BE(ctx, &LOWER_P(value)));
+    CHECK_ERROR(readUint64BE(ctx, &UPPER_P(value)));
+    CHECK_ERROR(readUint64BE(ctx, &LOWER_P(value)));
 
     return parser_ok;
 }
@@ -54,8 +54,8 @@ parser_error_t readu256BE(parser_context_t *ctx, uint256_t *bigInt) {
         return parser_unexpected_error;
     }
 
-    CHECK_PARSER_ERR(readu128BE(ctx, &UPPER_P(bigInt)));
-    CHECK_PARSER_ERR(readu128BE(ctx, &LOWER_P(bigInt)));
+    CHECK_ERROR(readu128BE(ctx, &UPPER_P(bigInt)));
+    CHECK_ERROR(readu128BE(ctx, &LOWER_P(bigInt)));
 
     return parser_ok;
 }
