@@ -1,24 +1,26 @@
 /*******************************************************************************
-*   (c) 2019 Zondax GmbH
-*
-*  Licensed under the Apache License, Version 2.0 (the "License");
-*  you may not use this file except in compliance with the License.
-*  You may obtain a copy of the License at
-*
-*      http://www.apache.org/licenses/LICENSE-2.0
-*
-*  Unless required by applicable law or agreed to in writing, software
-*  distributed under the License is distributed on an "AS IS" BASIS,
-*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*  See the License for the specific language governing permissions and
-*  limitations under the License.
-********************************************************************************/
-#include <fmt/core.h>
+ *   (c) 2019 Zondax GmbH
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ ********************************************************************************/
 #include <coin.h>
-#include "testcases.h"
-#include "zxmacros.h"
-#include "zxformat.h"
+#include <fmt/core.h>
+
 #include <iostream>
+
+#include "testcases.h"
+#include "zxformat.h"
+#include "zxmacros.h"
 const uint32_t fieldSize = 37;
 
 // Helper function to safely get string from JSON value (handles both string and number types)
@@ -51,8 +53,8 @@ uint64_t getUint64Value(const nlohmann::json &obj, const std::string &key, uint6
     return defaultValue;
 }
 
-template<typename S, typename... Args>
-void addTo(std::vector<std::string> &answer, const S &format_str, Args &&... args) {
+template <typename S, typename... Args>
+void addTo(std::vector<std::string> &answer, const S &format_str, Args &&...args) {
     answer.push_back(fmt::format(format_str, args...));
 }
 
@@ -63,7 +65,7 @@ std::vector<std::string> FormatAddress(uint32_t prefix, const std::string &name,
 
     pageString(outBuffer, fieldSize, address.c_str(), 0, &numPages);
 
-    if(numPages == 0) {
+    if (numPages == 0) {
         auto pages = std::string("");
         snprintf(outBuffer, sizeof(outBuffer), "-- EMPTY --");
         addTo(answer, "{} | {}{}: {}", prefix, name, pages, outBuffer);
@@ -187,7 +189,7 @@ std::vector<std::string> GenerateExpectedUIOutput(const nlohmann::json &json, bo
     // Transfer method
     if (method == 0) {
         addTo(answer, "{} | Method : Transfer", idx, method);
-    // Invoke EVM method
+        // Invoke EVM method
     } else if (method == 3844450837) {
         addTo(answer, "{} | Method : Invoke EVM", idx, method);
     } else {
@@ -196,7 +198,7 @@ std::vector<std::string> GenerateExpectedUIOutput(const nlohmann::json &json, bo
     idx++;
 
     int paramIdx = 1;
-    for(auto value : params) {
+    for (auto value : params) {
         std::string paramText = "Params |" + std::to_string(paramIdx) + "| ";
         std::string paramValue;
         if (value.is_string()) {
@@ -260,7 +262,7 @@ std::vector<std::string> EVMGenerateExpectedUIOutput(const nlohmann::json &json,
 }
 
 std::vector<std::string> InvokeContractGenerateExpectedUIOutput(const nlohmann::json &json, bool expertMode) {
-        auto answer = std::vector<std::string>();
+    auto answer = std::vector<std::string>();
 
     bool valid = json.value("valid", true);
 
@@ -283,7 +285,6 @@ std::vector<std::string> InvokeContractGenerateExpectedUIOutput(const nlohmann::
     auto value = getStringValue(message, "value");
     auto contract = getStringValue(message, "Contract");
     auto contractF4 = getStringValue(message, "ContractF4");
-
 
     auto gaslimit = getStringValue(message, "gaslimit", "0");
     auto gaspremium = getStringValue(message, "gaspremium", "0");

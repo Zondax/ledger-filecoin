@@ -1,4 +1,4 @@
-import Zemu from '@zondax/zemu'
+import Zemu from "@zondax/zemu";
 
-Zemu.checkAndPullImage()
-Zemu.stopAllEmuContainers()
+Zemu.checkAndPullImage();
+Zemu.stopAllEmuContainers();

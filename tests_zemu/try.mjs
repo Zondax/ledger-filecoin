@@ -1,20 +1,18 @@
-import TransportNodeHid from '@ledgerhq/hw-transport-node-hid'
-import ledger_logs from '@ledgerhq/logs'
+import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
+import ledger_logs from "@ledgerhq/logs";
 
 import FilecoinApp from "@zondax/ledger-filecoin";
 
 export const PATH = "m/44'/461'/0'/0/1";
 
-
 async function get_address(app) {
-  const resp = await app.getAddressAndPubKey(PATH, true)
+  const resp = await app.getAddressAndPubKey(PATH, true);
 
-  console.log(resp)
+  console.log(resp);
 }
 
 function findRandom() {
-  let num =
-    (1 + parseInt((Math.random() * 100))) % 256;
+  const num = (1 + parseInt(Math.random() * 100)) % 256;
 
   return num;
 }
@@ -35,22 +33,21 @@ async function sign_raw_bytes(app, amount) {
   // do not wait here..
   const signatureRequest = await app.signRawBytes(PATH, txBlob);
 
-  console.log(JSON.stringify(signatureRequest))
-
+  console.log(JSON.stringify(signatureRequest));
 }
 
 async function main() {
-    const transport = await TransportNodeHid.default.open();
-    ledger_logs.listen((log) => {
-        console.log(`${log.type} ${log.message}`)
-    });
-    // const app = new AvalancheApp.default(transport);
-    const app = new FilecoinApp.default(transport);
+  const transport = await TransportNodeHid.default.open();
+  ledger_logs.listen((log) => {
+    console.log(`${log.type} ${log.message}`);
+  });
+  // const app = new AvalancheApp.default(transport);
+  const app = new FilecoinApp.default(transport);
 
-    // sign 2MiB of random data
-    await sign_raw_bytes(app, 2048 * 1024)
+  // sign 2MiB of random data
+  await sign_raw_bytes(app, 2048 * 1024);
 }
 
-; (async () => {
-  await main()
-})()
+(async () => {
+  await main();
+})();

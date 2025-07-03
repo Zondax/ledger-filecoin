@@ -1,26 +1,24 @@
 /*******************************************************************************
-*   (c) 2018 - 2023 ZondaX AG
-*
-*  Licensed under the Apache License, Version 2.0 (the "License");
-*  you may not use this file except in compliance with the License.
-*  You may obtain a copy of the License at
-*
-*      http://www.apache.org/licenses/LICENSE-2.0
-*
-*  Unless required by applicable law or agreed to in writing, software
-*  distributed under the License is distributed on an "AS IS" BASIS,
-*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*  See the License for the specific language governing permissions and
-*  limitations under the License.
-********************************************************************************/
+ *   (c) 2018 - 2023 ZondaX AG
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ ********************************************************************************/
 #include "rlp.h"
-#include "zxmacros.h"
-#include "zxformat.h"
 
-parser_error_t rlp_parseStream( parser_context_t *ctx,
-                                rlp_t *rlp,
-                                uint16_t *fields,
-                                uint16_t maxFields) {
+#include "zxformat.h"
+#include "zxmacros.h"
+
+parser_error_t rlp_parseStream(parser_context_t *ctx, rlp_t *rlp, uint16_t *fields, uint16_t maxFields) {
     if (ctx == NULL || rlp == NULL || fields == NULL) {
         return parser_unexpected_error;
     }

@@ -15,6 +15,11 @@
  ********************************************************************************/
 
 #include "parser_raw_bytes.h"
+
+#include <stdio.h>
+#include <string.h>
+#include <zxmacros.h>
+
 #include "app_mode.h"
 #include "cbor.h"
 #include "common/parser_common.h"
@@ -23,9 +28,6 @@
 #include "parser_impl.h"
 #include "parser_txdef.h"
 #include "zxformat.h"
-#include <stdio.h>
-#include <string.h>
-#include <zxmacros.h>
 
 static const char messagePrefix[] = "Filecoin Sign Bytes:\n";
 
@@ -34,118 +36,99 @@ static const char messagePrefix[] = "Filecoin Sign Bytes:\n";
 // the begining of the message.
 // and, finally, check that the data comes prefixed
 parser_error_t raw_bytes_init(uint8_t *buf, size_t buf_len) {
+    if (buf_len == 0) return parser_unexpected_buffer_end;
 
-  if (buf_len == 0)
-    return parser_unexpected_buffer_end;
-
-#if defined(TARGET_NANOS2) ||                         \
-    defined(TARGET_NANOX) || defined(TARGET_STAX)   || defined(TARGET_FLEX)
-  // Setup hasher pointer. This will reduce stack usage
-  if (blake_hash_setup(&parser_tx_obj.raw_bytes_tx.ctx_blake2b) != zxerr_ok) {
-    return parser_unexpected_error;
-  }
+#if defined(TARGET_NANOS2) || defined(TARGET_NANOX) || defined(TARGET_STAX) || defined(TARGET_FLEX)
+    // Setup hasher pointer. This will reduce stack usage
+    if (blake_hash_setup(&parser_tx_obj.raw_bytes_tx.ctx_blake2b) != zxerr_ok) {
+        return parser_unexpected_error;
+    }
 #endif
-  // init hash context
-  blake_hash_init();
+    // init hash context
+    blake_hash_init();
 
-  // get message len in bytes
-  uint64_t total = 0;
-  size_t bytes_read = decompressLEB128(buf, buf_len, &total);
+    // get message len in bytes
+    uint64_t total = 0;
+    size_t bytes_read = decompressLEB128(buf, buf_len, &total);
 
-  if (total == 0 || bytes_read == buf_len)
-    return parser_unexpected_buffer_end;
+    if (total == 0 || bytes_read == buf_len) return parser_unexpected_buffer_end;
 
-  // skip the bytes used by varint
-  size_t rx = buf_len - bytes_read;
+    // skip the bytes used by varint
+    size_t rx = buf_len - bytes_read;
 
-  if (rx <= sizeof(messagePrefix))
-    return parser_unexpected_buffer_end;
+    if (rx <= sizeof(messagePrefix)) return parser_unexpected_buffer_end;
 
-  // get pointer to the message: prefix + raw_bytes
-  uint8_t *msg = buf + bytes_read;
+    // get pointer to the message: prefix + raw_bytes
+    uint8_t *msg = buf + bytes_read;
 
-  uint8_t prefix_len = strlen(messagePrefix);
+    uint8_t prefix_len = strlen(messagePrefix);
 
-  // check for prefix
-  if (memcmp(messagePrefix, (const char *)msg, prefix_len))
-    return parser_invalid_prefix;
+    // check for prefix
+    if (memcmp(messagePrefix, (const char *)msg, prefix_len)) return parser_invalid_prefix;
 
-  // Initialize the other fields of the raw_bytes state.
-  parser_tx_obj.raw_bytes_tx.total = total;
-  parser_tx_obj.raw_bytes_tx.current = 0;
-  MEMZERO(parser_tx_obj.raw_bytes_tx.digest, BLAKE2B_256_SIZE);
+    // Initialize the other fields of the raw_bytes state.
+    parser_tx_obj.raw_bytes_tx.total = total;
+    parser_tx_obj.raw_bytes_tx.current = 0;
+    MEMZERO(parser_tx_obj.raw_bytes_tx.digest, BLAKE2B_256_SIZE);
 
-  return raw_bytes_update(msg, rx);
+    return raw_bytes_update(msg, rx);
 }
 
 parser_error_t raw_bytes_update(uint8_t *buf, size_t buf_len) {
-  if (buf_len == 0)
-    return parser_unexpected_buffer_end;
+    if (buf_len == 0) return parser_unexpected_buffer_end;
 
-  if (blake_hash_update(buf, buf_len) != zxerr_ok)
-    return parser_value_out_of_range;
+    if (blake_hash_update(buf, buf_len) != zxerr_ok) return parser_value_out_of_range;
 
-  parser_tx_obj.raw_bytes_tx.current += buf_len;
+    parser_tx_obj.raw_bytes_tx.current += buf_len;
 
-  return parser_ok;
+    return parser_ok;
 }
 
-parser_error_t _readRawBytes(__Z_UNUSED const parser_context_t *ctx,
-                             raw_bytes_state_t *tx) {
+parser_error_t _readRawBytes(__Z_UNUSED const parser_context_t *ctx, raw_bytes_state_t *tx) {
+    size_t total = tx->total;
+    size_t current = tx->current;
 
-  size_t total = tx->total;
-  size_t current = tx->current;
+    uint8_t tmp[BLAKE2B_256_SIZE] = {0};
 
-  uint8_t tmp[BLAKE2B_256_SIZE] = {0};
+    if (total != current) return parser_no_data;
 
-  if (total != current)
-    return parser_no_data;
+    if (blake_hash_finish(tmp, sizeof(tmp)) != zxerr_ok) return parser_value_out_of_range;
 
-  if (blake_hash_finish(tmp, sizeof(tmp)) != zxerr_ok)
-    return parser_value_out_of_range;
+    if (blake_hash_cid(tmp, BLAKE2B_256_SIZE, tx->digest, BLAKE2B_256_SIZE) != zxerr_ok) {
+        return parser_unexpected_error;
+    }
 
-  if (blake_hash_cid(tmp, BLAKE2B_256_SIZE, tx->digest, BLAKE2B_256_SIZE) !=
-      zxerr_ok) {
-    return parser_unexpected_error;
-  }
-
-  return parser_ok;
+    return parser_ok;
 }
 
-parser_error_t _validateRawBytes(__Z_UNUSED const parser_context_t *ctx) {
-  return parser_ok;
-}
+parser_error_t _validateRawBytes(__Z_UNUSED const parser_context_t *ctx) { return parser_ok; }
 
 uint8_t _getNumItemsRawBytes(__Z_UNUSED const parser_context_t *ctx) {
-  // Raw-bytes data hash as an hex string
-  return 1;
+    // Raw-bytes data hash as an hex string
+    return 1;
 }
 
-parser_error_t _getItemRawBytes(__Z_UNUSED const parser_context_t *ctx,
-                                uint8_t displayIdx, char *outKey,
-                                uint16_t outKeyLen, char *outVal,
-                                uint16_t outValLen, uint8_t pageIdx,
+parser_error_t _getItemRawBytes(__Z_UNUSED const parser_context_t *ctx, uint8_t displayIdx, char *outKey,
+                                uint16_t outKeyLen, char *outVal, uint16_t outValLen, uint8_t pageIdx,
                                 uint8_t *pageCount) {
-
-  if (displayIdx > 1) {
-    return parser_display_idx_out_of_range;
-  }
+    if (displayIdx > 1) {
+        return parser_display_idx_out_of_range;
+    }
 
     // Check that Blindsign is enabled
     if (!app_mode_blindsign()) {
-      return parser_blindsign_required;
+        return parser_blindsign_required;
     }
 
-  // get the hash of the buffer
-  uint8_t hex[BLAKE2B_256_SIZE * 2 + 1] = {0};
+    // get the hash of the buffer
+    uint8_t hex[BLAKE2B_256_SIZE * 2 + 1] = {0};
 
-  // get hash
-  array_to_hexstr((char *)hex, 65, parser_tx_obj.raw_bytes_tx.digest,
-                  BLAKE2B_256_SIZE);
+    // get hash
+    array_to_hexstr((char *)hex, 65, parser_tx_obj.raw_bytes_tx.digest, BLAKE2B_256_SIZE);
 
-  snprintf(outKey, outKeyLen, "BytesHash:");
+    snprintf(outKey, outKeyLen, "BytesHash:");
 
-  pageString(outVal, outValLen, (const char *)hex, pageIdx, pageCount);
+    pageString(outVal, outValLen, (const char *)hex, pageIdx, pageCount);
 
-  return parser_ok;
+    return parser_ok;
 }
