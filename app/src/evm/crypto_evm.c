@@ -18,8 +18,7 @@
 
 #include "coin_evm.h"
 #include "cx.h"
-// TODO: change to tx_evm.h
-#include "tx.h"
+#include "tx_evm.h"
 #include "zxformat.h"
 #include "zxmacros.h"
 
@@ -163,8 +162,7 @@ zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t
 
     // we need to fix V
     uint8_t v = 0;
-    // TODO: change to tx_compute_eth_v_evm
-    CHECK_ZXERR(tx_compute_eth_v(info, &v));
+    CHECK_ZXERR(tx_compute_eth_v(info, &v, is_personal_message));
 
     // need to reorder signature as hw-eth-app expects v at the beginning.
     // so rsv -> vrs

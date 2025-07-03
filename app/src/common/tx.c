@@ -114,14 +114,6 @@ zxerr_t tx_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char *ou
     return zxerr_ok;
 }
 
-zxerr_t tx_compute_eth_v(unsigned int info, uint8_t *v) {
-    parser_error_t err = parser_compute_eth_v(&ctx_parsed_tx, info, v);
-
-    if (err != parser_ok) return zxerr_unknown;
-
-    return zxerr_ok;
-}
-
 zxerr_t tx_rawbytes_init_state(uint8_t *buf, size_t buf_len) {
     if (parser_rawbytes_init(buf, buf_len) != parser_ok) return zxerr_unknown;
 
