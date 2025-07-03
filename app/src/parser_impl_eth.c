@@ -15,18 +15,19 @@
  ********************************************************************************/
 
 #include "parser_impl_eth.h"
-#include "app_mode.h"
-#include "common/parser_common.h"
-#include "crypto.h"
-#include "eth_utils.h"
-#include "parser_txdef.h"
-#include "zxformat.h"
+
 #include <stdio.h>
 #include <zxmacros.h>
 
+#include "app_mode.h"
+#include "common/parser_common.h"
+#include "crypto.h"
+#include "eth_erc20.h"
+#include "eth_utils.h"
+#include "parser_txdef.h"
 #include "rlp.h"
 #include "uint256.h"
-#include "eth_erc20.h"
+#include "zxformat.h"
 
 eth_tx_t eth_tx_obj;
 #define FILECOIN_MAINNET_CHAINID 314
@@ -90,11 +91,11 @@ static parser_error_t parse_legacy_tx(parser_context_t *ctx, eth_tx_t *tx_obj) {
 }
 
 static parser_error_t parse_2930(parser_context_t *ctx, eth_tx_t *tx_obj) {
-  // the chain_id is the first field for this transaction
-  // later we can implement the parser for the other fields
-  CHECK_PARSER_ERR(readChainID(ctx, &tx_obj->chainId));
+    // the chain_id is the first field for this transaction
+    // later we can implement the parser for the other fields
+    CHECK_PARSER_ERR(readChainID(ctx, &tx_obj->chainId));
 
-  return parser_ok;
+    return parser_ok;
 }
 
 static parser_error_t parse_1559(parser_context_t *ctx, eth_tx_t *tx_obj) {
@@ -107,7 +108,7 @@ static parser_error_t parse_1559(parser_context_t *ctx, eth_tx_t *tx_obj) {
 
 static parser_error_t readTxnType(parser_context_t *ctx, eth_tx_type_e *type) {
     if (ctx == NULL || type == NULL || ctx->bufferLen == 0 || ctx->offset != 0) {
-      return parser_unexpected_error;
+        return parser_unexpected_error;
     }
     // Check first byte:
     //    0x01 --> EIP2930
@@ -116,14 +117,14 @@ static parser_error_t readTxnType(parser_context_t *ctx, eth_tx_type_e *type) {
     uint8_t marker = *(ctx->buffer + ctx->offset);
 
     if (marker == eip2930 || marker == eip1559) {
-      *type = (eth_tx_type_e)marker;
-      ctx->offset++;
-      return parser_ok;
+        *type = (eth_tx_type_e)marker;
+        ctx->offset++;
+        return parser_ok;
     }
 
     // Legacy tx type is greater than or equal to 0xc0.
     if (marker < legacy) {
-      return parser_unsupported_tx;
+        return parser_unsupported_tx;
     }
 
     *type = legacy;
@@ -172,10 +173,8 @@ parser_error_t _validateTxEth() {
     return parser_ok;
 }
 
-static parser_error_t printERC20(uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
-                                 char *outVal, uint16_t outValLen, uint8_t pageIdx,
-                                 uint8_t *pageCount) {
-
+static parser_error_t printERC20(uint8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outVal, uint16_t outValLen,
+                                 uint8_t pageIdx, uint8_t *pageCount) {
     if (outKey == NULL || outVal == NULL || pageCount == NULL) {
         return parser_unexpected_error;
     }
@@ -187,19 +186,21 @@ static parser_error_t printERC20(uint8_t displayIdx, char *outKey, uint16_t outK
     char tokenSymbol[10] = {0};
     uint8_t decimals = 0;
     CHECK_PARSER_ERR(getERC20Token(&eth_tx_obj, tokenSymbol, &decimals));
-    bool hideContract  = (memcmp(tokenSymbol, "?? ", 3) != 0);
+    bool hideContract = (memcmp(tokenSymbol, "?? ", 3) != 0);
 
     displayIdx += (displayIdx && hideContract) ? 1 : 0;
     switch (displayIdx) {
         case 0:
             snprintf(outKey, outKeyLen, "To");
-            rlp_t to = {.kind = RLP_KIND_STRING, .ptr = (eth_tx_obj.legacy.data.ptr + 4 + 12), .rlpLen = ETH_ADDRESS_LEN};
+            rlp_t to = {
+                .kind = RLP_KIND_STRING, .ptr = (eth_tx_obj.legacy.data.ptr + 4 + 12), .rlpLen = ETH_ADDRESS_LEN};
             CHECK_PARSER_ERR(printEVMAddress(&to, outVal, outValLen, pageIdx, pageCount));
             break;
 
         case 1:
             snprintf(outKey, outKeyLen, "Token Contract");
-            rlp_t contractAddress = {.kind = RLP_KIND_STRING, .ptr = eth_tx_obj.legacy.to.ptr, .rlpLen = ETH_ADDRESS_LEN};
+            rlp_t contractAddress = {
+                .kind = RLP_KIND_STRING, .ptr = eth_tx_obj.legacy.to.ptr, .rlpLen = ETH_ADDRESS_LEN};
             CHECK_PARSER_ERR(printEVMAddress(&contractAddress, outVal, outValLen, pageIdx, pageCount));
             break;
 
@@ -230,11 +231,8 @@ static parser_error_t printERC20(uint8_t displayIdx, char *outKey, uint16_t outK
     return parser_ok;
 }
 
-parser_error_t _getItemEth(const parser_context_t *ctx, uint8_t displayIdx,
-                           char *outKey, uint16_t outKeyLen, char *outVal,
-                           uint16_t outValLen, uint8_t pageIdx,
-                           uint8_t *pageCount) {
-
+parser_error_t _getItemEth(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
+                           char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
     // At the moment, clear signing is available only for ERC20
     if (validateERC20(&eth_tx_obj)) {
         return printERC20(displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
@@ -242,7 +240,7 @@ parser_error_t _getItemEth(const parser_context_t *ctx, uint8_t displayIdx,
 
     // Otherwise, check that Blindsign is enabled
     if (!app_mode_blindsign()) {
-      return parser_blindsign_required;
+        return parser_blindsign_required;
     }
 
     if (displayIdx > 1) {
@@ -267,7 +265,7 @@ parser_error_t _getItemEth(const parser_context_t *ctx, uint8_t displayIdx,
 // returns the number of items to display on the screen.
 // Note: we might need to add a transaction state object,
 // Defined with one parameter for now.
-parser_error_t _getNumItemsEth(uint8_t* numItems) {
+parser_error_t _getNumItemsEth(uint8_t *numItems) {
     if (numItems == NULL) {
         return parser_unexpected_error;
     }
@@ -278,7 +276,7 @@ parser_error_t _getNumItemsEth(uint8_t* numItems) {
         uint8_t decimals = 0;
         CHECK_PARSER_ERR(getERC20Token(&eth_tx_obj, tokenSymbol, &decimals));
         // If token is not recognized, print value address
-        *numItems  = (memcmp(tokenSymbol, "?? ", 3) != 0) ? 5 : 6;
+        *numItems = (memcmp(tokenSymbol, "?? ", 3) != 0) ? 5 : 6;
         return parser_ok;
     }
 
@@ -287,8 +285,7 @@ parser_error_t _getNumItemsEth(uint8_t* numItems) {
     return parser_ok;
 }
 
-parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj,
-                         unsigned int info, uint8_t *v) {
+parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int info, uint8_t *v) {
     if (ctx == NULL || tx_obj == NULL || v == NULL) {
         return parser_unexpected_error;
     }

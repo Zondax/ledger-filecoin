@@ -1,38 +1,42 @@
 /*******************************************************************************
-*   Ledger Ethereum App
-*   (c) 2016-2019 Ledger
-*
-*  Licensed under the Apache License, Version 2.0 (the "License");
-*  you may not use this file except in compliance with the License.
-*  You may obtain a copy of the License at
-*
-*      http://www.apache.org/licenses/LICENSE-2.0
-*
-*  Unless required by applicable law or agreed to in writing, software
-*  distributed under the License is distributed on an "AS IS" BASIS,
-*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*  See the License for the specific language governing permissions and
-*  limitations under the License.
-********************************************************************************/
+ *   Ledger Ethereum App
+ *   (c) 2016-2019 Ledger
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ ********************************************************************************/
 
 // Adapted from https://github.com/calccrypto/uint256_t
 
 #ifndef _UINT256_H_
 #define _UINT256_H_
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
-#include "zxmacros.h"
 #include "parser_common.h"
+#include "zxmacros.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct uint128_t { uint64_t elements[2]; } uint128_t;
+typedef struct uint128_t {
+    uint64_t elements[2];
+} uint128_t;
 
-typedef struct uint256_t { uint128_t elements[2]; } uint256_t;
+typedef struct uint256_t {
+    uint128_t elements[2];
+} uint256_t;
 
 #define UPPER_P(x) x->elements[0]
 #define LOWER_P(x) x->elements[1]
@@ -70,10 +74,8 @@ void mul128(uint128_t *number1, uint128_t *number2, uint128_t *target);
 void mul256(uint256_t *number1, uint256_t *number2, uint256_t *target);
 void divmod128(uint128_t *l, uint128_t *r, uint128_t *div, uint128_t *mod);
 void divmod256(uint256_t *l, uint256_t *r, uint256_t *div, uint256_t *mod);
-bool tostring128(uint128_t *number, uint32_t base, char *out,
-                 uint32_t outLength);
-bool tostring256(uint256_t *number, uint32_t base, char *out,
-                 uint32_t outLength);
+bool tostring128(uint128_t *number, uint32_t base, char *out, uint32_t outLength);
+bool tostring256(uint256_t *number, uint32_t base, char *out, uint32_t outLength);
 
 #ifdef __cplusplus
 }

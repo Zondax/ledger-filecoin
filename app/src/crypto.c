@@ -1,29 +1,30 @@
 /*******************************************************************************
-*   (c) 2018 - 2023 Zondax AG
-*
-*  Licensed under the Apache License, Version 2.0 (the "License");
-*  you may not use this file except in compliance with the License.
-*  You may obtain a copy of the License at
-*
-*      http://www.apache.org/licenses/LICENSE-2.0
-*
-*  Unless required by applicable law or agreed to in writing, software
-*  distributed under the License is distributed on an "AS IS" BASIS,
-*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*  See the License for the specific language governing permissions and
-*  limitations under the License.
-********************************************************************************/
+ *   (c) 2018 - 2023 Zondax AG
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ ********************************************************************************/
 
 #include "crypto.h"
-#include <stdio.h>
-#include "coin.h"
-#include "tx.h"
-#include "zxmacros.h"
-#include "base32.h"
-#include "zxformat.h"
 
+#include <stdio.h>
+
+#include "base32.h"
+#include "coin.h"
 #include "cx.h"
 #include "cx_blake2b.h"
+#include "tx.h"
+#include "zxformat.h"
+#include "zxmacros.h"
 
 static cx_blake2b_t *ctx_blake2b = NULL;
 
@@ -38,14 +39,8 @@ static zxerr_t crypto_extractPublicKey(uint8_t *pubKey, uint16_t pubKeyLen, uint
 
     zxerr_t error = zxerr_unknown;
     // Generate keys
-    CATCH_CXERROR(os_derive_bip32_with_seed_no_throw(HDW_NORMAL,
-                                                     CX_CURVE_256K1,
-                                                     hdPath,
-                                                     hdPath_len,
-                                                     privateKeyData,
-                                                     chainCode,
-                                                     NULL,
-                                                     0));
+    CATCH_CXERROR(os_derive_bip32_with_seed_no_throw(HDW_NORMAL, CX_CURVE_256K1, hdPath, hdPath_len, privateKeyData,
+                                                     chainCode, NULL, 0));
 
     CATCH_CXERROR(cx_ecfp_init_private_key_no_throw(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey));
     CATCH_CXERROR(cx_ecfp_init_public_key_no_throw(CX_CURVE_256K1, NULL, 0, &cx_publicKey));
@@ -64,8 +59,7 @@ catch_cx_error:
     return error;
 }
 
-__Z_INLINE zxerr_t keccak_hash(const unsigned char *in, unsigned int inLen,
-                          unsigned char *out, unsigned int outLen) {
+__Z_INLINE zxerr_t keccak_hash(const unsigned char *in, unsigned int inLen, unsigned char *out, unsigned int outLen) {
     // return actual size using value from signatureLength
     cx_sha3_t keccak;
     if (cx_keccak_init_no_throw(&keccak, outLen * 8) != CX_OK) return zxerr_unknown;
@@ -74,8 +68,7 @@ __Z_INLINE zxerr_t keccak_hash(const unsigned char *in, unsigned int inLen,
     return zxerr_ok;
 }
 
-zxerr_t keccak_digest(const unsigned char *in, unsigned int inLen,
-                          unsigned char *out, unsigned int outLen) {
+zxerr_t keccak_digest(const unsigned char *in, unsigned int inLen, unsigned char *out, unsigned int outLen) {
     return keccak_hash(in, inLen, out, outLen);
 }
 zxerr_t blake_hash_setup(cx_blake2b_t *hasher) {
@@ -124,9 +117,7 @@ zxerr_t blake_hash(const uint8_t *in, uint16_t inLen, uint8_t *out, uint16_t out
     return zxerr_ok;
 }
 
-zxerr_t blake_hash_cid(const unsigned char *in, unsigned int inLen,
-               unsigned char *out, unsigned int outLen) {
-
+zxerr_t blake_hash_cid(const unsigned char *in, unsigned int inLen, unsigned char *out, unsigned int outLen) {
     uint8_t prefix[] = PREFIX;
 
     cx_blake2b_t ctx;
@@ -148,10 +139,11 @@ typedef struct {
 
 } __attribute__((packed)) signature_t;
 
-zxerr_t _sign(uint8_t *output, uint16_t outputLen, const uint8_t *message, uint16_t messageLen, uint16_t *sigSize, unsigned int *info) {
-    if (output == NULL || message == NULL || sigSize == NULL ||
-        outputLen < sizeof(signature_t) || messageLen != CX_SHA256_SIZE) {
-            return zxerr_invalid_crypto_settings;
+zxerr_t _sign(uint8_t *output, uint16_t outputLen, const uint8_t *message, uint16_t messageLen, uint16_t *sigSize,
+              unsigned int *info) {
+    if (output == NULL || message == NULL || sigSize == NULL || outputLen < sizeof(signature_t) ||
+        messageLen != CX_SHA256_SIZE) {
+        return zxerr_invalid_crypto_settings;
     }
 
     cx_ecfp_private_key_t cx_privateKey;
@@ -160,33 +152,21 @@ zxerr_t _sign(uint8_t *output, uint16_t outputLen, const uint8_t *message, uint1
     uint32_t tmpInfo = 0;
     *sigSize = 0;
 
-    signature_t *const signature = (signature_t *) output;
+    signature_t *const signature = (signature_t *)output;
     zxerr_t error = zxerr_unknown;
 
-    CATCH_CXERROR(os_derive_bip32_with_seed_no_throw(HDW_NORMAL,
-                                                     CX_CURVE_256K1,
-                                                     hdPath,
-                                                     hdPath_len,
-                                                     privateKeyData,
-                                                     NULL,
-                                                     NULL,
-                                                     0));
+    CATCH_CXERROR(os_derive_bip32_with_seed_no_throw(HDW_NORMAL, CX_CURVE_256K1, hdPath, hdPath_len, privateKeyData,
+                                                     NULL, NULL, 0));
 
     CATCH_CXERROR(cx_ecfp_init_private_key_no_throw(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey));
-    CATCH_CXERROR(cx_ecdsa_sign_no_throw(&cx_privateKey,
-                                         CX_RND_RFC6979 | CX_LAST,
-                                         CX_SHA256,
-                                         message,
-                                         messageLen,
-                                         signature->der_signature,
-                                         &signatureLength, &tmpInfo));
+    CATCH_CXERROR(cx_ecdsa_sign_no_throw(&cx_privateKey, CX_RND_RFC6979 | CX_LAST, CX_SHA256, message, messageLen,
+                                         signature->der_signature, &signatureLength, &tmpInfo));
 
-    const err_convert_e err_c = convertDERtoRSV(signature->der_signature, tmpInfo,  signature->r, signature->s, &signature->v);
+    const err_convert_e err_c =
+        convertDERtoRSV(signature->der_signature, tmpInfo, signature->r, signature->s, &signature->v);
     if (err_c == no_error) {
-        *sigSize =  sizeof_field(signature_t, r) +
-                    sizeof_field(signature_t, s) +
-                    sizeof_field(signature_t, v) +
-                    signatureLength;
+        *sigSize = sizeof_field(signature_t, r) + sizeof_field(signature_t, s) + sizeof_field(signature_t, v) +
+                   signatureLength;
         if (info != NULL) *info = tmpInfo;
         error = zxerr_ok;
     }
@@ -203,7 +183,8 @@ catch_cx_error:
 }
 
 // Sign a filecoin related transaction
-zxerr_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen, uint16_t *sigSize) {
+zxerr_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen,
+                    uint16_t *sigSize) {
     if (buffer == NULL || message == NULL || sigSize == NULL || signatureMaxlen < sizeof(signature_t)) {
         return zxerr_invalid_crypto_settings;
     }
@@ -217,19 +198,20 @@ zxerr_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *me
     return _sign(buffer, signatureMaxlen, message_digest, BLAKE2B_256_SIZE, sigSize, NULL);
 }
 
-zxerr_t crypto_sign_raw_bytes(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *digest, uint16_t messageLen, uint16_t *sigSize) {
+zxerr_t crypto_sign_raw_bytes(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *digest, uint16_t messageLen,
+                              uint16_t *sigSize) {
     if (buffer == NULL || digest == NULL || sigSize == NULL || signatureMaxlen < sizeof(signature_t)) {
         return zxerr_invalid_crypto_settings;
     }
 
-    if (messageLen != BLAKE2B_256_SIZE)
-        return zxerr_invalid_crypto_settings;
+    if (messageLen != BLAKE2B_256_SIZE) return zxerr_invalid_crypto_settings;
 
     return _sign(buffer, signatureMaxlen, digest, BLAKE2B_256_SIZE, sigSize, NULL);
 }
 
 // Sign an ethereum related transaction
-zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen, uint16_t *sigSize) {
+zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen,
+                        uint16_t *sigSize) {
     if (buffer == NULL || message == NULL || sigSize == NULL || signatureMaxlen < sizeof(signature_t)) {
         return zxerr_invalid_crypto_settings;
     }
@@ -239,7 +221,7 @@ zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t
 
     unsigned int info = 0;
     zxerr_t error = _sign(buffer, signatureMaxlen, message_digest, KECCAK_256_SIZE, sigSize, &info);
-    if (error != zxerr_ok){
+    if (error != zxerr_ok) {
         return zxerr_invalid_crypto_settings;
     }
 
@@ -247,8 +229,7 @@ zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t
     uint8_t v = 0;
     error = tx_compute_eth_v(info, &v);
 
-    if (error != zxerr_ok)
-        return zxerr_invalid_crypto_settings;
+    if (error != zxerr_ok) return zxerr_invalid_crypto_settings;
 
     // need to reorder signature as hw-eth-app expects v at the beginning.
     // so rsv -> vrs
@@ -288,7 +269,7 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrL
         return zxerr_no_data;
     }
     MEMZERO(buffer, buffer_len);
-    answer_t *const answer = (answer_t *) buffer;
+    answer_t *const answer = (answer_t *)buffer;
 
     CHECK_ZXERR(crypto_extractPublicKey(answer->publicKey, sizeof_field(answer_t, publicKey), NULL))
 
@@ -314,9 +295,10 @@ zxerr_t crypto_fillEthAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *ad
         return zxerr_no_data;
     }
     MEMZERO(buffer, buffer_len);
-    answer_eth_t *const answer = (answer_eth_t *) buffer;
+    answer_eth_t *const answer = (answer_eth_t *)buffer;
 
-    CHECK_ZXERR(crypto_extractPublicKey(&answer->publicKey[1], sizeof_field(answer_eth_t, publicKey) - 1, &fil_chain_code))
+    CHECK_ZXERR(
+        crypto_extractPublicKey(&answer->publicKey[1], sizeof_field(answer_eth_t, publicKey) - 1, &fil_chain_code))
 
     answer->publicKey[0] = SECP256K1_PK_LEN;
 
@@ -330,8 +312,8 @@ zxerr_t crypto_fillEthAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *ad
     char str[41] = {0};
 
     // take the last 20-bytes of the hash, they are the ethereum address
-    array_to_hexstr(str, 41, hash + 12 , ETH_ADDR_LEN);
-    MEMCPY(answer->address+1, str, 40);
+    array_to_hexstr(str, 41, hash + 12, ETH_ADDR_LEN);
+    MEMCPY(answer->address + 1, str, 40);
 
     *addrLen = sizeof_field(answer_eth_t, publicKey) + sizeof_field(answer_eth_t, address);
 

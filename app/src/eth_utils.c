@@ -1,53 +1,46 @@
 /*******************************************************************************
-*  (c) 2018 - 2023 Zondax AG
-*
-*  Licensed under the Apache License, Version 2.0 (the "License");
-*  you may not use this file except in compliance with the License.
-*  You may obtain a copy of the License at
-*
-*      http://www.apache.org/licenses/LICENSE-2.0
-*
-*  Unless required by applicable law or agreed to in writing, software
-*  distributed under the License is distributed on an "AS IS" BASIS,
-*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*  See the License for the specific language governing permissions and
-*  limitations under the License.
-********************************************************************************/
+ *  (c) 2018 - 2023 Zondax AG
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ ********************************************************************************/
 #include "eth_utils.h"
+
 #include <stdio.h>
 #include <zxmacros.h>
-#include "zxerror.h"
-#include "rlp.h"
-#include "zxformat.h"
-#include "coin.h"
 
-#define CHECK_RLP_LEN(BUFF_LEN, RLP_LEN)                                       \
-    {                                                                          \
-        uint64_t buff_len = BUFF_LEN;                                          \
-        uint64_t rlp_len = RLP_LEN;                                            \
-        if (buff_len < rlp_len)                                                \
-            return rlp_no_data;                                                \
+#include "coin.h"
+#include "rlp.h"
+#include "zxerror.h"
+#include "zxformat.h"
+
+#define CHECK_RLP_LEN(BUFF_LEN, RLP_LEN)            \
+    {                                               \
+        uint64_t buff_len = BUFF_LEN;               \
+        uint64_t rlp_len = RLP_LEN;                 \
+        if (buff_len < rlp_len) return rlp_no_data; \
     }
 
-uint64_t
-saturating_add(uint64_t a, uint64_t b)
-{
-
+uint64_t saturating_add(uint64_t a, uint64_t b) {
     uint64_t num = a + b;
-    if (num < a || num < b)
-        return UINT64_MAX;
+    if (num < a || num < b) return UINT64_MAX;
 
     return num;
 }
 
-uint32_t
-saturating_add_u32(uint32_t a, uint32_t b)
-{
-
+uint32_t saturating_add_u32(uint32_t a, uint32_t b) {
     uint32_t num = a + b;
 
-    if (num < a || num < b)
-        return UINT32_MAX;
+    if (num < a || num < b) return UINT32_MAX;
 
     return num;
 }
@@ -74,14 +67,10 @@ parser_error_t be_bytes_to_u64(const uint8_t *bytes, uint8_t len, uint64_t *num)
     return parser_ok;
 }
 
-rlp_error_t
-get_tx_rlp_len(const uint8_t *buffer, uint32_t len, uint64_t *read, uint64_t *to_read)
-{
-    if (buffer == NULL || len == 0)
-        return rlp_no_data;
+rlp_error_t get_tx_rlp_len(const uint8_t *buffer, uint32_t len, uint64_t *read, uint64_t *to_read) {
+    if (buffer == NULL || len == 0) return rlp_no_data;
 
-    if (read == NULL || to_read == NULL)
-        return rlp_no_data;
+    if (read == NULL || to_read == NULL) return rlp_no_data;
 
     // get alias
     const uint8_t *data = buffer;
@@ -93,7 +82,7 @@ get_tx_rlp_len(const uint8_t *buffer, uint32_t len, uint64_t *read, uint64_t *to
     // skip version if present/recognized
     //  otherwise tx is probably legacy so no version, just rlp data
     uint8_t version = data[offset];
-    if (version == 1 || version == 2 ) {
+    if (version == 1 || version == 2) {
         offset += 1;
         *read += 1;
     }
@@ -119,9 +108,7 @@ get_tx_rlp_len(const uint8_t *buffer, uint32_t len, uint64_t *read, uint64_t *to
         uint64_t num_bytes = (marker - 0xF7);
 
         uint64_t num;
-        if (be_bytes_to_u64(&data[offset], num_bytes, &num) != 0)
-            return rlp_invalid_data;
-
+        if (be_bytes_to_u64(&data[offset], num_bytes, &num) != 0) return rlp_invalid_data;
 
         // marker byte + number of bytes used to encode the len
         *read += 1 + num_bytes;
@@ -134,8 +121,7 @@ get_tx_rlp_len(const uint8_t *buffer, uint32_t len, uint64_t *read, uint64_t *to
     return rlp_invalid_data;
 }
 
-parser_error_t printRLPNumber(const rlp_t *num, char* outVal, uint16_t outValLen,
-                              uint8_t pageIdx, uint8_t *pageCount) {
+parser_error_t printRLPNumber(const rlp_t *num, char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
     if (num == NULL || outVal == NULL || pageCount == NULL) {
         return parser_unexpected_error;
     }
@@ -152,9 +138,10 @@ parser_error_t printRLPNumber(const rlp_t *num, char* outVal, uint16_t outValLen
     return parser_ok;
 }
 
-parser_error_t printEVMAddress(const rlp_t *address, char* outVal, uint16_t outValLen,
-                               uint8_t pageIdx, uint8_t *pageCount) {
-    if (address == NULL || address->ptr == NULL || outVal == NULL || pageCount == NULL || address->rlpLen != ETH_ADDR_LEN) {
+parser_error_t printEVMAddress(const rlp_t *address, char *outVal, uint16_t outValLen, uint8_t pageIdx,
+                               uint8_t *pageCount) {
+    if (address == NULL || address->ptr == NULL || outVal == NULL || pageCount == NULL ||
+        address->rlpLen != ETH_ADDR_LEN) {
         return parser_unexpected_error;
     }
 

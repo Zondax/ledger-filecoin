@@ -15,8 +15,6 @@
  *  limitations under the License.
  ********************************************************************************/
 
-#include "app_main.h"
-
 #include <os.h>
 #include <os_io_seproxyhal.h>
 #include <stdio.h>
@@ -25,10 +23,11 @@
 
 #include "actions.h"
 #include "addr.h"
-#include "common/tx.h"
-#include "eth_addr.h"
+#include "app_main.h"
 #include "coin.h"
+#include "common/tx.h"
 #include "crypto.h"
+#include "eth_addr.h"
 #include "eth_utils.h"
 #include "tx.h"
 #include "view.h"
@@ -38,10 +37,7 @@
 static bool tx_initialized = false;
 static uint32_t msg_counter = 0;
 
-void
-extractHDPath(uint32_t rx, uint32_t offset, uint32_t path_len)
-{
-
+void extractHDPath(uint32_t rx, uint32_t offset, uint32_t path_len) {
     if ((rx - offset) < sizeof(uint32_t) * path_len) {
         THROW(APDU_CODE_WRONG_LENGTH);
     }
@@ -50,32 +46,25 @@ extractHDPath(uint32_t rx, uint32_t offset, uint32_t path_len)
     hdPath_len = path_len;
 }
 
-void
-extract_fil_path(uint32_t rx, uint32_t offset)
-{
+void extract_fil_path(uint32_t rx, uint32_t offset) {
     tx_initialized = false;
     extractHDPath(rx, offset, HDPATH_LEN_DEFAULT);
 
-    const bool mainnet =
-      hdPath[0] == HDPATH_0_DEFAULT && hdPath[1] == HDPATH_1_DEFAULT;
+    const bool mainnet = hdPath[0] == HDPATH_0_DEFAULT && hdPath[1] == HDPATH_1_DEFAULT;
 
-    const bool testnet =
-      hdPath[0] == HDPATH_0_TESTNET && hdPath[1] == HDPATH_1_TESTNET;
+    const bool testnet = hdPath[0] == HDPATH_0_TESTNET && hdPath[1] == HDPATH_1_TESTNET;
 
     if (!mainnet && !testnet) {
         THROW(APDU_CODE_DATA_INVALID);
     }
 }
 
-void
-extract_eth_path(uint32_t rx, uint32_t offset)
-{
+void extract_eth_path(uint32_t rx, uint32_t offset) {
     tx_initialized = false;
 
     uint32_t path_len = *(G_io_apdu_buffer + offset);
 
-    if (path_len > MAX_BIP32_PATH || path_len < 1)
-        THROW(APDU_CODE_WRONG_LENGTH);
+    if (path_len > MAX_BIP32_PATH || path_len < 1) THROW(APDU_CODE_WRONG_LENGTH);
 
     if ((rx - offset - 1) < sizeof(uint32_t) * path_len) {
         THROW(APDU_CODE_WRONG_LENGTH);
@@ -90,8 +79,7 @@ extract_eth_path(uint32_t rx, uint32_t offset)
         path_data += sizeof(uint32_t);
     }
 
-    const bool mainnet =
-      hdPath[0] == HDPATH_ETH_0_DEFAULT && hdPath[1] == HDPATH_ETH_1_DEFAULT;
+    const bool mainnet = hdPath[0] == HDPATH_ETH_0_DEFAULT && hdPath[1] == HDPATH_ETH_1_DEFAULT;
 
     if (!mainnet) {
         THROW(APDU_CODE_DATA_INVALID);
@@ -101,10 +89,7 @@ extract_eth_path(uint32_t rx, uint32_t offset)
     hdPath_len = path_len;
 }
 
-bool
-process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
-{
-
+__Z_INLINE bool process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
     const uint8_t payloadType = G_io_apdu_buffer[OFFSET_PAYLOAD_TYPE];
 
     if (G_io_apdu_buffer[OFFSET_P2] != 0) {
@@ -127,8 +112,7 @@ process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
             if (!tx_initialized) {
                 THROW(APDU_CODE_TX_NOT_INITIALIZED);
             }
-            added =
-              tx_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
+            added = tx_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
             if (added != rx - OFFSET_DATA) {
                 tx_initialized = false;
                 THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
@@ -138,8 +122,7 @@ process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
             if (!tx_initialized) {
                 THROW(APDU_CODE_TX_NOT_INITIALIZED);
             }
-            added =
-              tx_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
+            added = tx_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
             tx_initialized = false;
             if (added != rx - OFFSET_DATA) {
                 THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
@@ -148,11 +131,10 @@ process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
     }
 
     THROW(APDU_CODE_INVALIDP1P2);
+    return false;
 }
 
-bool
-process_rawbytes_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
-{
+__Z_INLINE bool process_rawbytes_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
     const uint8_t payloadType = G_io_apdu_buffer[OFFSET_PAYLOAD_TYPE];
 
     if (G_io_apdu_buffer[OFFSET_P2] != 0) {
@@ -173,7 +155,6 @@ process_rawbytes_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
             return false;
         case P1_ADD:
         case P1_LAST: {
-
             size_t msg_len = rx - OFFSET_DATA;
             uint8_t *buf = G_io_apdu_buffer + OFFSET_DATA;
 
@@ -195,7 +176,7 @@ process_rawbytes_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
                 }
             }
 
-            if (payloadType == P1_LAST){
+            if (payloadType == P1_LAST) {
                 return true;
             }
 
@@ -205,11 +186,10 @@ process_rawbytes_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
 
     tx_initialized = false;
     THROW(APDU_CODE_INVALIDP1P2);
+    return false;
 }
 
-bool
-process_chunk_eth(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
-{
+__Z_INLINE bool process_chunk_eth(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
     const uint8_t payloadType = G_io_apdu_buffer[OFFSET_PAYLOAD_TYPE];
 
     if (G_io_apdu_buffer[OFFSET_P2] != 0) {
@@ -276,8 +256,7 @@ process_chunk_eth(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
             uint64_t buff_len = tx_get_buffer_length();
             uint8_t *buff_data = tx_get_buffer();
 
-            if (get_tx_rlp_len(buff_data, buff_len, &read, &to_read) !=
-                rlp_ok) {
+            if (get_tx_rlp_len(buff_data, buff_len, &read, &to_read) != rlp_ok) {
                 THROW(APDU_CODE_DATA_INVALID);
             }
 
@@ -287,8 +266,7 @@ process_chunk_eth(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
             uint64_t missing = to_read - rlp_read;
             max_len = len;
 
-            if (missing < len)
-                max_len = missing;
+            if (missing < len) max_len = missing;
 
             added = tx_append(data, max_len);
 
@@ -306,11 +284,10 @@ process_chunk_eth(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
             return false;
     }
     THROW(APDU_CODE_INVALIDP1P2);
+    return false;
 }
 
-__Z_INLINE void
-handleGetAddr(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
-{
+__Z_INLINE void handleGetAddr(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     extract_fil_path(rx, OFFSET_DATA);
 
     uint8_t requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
@@ -330,16 +307,13 @@ handleGetAddr(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
     THROW(APDU_CODE_OK);
 }
 
-__Z_INLINE void
-handleGetAddrEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
-{
+__Z_INLINE void handleGetAddrEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     extract_eth_path(rx, OFFSET_DATA);
 
     uint8_t requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
     uint8_t with_code = G_io_apdu_buffer[OFFSET_P2];
 
-    if (with_code != P2_CHAINCODE && with_code != P2_NO_CHAINCODE)
-        THROW(APDU_CODE_INVALIDP1P2);
+    if (with_code != P2_CHAINCODE && with_code != P2_NO_CHAINCODE) THROW(APDU_CODE_INVALIDP1P2);
 
     fil_chain_code = with_code;
 
@@ -358,9 +332,7 @@ handleGetAddrEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
     THROW(APDU_CODE_OK);
 }
 
-__Z_INLINE void
-handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
-{
+__Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     if (!process_chunk(tx, rx)) {
         THROW(APDU_CODE_OK);
     }
@@ -392,9 +364,7 @@ handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
     *flags |= IO_ASYNCH_REPLY;
 }
 
-__Z_INLINE void
-handleSignRawBytes(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
-{
+__Z_INLINE void handleSignRawBytes(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     zemu_log_stack("handleSignRawBytes");
 
     msg_counter += 1;
@@ -405,9 +375,9 @@ handleSignRawBytes(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
         if ((msg_counter % 5) == 0) {
             char prompt[] = {"RawBytes:"};
             view_message_show(prompt, message);
-            #if !defined(TARGET_STAX) && !defined(TARGET_FLEX)
+#if !defined(TARGET_STAX) && !defined(TARGET_FLEX)
             UX_WAIT_DISPLAYED();
-            #endif
+#endif
         }
         THROW(APDU_CODE_OK);
     }
@@ -439,9 +409,7 @@ handleSignRawBytes(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
     *flags |= IO_ASYNCH_REPLY;
 }
 
-__Z_INLINE void
-handleSignEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
-{
+__Z_INLINE void handleSignEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     zemu_log_stack("handleSignEth");
     if (!process_chunk_eth(tx, rx)) {
         THROW(APDU_CODE_OK);
@@ -472,16 +440,11 @@ handleSignEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
     *flags |= IO_ASYNCH_REPLY;
 }
 
-void
-handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
-{
+void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     volatile uint16_t sw = 0;
 
-    BEGIN_TRY
-    {
-        TRY
-        {
-
+    BEGIN_TRY {
+        TRY {
             const uint8_t cla = G_io_apdu_buffer[OFFSET_CLA];
 
             if ((cla != CLA) && (cla != CLA_ETH)) {
@@ -496,9 +459,7 @@ handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
 
             // Handle this case as ins number is the same as normal fil sign
             // instruction
-            if (instruction == INS_GET_ADDR_ETH && cla == CLA_ETH)
-                handleGetAddrEth(flags, tx, rx);
-
+            if (instruction == INS_GET_ADDR_ETH && cla == CLA_ETH) handleGetAddrEth(flags, tx, rx);
 
             switch (instruction) {
                 case INS_GET_VERSION: {
@@ -551,12 +512,8 @@ handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
                     THROW(APDU_CODE_INS_NOT_SUPPORTED);
             }
         }
-        CATCH(EXCEPTION_IO_RESET)
-        {
-            THROW(EXCEPTION_IO_RESET);
-        }
-        CATCH_OTHER(e)
-        {
+        CATCH(EXCEPTION_IO_RESET) { THROW(EXCEPTION_IO_RESET); }
+        CATCH_OTHER(e) {
             switch (e & 0xF000) {
                 case 0x6000:
                 case APDU_CODE_OK:

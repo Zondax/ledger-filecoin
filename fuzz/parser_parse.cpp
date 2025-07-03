@@ -9,7 +9,6 @@
 #error "This fuzz target won't work correctly with NDEBUG defined, which will cause asserts to be eliminated"
 #endif
 
-
 using std::size_t;
 
 static char PARSER_KEY[16384];
@@ -21,11 +20,11 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
 
     char buffer[10000];
     array_to_hexstr(buffer, sizeof(buffer), data, size);
-    //fprintf(stderr, "input blob: %s\n", buffer);
+    // fprintf(stderr, "input blob: %s\n", buffer);
 
     rc = parser_parse(&ctx, data, size);
     if (rc != parser_ok) {
-        //fprintf(stderr, "parser error: %s\n", parser_getErrorDescription(rc));
+        // fprintf(stderr, "parser error: %s\n", parser_getErrorDescription(rc));
         return 0;
     }
 
@@ -40,9 +39,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     uint8_t num_items;
     rc = parser_getNumItems(&ctx, &num_items);
     if (rc != parser_ok) {
-        fprintf(stderr,
-                "error in parser_getNumItems: %s\n",
-                parser_getErrorDescription(rc));
+        fprintf(stderr, "error in parser_getNumItems: %s\n", parser_getErrorDescription(rc));
         assert(false);
     }
 
@@ -50,16 +47,11 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
         uint8_t page_idx = 0;
         uint8_t page_count = 1;
         while (page_idx < page_count) {
-            rc = parser_getItem(&ctx, i,
-                                PARSER_KEY, sizeof(PARSER_KEY),
-                                PARSER_VALUE, sizeof(PARSER_VALUE),
-                                page_idx, &page_count);
+            rc = parser_getItem(&ctx, i, PARSER_KEY, sizeof(PARSER_KEY), PARSER_VALUE, sizeof(PARSER_VALUE), page_idx,
+                                &page_count);
 
             if (rc != parser_ok) {
-                assert(fprintf(stderr,
-                               "error getting item %u at page index %u: %s\n",
-                               (unsigned) i,
-                               (unsigned) page_idx,
+                assert(fprintf(stderr, "error getting item %u at page index %u: %s\n", (unsigned)i, (unsigned)page_idx,
                                parser_getErrorDescription(rc)) != 0);
                 assert(false);
             }

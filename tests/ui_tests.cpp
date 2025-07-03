@@ -1,38 +1,39 @@
 /*******************************************************************************
-*   (c) 2019 Zondax GmbH
-*
-*  Licensed under the Apache License, Version 2.0 (the "License");
-*  you may not use this file except in compliance with the License.
-*  You may obtain a copy of the License at
-*
-*      http://www.apache.org/licenses/LICENSE-2.0
-*
-*  Unless required by applicable law or agreed to in writing, software
-*  distributed under the License is distributed on an "AS IS" BASIS,
-*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*  See the License for the specific language governing permissions and
-*  limitations under the License.
-********************************************************************************/
+ *   (c) 2019 Zondax GmbH
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ ********************************************************************************/
 
-#include "gmock/gmock.h"
-
-#include <iostream>
-#include <fstream>
-#include <nlohmann/json.hpp>
-#include <hexutils.h>
 #include <app_mode.h>
-#include "parser.h"
-#include "common.h"
+#include <hexutils.h>
+
+#include <fstream>
+#include <iostream>
 #include <memory>
-#include "testcases.h"
+#include <nlohmann/json.hpp>
+
+#include "common.h"
 #include "expected_output.h"
+#include "gmock/gmock.h"
+#include "parser.h"
+#include "testcases.h"
 
 using ::testing::TestWithParam;
 
 class JsonTests : public ::testing::TestWithParam<testcase_t> {
-public:
+   public:
     struct PrintToStringParamName {
-        template<class ParamType>
+        template <class ParamType>
         std::string operator()(const testing::TestParamInfo<ParamType> &info) const {
             auto p = static_cast<testcase_t>(info.param);
             std::stringstream ss;
@@ -43,9 +44,11 @@ public:
 };
 
 std::string CleanTestname(std::string s) {
-    s.erase(remove_if(s.begin(), s.end(), [](char v) -> bool {
-        return v == ':' || v == ' ' || v == '/' || v == '-' || v == '.' || v == '_' || v == '#';
-    }), s.end());
+    s.erase(remove_if(s.begin(), s.end(),
+                      [](char v) -> bool {
+                          return v == ':' || v == ' ' || v == '/' || v == '-' || v == '.' || v == '_' || v == '#';
+                      }),
+            s.end());
     return s;
 }
 
@@ -75,16 +78,9 @@ std::vector<testcase_t> GetJsonTestCases(const std::string &jsonFile, Generator 
 
         auto name = CleanTestname(i.value("description", std::string("")));
 
-        answer.push_back(testcase_t{
-                answer.size() + 1,
-                name,
-                i.value("encoded_tx_hex", std::string("")),
-                valid,
-                i.value("testnet", false),
-                i.value("error", std::string("")),
-                outputs,
-                outputs_expert
-        });
+        answer.push_back(testcase_t{answer.size() + 1, name, i.value("encoded_tx_hex", std::string("")), valid,
+                                    i.value("testnet", false), i.value("error", std::string("")), outputs,
+                                    outputs_expert});
     }
 
     return answer;
@@ -152,9 +148,9 @@ void check_testcase_fil_base(const testcase_t &tc, bool a) {
 ///////////////////////////////////////////////////////////////////////
 
 class VerifyTestVectors : public ::testing::TestWithParam<testcase_t> {
-public:
+   public:
     struct PrintToStringParamName {
-        template<class ParamType>
+        template <class ParamType>
         std::string operator()(const testing::TestParamInfo<ParamType> &info) const {
             auto p = static_cast<testcase_t>(info.param);
             std::stringstream ss;
@@ -164,29 +160,24 @@ public:
     };
 };
 
-class VerifyEvmTransactions: public JsonTests{};
+class VerifyEvmTransactions : public JsonTests {};
 
-class VerifyInvokeContract: public JsonTests{};
+class VerifyInvokeContract : public JsonTests {};
 
 GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(VerifyTestVectors);
 
-INSTANTIATE_TEST_SUITE_P(
-        EVMTransactions,
-        VerifyEvmTransactions,
-        ::testing::ValuesIn(GetJsonTestCases("testvectors/evm.json", EVMGenerateExpectedUIOutput)), VerifyTestVectors::PrintToStringParamName()
-);
+INSTANTIATE_TEST_SUITE_P(EVMTransactions, VerifyEvmTransactions,
+                         ::testing::ValuesIn(GetJsonTestCases("testvectors/evm.json", EVMGenerateExpectedUIOutput)),
+                         VerifyTestVectors::PrintToStringParamName());
 
-INSTANTIATE_TEST_SUITE_P(
-        InvokeContract,
-        VerifyInvokeContract,
-        ::testing::ValuesIn(GetJsonTestCases("testvectors/invoke_contracts.json", InvokeContractGenerateExpectedUIOutput)), VerifyTestVectors::PrintToStringParamName()
-);
+INSTANTIATE_TEST_SUITE_P(InvokeContract, VerifyInvokeContract,
+                         ::testing::ValuesIn(GetJsonTestCases("testvectors/invoke_contracts.json",
+                                                              InvokeContractGenerateExpectedUIOutput)),
+                         VerifyTestVectors::PrintToStringParamName());
 
-INSTANTIATE_TEST_SUITE_P(
-        Multisig,
-        VerifyTestVectors,
-        ::testing::ValuesIn(GetJsonTestCases("testvectors/manual.json", GenerateExpectedUIOutput)), VerifyTestVectors::PrintToStringParamName()
-);
+INSTANTIATE_TEST_SUITE_P(Multisig, VerifyTestVectors,
+                         ::testing::ValuesIn(GetJsonTestCases("testvectors/manual.json", GenerateExpectedUIOutput)),
+                         VerifyTestVectors::PrintToStringParamName());
 
 TEST_P(VerifyTestVectors, CheckUIOutput_CurrentTX_Normal) { check_testcase_fil_base(GetParam(), true); }
 

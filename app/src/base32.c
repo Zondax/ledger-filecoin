@@ -21,13 +21,8 @@
 
 #include <string.h>
 
-uint32_t base32_encode(const uint8_t *data,
-                       uint32_t length,
-                       char *result,
-                       uint32_t resultLen)
-{
-    if (data == NULL || result == NULL ||
-        length > (1 << 28) || length == 0 || resultLen == 0) {
+uint32_t base32_encode(const uint8_t *data, uint32_t length, char *result, uint32_t resultLen) {
+    if (data == NULL || result == NULL || length > (1 << 28) || length == 0 || resultLen == 0) {
         return 0;
     }
     uint32_t count = 0;

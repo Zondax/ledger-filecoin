@@ -1,28 +1,27 @@
 /*******************************************************************************
-*   Ledger Ethereum App
-*   (c) 2016-2019 Ledger
-*
-*  Licensed under the Apache License, Version 2.0 (the "License");
-*  you may not use this file except in compliance with the License.
-*  You may obtain a copy of the License at
-*
-*      http://www.apache.org/licenses/LICENSE-2.0
-*
-*  Unless required by applicable law or agreed to in writing, software
-*  distributed under the License is distributed on an "AS IS" BASIS,
-*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*  See the License for the specific language governing permissions and
-*  limitations under the License.
-********************************************************************************/
+ *   Ledger Ethereum App
+ *   (c) 2016-2019 Ledger
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ ********************************************************************************/
 
 // Adapted from https://github.com/calccrypto/uint256_t
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-
 #include "uint256.h"
 
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 static const char HEXDIGITS[] = "0123456789abcdef";
 
@@ -61,13 +60,9 @@ parser_error_t readu256BE(parser_context_t *ctx, uint256_t *bigInt) {
     return parser_ok;
 }
 
-bool zero128(uint128_t *number) {
-    return ((LOWER_P(number) == 0) && (UPPER_P(number) == 0));
-}
+bool zero128(uint128_t *number) { return ((LOWER_P(number) == 0) && (UPPER_P(number) == 0)); }
 
-bool zero256(uint256_t *number) {
-    return (zero128(&LOWER_P(number)) && zero128(&UPPER_P(number)));
-}
+bool zero256(uint256_t *number) { return (zero128(&LOWER_P(number)) && zero128(&UPPER_P(number))); }
 
 void copy128(uint128_t *target, uint128_t *number) {
     UPPER_P(target) = UPPER_P(number);
@@ -98,8 +93,7 @@ void shiftl128(uint128_t *number, uint32_t value, uint128_t *target) {
     } else if (value == 0) {
         copy128(target, number);
     } else if (value < 64) {
-        UPPER_P(target) =
-            (UPPER_P(number) << value) + (LOWER_P(number) >> (64 - value));
+        UPPER_P(target) = (UPPER_P(number) << value) + (LOWER_P(number) >> (64 - value));
         LOWER_P(target) = (LOWER_P(number) << value);
     } else if (value > 64) {
         UPPER_P(target) = LOWER_P(number) << (value - 64);
@@ -143,8 +137,7 @@ void shiftr128(uint128_t *number, uint32_t value, uint128_t *target) {
     } else if (value < 64) {
         uint128_t result;
         UPPER(result) = UPPER_P(number) >> value;
-        LOWER(result) =
-            (UPPER_P(number) << (64 - value)) + (LOWER_P(number) >> value);
+        LOWER(result) = (UPPER_P(number) << (64 - value)) + (LOWER_P(number) >> value);
         copy128(target, &result);
     } else if (value > 64) {
         LOWER_P(target) = UPPER_P(number) >> (value - 64);
@@ -220,13 +213,11 @@ uint32_t bits256(uint256_t *number) {
 }
 
 bool equal128(uint128_t *number1, uint128_t *number2) {
-    return (UPPER_P(number1) == UPPER_P(number2)) &&
-           (LOWER_P(number1) == LOWER_P(number2));
+    return (UPPER_P(number1) == UPPER_P(number2)) && (LOWER_P(number1) == LOWER_P(number2));
 }
 
 bool equal256(uint256_t *number1, uint256_t *number2) {
-    return (equal128(&UPPER_P(number1), &UPPER_P(number2)) &&
-            equal128(&LOWER_P(number1), &LOWER_P(number2)));
+    return (equal128(&UPPER_P(number1), &UPPER_P(number2)) && equal128(&LOWER_P(number1), &LOWER_P(number2)));
 }
 
 bool gt128(uint128_t *number1, uint128_t *number2) {
@@ -243,18 +234,12 @@ bool gt256(uint256_t *number1, uint256_t *number2) {
     return gt128(&UPPER_P(number1), &UPPER_P(number2));
 }
 
-bool gte128(uint128_t *number1, uint128_t *number2) {
-    return gt128(number1, number2) || equal128(number1, number2);
-}
+bool gte128(uint128_t *number1, uint128_t *number2) { return gt128(number1, number2) || equal128(number1, number2); }
 
-bool gte256(uint256_t *number1, uint256_t *number2) {
-    return gt256(number1, number2) || equal256(number1, number2);
-}
+bool gte256(uint256_t *number1, uint256_t *number2) { return gt256(number1, number2) || equal256(number1, number2); }
 
 void add128(uint128_t *number1, uint128_t *number2, uint128_t *target) {
-    UPPER_P(target) =
-        UPPER_P(number1) + UPPER_P(number2) +
-        ((LOWER_P(number1) + LOWER_P(number2)) < LOWER_P(number1));
+    UPPER_P(target) = UPPER_P(number1) + UPPER_P(number2) + ((LOWER_P(number1) + LOWER_P(number2)) < LOWER_P(number1));
     LOWER_P(target) = LOWER_P(number1) + LOWER_P(number2);
 }
 
@@ -272,9 +257,7 @@ void add256(uint256_t *number1, uint256_t *number2, uint256_t *target) {
 }
 
 void minus128(uint128_t *number1, uint128_t *number2, uint128_t *target) {
-    UPPER_P(target) =
-        UPPER_P(number1) - UPPER_P(number2) -
-        ((LOWER_P(number1) - LOWER_P(number2)) > LOWER_P(number1));
+    UPPER_P(target) = UPPER_P(number1) - UPPER_P(number2) - ((LOWER_P(number1) - LOWER_P(number2)) > LOWER_P(number1));
     LOWER_P(target) = LOWER_P(number1) - LOWER_P(number2);
 }
 
@@ -302,10 +285,9 @@ void or256(uint256_t *number1, uint256_t *number2, uint256_t *target) {
 }
 
 void mul128(uint128_t *number1, uint128_t *number2, uint128_t *target) {
-    uint64_t top[4] = {UPPER_P(number1) >> 32, UPPER_P(number1) & 0xffffffff,
-                       LOWER_P(number1) >> 32, LOWER_P(number1) & 0xffffffff};
-    uint64_t bottom[4] = {UPPER_P(number2) >> 32, UPPER_P(number2) & 0xffffffff,
-                          LOWER_P(number2) >> 32,
+    uint64_t top[4] = {UPPER_P(number1) >> 32, UPPER_P(number1) & 0xffffffff, LOWER_P(number1) >> 32,
+                       LOWER_P(number1) & 0xffffffff};
+    uint64_t bottom[4] = {UPPER_P(number2) >> 32, UPPER_P(number2) & 0xffffffff, LOWER_P(number2) >> 32,
                           LOWER_P(number2) & 0xffffffff};
     uint64_t products[4][4];
     uint128_t tmp, tmp2;
@@ -437,8 +419,7 @@ void mul256(uint256_t *number1, uint256_t *number2, uint256_t *target) {
     add256(&target1, &target2, target);
 }
 
-void divmod128(uint128_t *l, uint128_t *r, uint128_t *retDiv,
-               uint128_t *retMod) {
+void divmod128(uint128_t *l, uint128_t *r, uint128_t *retDiv, uint128_t *retMod) {
     uint128_t copyd, adder, resDiv, resMod;
     uint128_t one;
     UPPER(one) = 0;
@@ -469,8 +450,7 @@ void divmod128(uint128_t *l, uint128_t *r, uint128_t *retDiv,
     }
 }
 
-void divmod256(uint256_t *l, uint256_t *r, uint256_t *retDiv,
-               uint256_t *retMod) {
+void divmod256(uint256_t *l, uint256_t *r, uint256_t *retDiv, uint256_t *retMod) {
     uint256_t copyd, adder, resDiv, resMod;
     uint256_t one;
     clear256(&one);
@@ -512,8 +492,7 @@ static void reverseString(char *str, uint32_t length) {
     }
 }
 
-bool tostring128(uint128_t *number, uint32_t baseParam, char *out,
-                 uint32_t outLength) {
+bool tostring128(uint128_t *number, uint32_t baseParam, char *out, uint32_t outLength) {
     if (number == NULL || out == NULL || outLength == 0) {
         return false;
     }
@@ -544,8 +523,7 @@ bool tostring128(uint128_t *number, uint32_t baseParam, char *out,
     return true;
 }
 
-bool tostring256(uint256_t *number, uint32_t baseParam, char *out,
-                 uint32_t outLength) {
+bool tostring256(uint256_t *number, uint32_t baseParam, char *out, uint32_t outLength) {
     if (number == NULL || out == NULL || outLength <= 1) {
         return false;
     }
@@ -563,7 +541,7 @@ bool tostring256(uint256_t *number, uint32_t baseParam, char *out,
         return false;
     }
 
-    outLength--;    // Keep a byte for termination
+    outLength--;  // Keep a byte for termination
 
     do {
         if (offset > (outLength - 1)) {
