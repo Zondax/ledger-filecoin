@@ -19,7 +19,7 @@
 
 #include "coin_evm.h"
 #include "parser_common.h"
-#include "parser_txdef.h"
+#include "parser_impl_evm.h"
 #include "rlp.h"
 
 #ifdef __cplusplus

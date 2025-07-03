@@ -55,12 +55,12 @@ static parser_error_t parse_legacy_tx(parser_context_t *ctx, eth_tx_t *tx_obj) {
         return parser_unexpected_error;
     }
 
-    CHECK_PARSER_ERR(rlp_read(ctx, &tx_obj->legacy.nonce));
-    CHECK_PARSER_ERR(rlp_read(ctx, &(tx_obj->legacy.gasPrice)));
-    CHECK_PARSER_ERR(rlp_read(ctx, &(tx_obj->legacy.gasLimit)));
-    CHECK_PARSER_ERR(rlp_read(ctx, &(tx_obj->legacy.to)));
-    CHECK_PARSER_ERR(rlp_read(ctx, &(tx_obj->legacy.value)));
-    CHECK_PARSER_ERR(rlp_read(ctx, &(tx_obj->legacy.data)));
+    CHECK_PARSER_ERR(rlp_read(ctx, &tx_obj->tx.nonce));
+    CHECK_PARSER_ERR(rlp_read(ctx, &(tx_obj->tx.gasPrice)));
+    CHECK_PARSER_ERR(rlp_read(ctx, &(tx_obj->tx.gasLimit)));
+    CHECK_PARSER_ERR(rlp_read(ctx, &(tx_obj->tx.to)));
+    CHECK_PARSER_ERR(rlp_read(ctx, &(tx_obj->tx.value)));
+    CHECK_PARSER_ERR(rlp_read(ctx, &(tx_obj->tx.data)));
 
     // Check for legacy no EIP155 which means no chain_id
     // There is not more data no eip155 compliant tx
@@ -182,7 +182,7 @@ static parser_error_t printERC20(uint8_t displayIdx, char *outKey, uint16_t outK
     MEMZERO(outVal, outValLen);
     *pageCount = 1;
 
-    const eth_base_t *legacy = &eth_tx_obj.legacy;
+    const eth_base_t *legacy = &eth_tx_obj.tx;
     char tokenSymbol[10] = {0};
     uint8_t decimals = 0;
     CHECK_PARSER_ERR(getERC20Token(&eth_tx_obj, tokenSymbol, &decimals));
@@ -192,15 +192,13 @@ static parser_error_t printERC20(uint8_t displayIdx, char *outKey, uint16_t outK
     switch (displayIdx) {
         case 0:
             snprintf(outKey, outKeyLen, "To");
-            rlp_t to = {
-                .kind = RLP_KIND_STRING, .ptr = (eth_tx_obj.legacy.data.ptr + 4 + 12), .rlpLen = ETH_ADDRESS_LEN};
+            rlp_t to = {.kind = RLP_KIND_STRING, .ptr = (eth_tx_obj.tx.data.ptr + 4 + 12), .rlpLen = ETH_ADDRESS_LEN};
             CHECK_PARSER_ERR(printEVMAddress(&to, outVal, outValLen, pageIdx, pageCount));
             break;
 
         case 1:
             snprintf(outKey, outKeyLen, "Token Contract");
-            rlp_t contractAddress = {
-                .kind = RLP_KIND_STRING, .ptr = eth_tx_obj.legacy.to.ptr, .rlpLen = ETH_ADDRESS_LEN};
+            rlp_t contractAddress = {.kind = RLP_KIND_STRING, .ptr = eth_tx_obj.tx.to.ptr, .rlpLen = ETH_ADDRESS_LEN};
             CHECK_PARSER_ERR(printEVMAddress(&contractAddress, outVal, outValLen, pageIdx, pageCount));
             break;
 

@@ -86,13 +86,13 @@ const erc20_tokens_t supportedTokens[] = {
 
 parser_error_t getERC20Token(const eth_tx_t *ethObj, char tokenSymbol[MAX_SYMBOL_LEN], uint8_t *decimals) {
     if (ethObj == NULL || tokenSymbol == NULL || decimals == NULL ||
-        ethObj->legacy.data.rlpLen != ERC20_TRANSFER_DATA_LENGTH ||
-        memcmp(ethObj->legacy.data.ptr, ERC20_TRANSFER_PREFIX, 4) != 0) {
+        ethObj->tx.data.rlpLen != ERC20_TRANSFER_DATA_LENGTH ||
+        memcmp(ethObj->tx.data.ptr, ERC20_TRANSFER_PREFIX, 4) != 0) {
         return parser_unexpected_value;
     }
 
     // Verify address contract: first 12 bytes must be 0
-    const uint8_t *addressPtr = ethObj->legacy.data.ptr + 4;
+    const uint8_t *addressPtr = ethObj->tx.data.ptr + 4;
     for (uint8_t i = 0; i < 12; i++) {
         if (*(addressPtr++) != 0) {
             return parser_unexpected_value;
@@ -102,7 +102,7 @@ parser_error_t getERC20Token(const eth_tx_t *ethObj, char tokenSymbol[MAX_SYMBOL
     // Check if token is in the list
     const uint8_t supportedTokensSize = sizeof(supportedTokens) / sizeof(supportedTokens[0]);
     for (uint8_t i = 0; i < supportedTokensSize; i++) {
-        if (memcmp(ethObj->legacy.to.ptr, supportedTokens[i].address, ETH_ADDRESS_LEN) == 0) {
+        if (memcmp(ethObj->tx.to.ptr, supportedTokens[i].address, ETH_ADDRESS_LEN) == 0) {
             // Set symbol and decimals
             snprintf(tokenSymbol, 10, "%s", (char *)PIC(supportedTokens[i].symbol));
             *decimals = supportedTokens[i].decimals;
@@ -127,7 +127,7 @@ parser_error_t printERC20Value(const eth_tx_t *ethObj, char *outVal, uint16_t ou
     CHECK_PARSER_ERR(getERC20Token(ethObj, tokenSymbol, &decimals))
 
     uint256_t value = {0};
-    const uint8_t *valuePtr = ethObj->legacy.data.ptr + SELECTOR_LENGTH + BIGINT_LENGTH;
+    const uint8_t *valuePtr = ethObj->tx.data.ptr + SELECTOR_LENGTH + BIGINT_LENGTH;
     parser_context_t tmpCtx = {.buffer = valuePtr, .bufferLen = BIGINT_LENGTH, .offset = 0, .tx_type = eth_tx};
     CHECK_PARSER_ERR(readu256BE(&tmpCtx, &value));
 
@@ -153,11 +153,11 @@ parser_error_t printERC20Value(const eth_tx_t *ethObj, char *outVal, uint16_t ou
 
 bool validateERC20(eth_tx_t *ethObj) {
     // Check that data start with ERC20 prefix
-    const bool isPayable = false;  // ethObj->legacy.value;
+    const bool isPayable = false;  // ethObj->tx.value;
 
-    if (ethObj == NULL || isPayable || ethObj->legacy.to.rlpLen != ETH_ADDRESS_LEN || ethObj->legacy.data.ptr == NULL ||
-        ethObj->legacy.data.rlpLen != ERC20_TRANSFER_DATA_LENGTH ||
-        memcmp(ethObj->legacy.data.ptr, ERC20_TRANSFER_PREFIX, sizeof(ERC20_TRANSFER_PREFIX)) != 0) {
+    if (ethObj == NULL || isPayable || ethObj->tx.to.rlpLen != ETH_ADDRESS_LEN || ethObj->tx.data.ptr == NULL ||
+        ethObj->tx.data.rlpLen != ERC20_TRANSFER_DATA_LENGTH ||
+        memcmp(ethObj->tx.data.ptr, ERC20_TRANSFER_PREFIX, sizeof(ERC20_TRANSFER_PREFIX)) != 0) {
         return false;
     }
 

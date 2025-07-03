@@ -1,5 +1,5 @@
 /*******************************************************************************
- *   (c) 2018 - 2023 Zondax AG
+ *   (c) 2018 - 2024 Zondax AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -20,7 +20,48 @@ extern "C" {
 #endif
 
 #include "parser_common.h"
-#include "parser_txdef.h"
+#include "rlp.h"
+
+#define ETH_ADDRESS_LEN 20
+typedef struct {
+    uint8_t addr[ETH_ADDRESS_LEN];
+} eth_addr_t;
+
+typedef struct {
+    // Commom fields
+    rlp_t nonce;
+    rlp_t gasLimit;
+    rlp_t to;
+    rlp_t value;
+    rlp_t data;
+
+    // legacy & eip2930
+    rlp_t gasPrice;
+
+    // eip1559
+    rlp_t max_priority_fee_per_gas;
+    rlp_t max_fee_per_gas;
+
+    // eip2930 & eip1559
+    rlp_t access_list;
+} eth_base_t;
+
+// EIP 2718 TransactionType
+// Valid transaction types should be in [0x00, 0x7f]
+typedef enum {
+    eip2930 = 0x01,
+    eip1559 = 0x02,
+    // Legacy tx type is greater than or equal to 0xc0.
+    legacy = 0xc0
+} eth_tx_type_e;
+
+typedef struct {
+    eth_tx_type_e tx_type;
+    rlp_t chainId;
+    eth_base_t tx;
+    bool is_erc20_transfer;
+    bool is_blindsign;
+} eth_tx_t;
 
 extern eth_tx_t eth_tx_obj;
 
@@ -36,6 +77,7 @@ parser_error_t _getNumItemsEth(uint8_t *numItems);
 
 parser_error_t _validateTxEth();
 
+// TODO: change to parser_compute_eth_v_evm
 parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int info, uint8_t *v);
 
 #ifdef __cplusplus

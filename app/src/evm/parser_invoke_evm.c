@@ -41,7 +41,7 @@ parser_error_t getNumItemsInvokeEVM(uint8_t *numItems, const fil_base_tx_t *txOb
     rlp_t tmpValue = {0};
     rlp_t tokenContract = {.ptr = txObj->to.buffer + 2, .rlpLen = ETH_ADDRESS_LEN, .kind = RLP_KIND_STRING};
     rlp_t data = {.ptr = txObj->params, .rlpLen = ERC20_TRANSFER_DATA_LENGTH, .kind = RLP_KIND_STRING};
-    eth_tx_t tmpEthObj = {.legacy.value = tmpValue, .legacy.to = tokenContract, .legacy.data = data};
+    eth_tx_t tmpEthObj = {.tx.value = tmpValue, .tx.to = tokenContract, .tx.data = data};
 
     CHECK_PARSER_ERR(getERC20Token(&tmpEthObj, tokenSymbol, &decimals));
     const bool unknownToken = (memcmp(tokenSymbol, "?? ", 3) == 0);
@@ -112,7 +112,7 @@ parser_error_t printInvokeEVM(const fil_base_tx_t *txObj, uint8_t displayIdx, ch
     rlp_t tmpValue = {0};
     rlp_t tokenContract = {.ptr = txObj->to.buffer + 2, .rlpLen = ETH_ADDRESS_LEN, .kind = RLP_KIND_STRING};
     rlp_t data = {.ptr = txObj->params, .rlpLen = ERC20_TRANSFER_DATA_LENGTH, .kind = RLP_KIND_STRING};
-    eth_tx_t tmpEthObj = {.legacy.value = tmpValue, .legacy.to = tokenContract, .legacy.data = data};
+    eth_tx_t tmpEthObj = {.tx.value = tmpValue, .tx.to = tokenContract, .tx.data = data};
 
     char tokenSymbol[10] = {0};
     uint8_t decimals = 0;
@@ -245,6 +245,6 @@ bool isInvokeEVM_ERC20Transfer(const fil_base_tx_t *txObj) {
     rlp_t tmpValue = {0};
     rlp_t tokenContract = {.ptr = txObj->to.buffer + 2, .rlpLen = ETH_ADDRESS_LEN, .kind = RLP_KIND_STRING};
     rlp_t data = {.ptr = txObj->params, .rlpLen = ERC20_TRANSFER_DATA_LENGTH, .kind = RLP_KIND_STRING};
-    eth_tx_t tmpEthObj = {.legacy.value = tmpValue, .legacy.to = tokenContract, .legacy.data = data};
+    eth_tx_t tmpEthObj = {.tx.value = tmpValue, .tx.to = tokenContract, .tx.data = data};
     return validateERC20(&tmpEthObj);
 }
