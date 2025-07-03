@@ -75,18 +75,18 @@ void extract_eth_path(uint32_t rx, uint32_t offset) {
 
     // hw-app-eth serializes path as BE numbers
     for (uint8_t i = 0; i < path_len; i++) {
-        hdPath[i] = U4BE(path_data, 0);
+        hdPathEth[i] = U4BE(path_data, 0);
         path_data += sizeof(uint32_t);
     }
 
-    const bool mainnet = hdPath[0] == HDPATH_ETH_0_DEFAULT && hdPath[1] == HDPATH_ETH_1_DEFAULT;
+    const bool mainnet = hdPathEth[0] == HDPATH_ETH_0_DEFAULT && hdPathEth[1] == HDPATH_ETH_1_DEFAULT;
 
     if (!mainnet) {
         THROW(APDU_CODE_DATA_INVALID);
     }
 
     // set the hdPath len
-    hdPath_len = path_len;
+    hdPathEth_len = path_len;
 }
 
 __Z_INLINE bool process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
@@ -217,7 +217,7 @@ __Z_INLINE bool process_chunk_eth(__Z_UNUSED volatile uint32_t *tx, uint32_t rx)
             // contains the serialized path only;
             // so we need to offset the data to point to the first transaction
             // byte
-            uint32_t path_len = sizeof(uint32_t) * hdPath_len;
+            uint32_t path_len = sizeof(uint32_t) * hdPathEth_len;
 
             // plus the first offset data containing the path len
             data += path_len + 1;
