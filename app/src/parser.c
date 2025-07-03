@@ -44,7 +44,7 @@ void __assert_fail(__Z_UNUSED const char *assertion, __Z_UNUSED const char *file
 
 parser_error_t parser_init(parser_context_t *ctx, const uint8_t *buffer, uint16_t bufferSize);
 
-static parser_error_t parser_init_context(parser_context_t *ctx, const uint8_t *buffer, uint16_t bufferSize) {
+parser_error_t parser_init_context(parser_context_t *ctx, const uint8_t *buffer, uint16_t bufferSize) {
     ctx->offset = 0;
     ctx->buffer = NULL;
     ctx->bufferLen = 0;
@@ -329,10 +329,6 @@ parser_error_t parser_getItem(const parser_context_t *ctx, uint8_t displayIdx, c
         default:
             return parser_unsupported_tx;
     }
-}
-
-parser_error_t parser_compute_eth_v(parser_context_t *ctx, unsigned int info, uint8_t *v) {
-    return _computeV(ctx, &eth_tx_obj, info, v);
 }
 
 parser_error_t parser_rawbytes_init(uint8_t *buf, size_t buf_len) { return raw_bytes_init(buf, buf_len); }
