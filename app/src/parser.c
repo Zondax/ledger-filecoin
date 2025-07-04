@@ -76,10 +76,6 @@ parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data, size_t d
             app_mode_skip_blindsign_ui();
             return _read(ctx, &(parser_tx_obj.base_tx));
         }
-        case eth_tx: {
-            CHECK_ERROR(parser_init(ctx, data, dataLen))
-            return _readEth(ctx, &eth_tx_obj);
-        }
         case raw_bytes: {
             // Processing raw-bytes is valid only in expert mode
             if (!app_mode_blindsign()) return parser_blindsign_mode_required;
@@ -98,10 +94,6 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
     switch (ctx->tx_type) {
         case fil_tx: {
             CHECK_ERROR(_validateTx(ctx, &parser_tx_obj.base_tx))
-            break;
-        }
-        case eth_tx: {
-            CHECK_ERROR(_validateTxEth())
             break;
         }
         case raw_bytes: {
@@ -131,10 +123,6 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_item
     switch (ctx->tx_type) {
         case fil_tx: {
             *num_items = _getNumItems(ctx, &parser_tx_obj.base_tx);
-            break;
-        }
-        case eth_tx: {
-            CHECK_ERROR(_getNumItemsEth(num_items));
             break;
         }
         case raw_bytes: {
@@ -318,9 +306,6 @@ parser_error_t parser_getItem(const parser_context_t *ctx, uint8_t displayIdx, c
     switch (ctx->tx_type) {
         case fil_tx: {
             return _getItemFil(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
-        }
-        case eth_tx: {
-            return _getItemEth(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
         }
         case raw_bytes: {
             // for now just display the hash

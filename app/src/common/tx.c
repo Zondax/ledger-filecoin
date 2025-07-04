@@ -46,8 +46,6 @@ void tx_initialize() {
 
 void tx_context_fil() { ctx_parsed_tx.tx_type = fil_tx; }
 
-void tx_context_eth() { ctx_parsed_tx.tx_type = eth_tx; }
-
 void tx_context_raw_bytes() { ctx_parsed_tx.tx_type = raw_bytes; }
 
 bool tx_is_rawbytes() { return ctx_parsed_tx.tx_type == raw_bytes; }

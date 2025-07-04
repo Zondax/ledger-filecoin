@@ -131,6 +131,7 @@ file(GLOB_RECURSE LIB_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/crypto_helper.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/crypto_test.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/base32.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser_impl_evm_specific.c
 
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/evm/parser_impl_evm.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/evm/parser_evm.c
@@ -139,7 +140,6 @@ file(GLOB_RECURSE LIB_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/evm/uint256.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/evm/evm_erc20.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/evm/evm_utils.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/evm/parser_impl_evm_fil.c
         )
 
 add_library(app_lib STATIC

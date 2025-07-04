@@ -42,6 +42,7 @@ zxerr_t eth_addr_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, ch
 
     switch (displayIdx) {
         case 0:
+            // TODO: Add "0x" prefix to the address??
             snprintf(outKey, outKeyLen, "Eth Address");
             pageString(outVal, outValLen, buffer, pageIdx, pageCount);
             return zxerr_ok;
