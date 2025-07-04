@@ -207,13 +207,13 @@ parser_error_t printInvokeEVM(const fil_base_tx_t *txObj, uint8_t displayIdx, ch
         case 9:
             snprintf(outKey, outKeyLen, "Gas Fee Cap");
             CHECK_ERROR(parser_printBigIntFixedPoint(&txObj->gasfeecap, outVal, outValLen, pageIdx, pageCount,
-                                                          COIN_AMOUNT_DECIMAL_PLACES));
+                                                     COIN_AMOUNT_DECIMAL_PLACES));
             break;
 
         case 10:
             snprintf(outKey, outKeyLen, "Gas Premium");
             CHECK_ERROR(parser_printBigIntFixedPoint(&txObj->gaspremium, outVal, outValLen, pageIdx, pageCount,
-                                                          COIN_AMOUNT_DECIMAL_PLACES));
+                                                     COIN_AMOUNT_DECIMAL_PLACES));
             break;
 
         case 11:
