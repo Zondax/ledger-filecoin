@@ -1,5 +1,5 @@
 /*******************************************************************************
- *   (c) 2018 - 2023 ZondaX AG
+ *   (c) 2018 - 2024 ZondaX AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -54,6 +54,7 @@ typedef struct {
     rlp_kind_e kind;
     const uint8_t *ptr;
     uint64_t rlpLen;
+    uint64_t chain_id_decoded;
 } rlp_t;
 
 #ifdef __cplusplus

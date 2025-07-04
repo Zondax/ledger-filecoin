@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  (c) 2018 - 2023 Zondax AG
+ *  (c) 2018 - 2024 Zondax AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -18,10 +18,14 @@
 #include <stdio.h>
 #include <zxmacros.h>
 
+#include "bignum.h"
 #include "coin_evm.h"
 #include "rlp.h"
 #include "zxerror.h"
 #include "zxformat.h"
+
+#define RLP_MARKER_VAL_1 0xC0
+#define RLP_MARKER_VAL_2 0xF7
 
 #define CHECK_RLP_LEN(BUFF_LEN, RLP_LEN)            \
     {                                               \
@@ -90,7 +94,7 @@ rlp_error_t get_tx_rlp_len(const uint8_t *buffer, uint32_t len, uint64_t *read, 
     // get rlp marker
     uint8_t marker = data[offset];
 
-    if ((marker - 0xC0) * (marker - 0xF7) <= 0) {
+    if ((marker - RLP_MARKER_VAL_1) * (marker - RLP_MARKER_VAL_2) <= 0) {
         *read += 1;
         uint8_t l = marker - 0xC0;
         *to_read = l;
@@ -105,7 +109,7 @@ rlp_error_t get_tx_rlp_len(const uint8_t *buffer, uint32_t len, uint64_t *read, 
         // The number of bytes that compose the length is encoded
         // in the marker
         // And then the length is just the number BE encoded
-        uint64_t num_bytes = (marker - 0xF7);
+        uint64_t num_bytes = (marker - RLP_MARKER_VAL_2);
 
         uint64_t num;
         if (be_bytes_to_u64(&data[offset], num_bytes, &num) != 0) return rlp_invalid_data;
@@ -138,9 +142,48 @@ parser_error_t printRLPNumber(const rlp_t *num, char *outVal, uint16_t outValLen
     return parser_ok;
 }
 
+#define LESS_THAN_64_DIGIT(num_digit) \
+    if (num_digit > 64) return parser_value_out_of_range;
+
+__Z_INLINE bool format_quantity(const uint8_t *num, uint16_t num_len, uint8_t *bcd, uint16_t bcdSize, char *bignum,
+                                uint16_t bignumSize) {
+    bignumBigEndian_to_bcd(bcd, bcdSize, num, num_len);
+    return bignumBigEndian_bcdprint(bignum, bignumSize, bcd, bcdSize);
+}
+
+parser_error_t printBigIntFixedPoint(const uint8_t *number, uint16_t number_len, char *outVal, uint16_t outValLen,
+                                     uint8_t pageIdx, uint8_t *pageCount, uint16_t decimals) {
+    if (number == NULL || outVal == NULL || pageCount == NULL) {
+        return parser_unexpected_error;
+    }
+
+    LESS_THAN_64_DIGIT(number_len);
+
+    char bignum[160] = {0};
+    union {
+        // overlapping arrays to avoid excessive stack usage. Do not use at the same time
+        uint8_t bcd[80];
+        char output[160];
+    } overlapped;
+
+    MEMZERO(&overlapped, sizeof(overlapped));
+
+    if (!format_quantity(number, number_len, overlapped.bcd, sizeof(overlapped.bcd), bignum, sizeof(bignum))) {
+        return parser_unexpected_value;
+    }
+
+    if (fpstr_to_str(overlapped.output, sizeof(overlapped.output), bignum, decimals)) {
+        return parser_unexpected_value;
+    }
+
+    number_inplace_trimming(overlapped.output, 1);
+    pageString(outVal, outValLen, overlapped.output, pageIdx, pageCount);
+    return parser_ok;
+}
+
 parser_error_t printEVMAddress(const rlp_t *address, char *outVal, uint16_t outValLen, uint8_t pageIdx,
                                uint8_t *pageCount) {
-    if (address == NULL || address->ptr == NULL || outVal == NULL || pageCount == NULL ||
+    if (address == NULL || outVal == NULL || address->ptr == NULL || pageCount == NULL ||
         address->rlpLen != ETH_ADDR_LEN) {
         return parser_unexpected_error;
     }

@@ -84,6 +84,5 @@ parser_error_t parser_getItemEth(const parser_context_t *ctx, uint8_t displayIdx
 }
 
 parser_error_t parser_compute_eth_v(parser_context_t *ctx, unsigned int info, uint8_t *v, bool is_personal_message) {
-    UNUSED(is_personal_message);
-    return _computeV(ctx, &eth_tx_obj, info, v);
+    return _computeV(ctx, &eth_tx_obj, info, v, is_personal_message);
 }

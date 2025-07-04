@@ -57,6 +57,10 @@ parser_error_t printRLPNumber(const rlp_t *num, char *outVal, uint16_t outValLen
 
 parser_error_t printEVMAddress(const rlp_t *address, char *outVal, uint16_t outValLen, uint8_t pageIdx,
                                uint8_t *pageCount);
+
+parser_error_t printBigIntFixedPoint(const uint8_t *number, uint16_t number_len, char *outVal, uint16_t outValLen,
+                                     uint8_t pageIdx, uint8_t *pageCount, uint16_t decimals);
+
 #ifdef __cplusplus
 }
 #endif

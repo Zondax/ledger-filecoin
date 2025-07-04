@@ -81,8 +81,8 @@ parser_error_t _getNumItemsEth(uint8_t *numItems);
 
 parser_error_t _validateTxEth();
 
-// TODO: change to parser_compute_eth_v_evm
-parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int info, uint8_t *v);
+parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int info, uint8_t *v,
+                         bool is_personal_message);
 
 #ifdef __cplusplus
 }

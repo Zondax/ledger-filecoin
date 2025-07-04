@@ -31,6 +31,9 @@
 
 eth_tx_t eth_tx_obj;
 
+#define ETHEREUM_RECOVERY_OFFSET 27
+#define EIP155_V_BASE 35
+
 static parser_error_t readChainID(parser_context_t *ctx, rlp_t *chainId) {
     if (ctx == NULL || chainId == NULL) {
         return parser_unexpected_error;
@@ -54,6 +57,7 @@ static parser_error_t readChainID(parser_context_t *ctx, rlp_t *chainId) {
     // Check allowed values for chain id using external configuration
     for (uint8_t i = 0; i < supported_networks_evm_len; i++) {
         if (tmpChainId == supported_networks_evm[i]) {
+            chainId->chain_id_decoded = tmpChainId;
             return parser_ok;
         }
     }
@@ -116,7 +120,7 @@ static parser_error_t parse_2930(parser_context_t *ctx, eth_tx_t *tx_obj) {
 
     // R and S fields should be empty
     if (ctx->offset < ctx->bufferLen) {
-        return parser_unexpected_characters;
+        return parser_unsupported_tx;
     }
 
     return parser_ok;
@@ -139,14 +143,14 @@ static parser_error_t parse_1559(parser_context_t *ctx, eth_tx_t *tx_obj) {
 
     // R and S fields should be empty
     if (ctx->offset < ctx->bufferLen) {
-        return parser_unexpected_characters;
+        return parser_unsupported_tx;
     }
 
     return parser_ok;
 }
 
 static parser_error_t readTxnType(parser_context_t *ctx, eth_tx_type_e *type) {
-    if (ctx == NULL || type == NULL || ctx->bufferLen == 0) {
+    if (ctx == NULL || type == NULL || ctx->bufferLen == 0 || ctx->offset != 0) {
         return parser_unexpected_error;
     }
     // Check first byte:
@@ -171,6 +175,10 @@ static parser_error_t readTxnType(parser_context_t *ctx, eth_tx_type_e *type) {
 }
 
 parser_error_t _readEth(parser_context_t *ctx, eth_tx_t *tx_obj) {
+    if (ctx == NULL || tx_obj == NULL) {
+        return parser_unexpected_value;
+    }
+
     MEMZERO(&eth_tx_obj, sizeof(eth_tx_obj));
     CHECK_ERROR(readTxnType(ctx, &tx_obj->tx_type))
     // We expect a list with all the fields from the transaction
@@ -184,7 +192,7 @@ parser_error_t _readEth(parser_context_t *ctx, eth_tx_t *tx_obj) {
 
     // All bytes must be read
     if (ctx->offset != ctx->bufferLen) {
-        return parser_unexpected_characters;
+        return parser_unsupported_tx;
     }
 
     parser_context_t txCtx = {.buffer = list.ptr, .bufferLen = list.rlpLen, .offset = 0};
@@ -205,7 +213,11 @@ parser_error_t _readEth(parser_context_t *ctx, eth_tx_t *tx_obj) {
 }
 
 parser_error_t _validateTxEth() {
-    if (!validateERC20(&eth_tx_obj) && !app_mode_blindsign()) {
+    eth_tx_obj.is_blindsign = true;
+    if (eth_tx_obj.tx.data.rlpLen == 0 || validateERC20(&eth_tx_obj)) {
+        app_mode_skip_blindsign_ui();
+        eth_tx_obj.is_blindsign = false;
+    } else if (!app_mode_blindsign()) {
         return parser_blindsign_mode_required;
     }
 
@@ -322,38 +334,29 @@ parser_error_t _getNumItemsEth(uint8_t *numItems) {
     return parser_ok;
 }
 
-parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int info, uint8_t *v) {
+// https://github.com/LedgerHQ/ledger-live/commit/b93a421866519b80fdd8a029caea97323eceae93
+parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int info, uint8_t *v,
+                         bool is_personal_message) {
     if (ctx == NULL || tx_obj == NULL || v == NULL) {
         return parser_unexpected_error;
     }
 
+    uint8_t parity = info & CX_ECCINFO_PARITY_ODD;
+
+    if (is_personal_message) {
+        *v = ETHEREUM_RECOVERY_OFFSET + parity;
+        return parser_ok;
+    }
+
     uint8_t type = eth_tx_obj.tx_type;
-    uint8_t parity = (info & CX_ECCINFO_PARITY_ODD) == 1;
 
     if (type == eip2930 || type == eip1559) {
         *v = parity;
         return parser_ok;
     }
 
-    // we need chainID info
-    if (tx_obj->chainId.rlpLen == 0) {
-        // according to app-ethereum this is the legacy non eip155 conformant
-        // so V should be made before EIP155 which had
-        // 27 + {0, 1}
-        // 27, decided by the parity of Y
-        // see https://bitcoin.stackexchange.com/a/112489
-        //     https://ethereum.stackexchange.com/a/113505
-        //     https://eips.ethereum.org/EIPS/eip-155
-        *v = 27 + parity;
-
-    } else {
-        uint64_t id = 0;
-        CHECK_ERROR(be_bytes_to_u64(tx_obj->chainId.ptr, tx_obj->chainId.rlpLen, &id));
-
-        uint32_t cv = 35 + parity;
-        cv = saturating_add_u32(cv, (uint32_t)id * 2);
-        *v = (uint8_t)cv;
-    }
+    uint32_t chainId = (uint32_t)eth_tx_obj.chainId.chain_id_decoded;
+    *v = (uint8_t)saturating_add_u32(EIP155_V_BASE + parity, chainId * 2);
 
     return parser_ok;
 }
