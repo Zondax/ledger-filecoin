@@ -14,11 +14,13 @@
  *  limitations under the License.
  ********************************************************************************/
 
-#include "parser_impl_evm_fil.h"
+#include "parser_impl_evm_specific.h"
 
 #include <stdint.h>
 
+#include "app_mode.h"
 #include "evm_erc20.h"
+#include "evm_utils.h"
 
 #define SUPPORTED_NETWORKS_EVM_LEN 2
 #define FILECOIN_MAINNET_CHAINID 314
@@ -93,3 +95,85 @@ const erc20_tokens_t supportedTokens[] = {
 };
 
 const uint8_t supportedTokensSize = sizeof(supportedTokens) / sizeof(supportedTokens[0]);
+
+parser_error_t printERC20TransferAppSpecific(eth_tx_t *ethTxObj, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
+                                             char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
+    const eth_base_t *legacy = &ethTxObj->tx;
+    char tokenSymbol[10] = {0};
+    uint8_t decimals = 0;
+    CHECK_ERROR(getERC20Token(ethTxObj, tokenSymbol, &decimals));
+    bool hideContract = (memcmp(tokenSymbol, "?? ", 3) != 0);
+
+    displayIdx += (displayIdx && hideContract) ? 1 : 0;
+    switch (displayIdx) {
+        case 0:
+            snprintf(outKey, outKeyLen, "To");
+            rlp_t to = {.kind = RLP_KIND_STRING, .ptr = (ethTxObj->tx.data.ptr + 4 + 12), .rlpLen = ETH_ADDRESS_LEN};
+            CHECK_ERROR(printEVMAddress(&to, outVal, outValLen, pageIdx, pageCount));
+            break;
+
+        case 1:
+            snprintf(outKey, outKeyLen, "Token Contract");
+            rlp_t contractAddress = {.kind = RLP_KIND_STRING, .ptr = ethTxObj->tx.to.ptr, .rlpLen = ETH_ADDRESS_LEN};
+            CHECK_ERROR(printEVMAddress(&contractAddress, outVal, outValLen, pageIdx, pageCount));
+            break;
+
+        case 2:
+            snprintf(outKey, outKeyLen, "Value");
+            CHECK_ERROR(printERC20Value(ethTxObj, outVal, outValLen, pageIdx, pageCount));
+            break;
+
+        case 3:
+            snprintf(outKey, outKeyLen, "Nonce");
+            CHECK_ERROR(printRLPNumber(&legacy->nonce, outVal, outValLen, pageIdx, pageCount));
+            break;
+
+        case 4:
+            snprintf(outKey, outKeyLen, "Gas price");
+            CHECK_ERROR(printRLPNumber(&legacy->gasPrice, outVal, outValLen, pageIdx, pageCount));
+            break;
+
+        case 5:
+            snprintf(outKey, outKeyLen, "Gas limit");
+            CHECK_ERROR(printRLPNumber(&legacy->gasLimit, outVal, outValLen, pageIdx, pageCount));
+            break;
+
+        default:
+            return parser_display_page_out_of_range;
+    }
+
+    return parser_ok;
+}
+
+parser_error_t getNumItemsEthAppSpecific(uint8_t *numItems) {
+    if (numItems == NULL) {
+        return parser_unexpected_error;
+    }
+    // Verify that tx is ERC20
+
+    if (validateERC20(&eth_tx_obj)) {
+        char tokenSymbol[10] = {0};
+        uint8_t decimals = 0;
+        CHECK_ERROR(getERC20Token(&eth_tx_obj, tokenSymbol, &decimals));
+        // If token is not recognized, print value address
+        *numItems = (memcmp(tokenSymbol, "?? ", 3) != 0) ? 5 : 6;
+        return parser_ok;
+    }
+
+    // Eth transaction hash.
+    *numItems = 1;
+    return parser_ok;
+}
+
+parser_error_t printGenericAppSpecific(const parser_context_t *ctx, uint8_t displayIdx, char *outKey,
+                                       uint16_t outKeyLen, char *outVal, uint16_t outValLen, uint8_t pageIdx,
+                                       uint8_t *pageCount) {
+    UNUSED(displayIdx);
+
+    // Always enable blindsign for EVM transactions in Filecoin
+    if (!app_mode_blindsign()) {
+        return parser_blindsign_mode_required;
+    }
+
+    return printEthHash(ctx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
+}

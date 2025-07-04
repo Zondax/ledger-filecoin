@@ -1,5 +1,5 @@
 /*******************************************************************************
- *   (c) 2018 - 2023 ZondaX AG
+ *   (c) 2018 - 2024 ZondaX AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  ********************************************************************************/
 
 #pragma once
+#ifndef _RPL_H_
+#define _RPL_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,41 +34,7 @@ parser_error_t rlp_readUInt256(const rlp_t *rlp, uint256_t *value);
 parser_error_t rlpNumberToString(rlp_t *num, char *symbol, uint8_t decimals, char *outVal, uint16_t outValLen,
                                  uint8_t pageIdx, uint8_t *pageCount);
 
-#if 0
-int16_t rlp_decode(const uint8_t *data,
-                   uint8_t *kind,
-                   uint16_t *len,
-                   uint16_t *valueOffset);
-
-// reads a byte from the field
-int8_t rlp_readByte(const uint8_t *data,
-                    const rlp_field_t *field,
-                    uint8_t *value);
-
-// reads a buffer into value. These are not actually zero terminate strings but buffers
-int8_t rlp_readStringPaging(const uint8_t *data,
-                            const rlp_field_t *field,
-                            char *value,
-                            uint16_t maxLen,
-                            uint16_t *valueLen,
-                            uint8_t pageIdx,
-                            uint8_t *pageCount);
-
-// reads a buffer into value. These are not actually zero terminate strings but buffers
-int8_t rlp_readString(const uint8_t *data,
-                      const rlp_field_t *field,
-                      char *value,
-                      uint16_t maxLen);
-
-// reads a list and splits into rootFields
-int8_t rlp_readList(const uint8_t *data,
-                    const rlp_field_t *field,
-                    rlp_field_t *listFields,
-                    uint8_t maxListFieldCount,
-                    uint16_t *listFieldCount);
-
-#endif
-
 #ifdef __cplusplus
 }
+#endif
 #endif

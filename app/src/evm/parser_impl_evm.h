@@ -74,6 +74,8 @@ parser_error_t _readEth(parser_context_t *ctx, eth_tx_t *eth_tx_obj);
 parser_error_t _getItemEth(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
                            char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount);
 
+parser_error_t printEthHash(const parser_context_t *ctx, char *outKey, uint16_t outKeyLen, char *outVal,
+                            uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount);
 // returns the number of items to display on the screen.
 // Note: we might need to add a transaction state object,
 // Defined with one parameter for now.

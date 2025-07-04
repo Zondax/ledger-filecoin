@@ -29,6 +29,15 @@
 #include "uint256.h"
 #include "zxformat.h"
 
+// External implementation specific to each app
+extern parser_error_t getNumItemsEthAppSpecific(uint8_t *numItems);
+extern parser_error_t printGenericAppSpecific(const parser_context_t *ctx, uint8_t displayIdx, char *outKey,
+                                              uint16_t outKeyLen, char *outVal, uint16_t outValLen, uint8_t pageIdx,
+                                              uint8_t *pageCount);
+extern parser_error_t printERC20TransferAppSpecific(eth_tx_t *ethTxObj, uint8_t displayIdx, char *outKey,
+                                                    uint16_t outKeyLen, char *outVal, uint16_t outValLen,
+                                                    uint8_t pageIdx, uint8_t *pageCount);
+
 eth_tx_t eth_tx_obj;
 
 #define ETHEREUM_RECOVERY_OFFSET 27
@@ -109,6 +118,7 @@ static parser_error_t parse_2930(parser_context_t *ctx, eth_tx_t *tx_obj) {
     if (ctx == NULL || tx_obj == NULL) {
         return parser_unexpected_error;
     }
+
     CHECK_ERROR(readChainID(ctx, &tx_obj->chainId));
     CHECK_ERROR(rlp_read(ctx, &tx_obj->tx.nonce));
     CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.gasPrice)));
@@ -212,93 +222,16 @@ parser_error_t _readEth(parser_context_t *ctx, eth_tx_t *tx_obj) {
     return parser_unexpected_error;
 }
 
-parser_error_t _validateTxEth() {
-    eth_tx_obj.is_blindsign = true;
-    if (eth_tx_obj.tx.data.rlpLen == 0 || validateERC20(&eth_tx_obj)) {
-        app_mode_skip_blindsign_ui();
-        eth_tx_obj.is_blindsign = false;
-    } else if (!app_mode_blindsign()) {
-        return parser_blindsign_mode_required;
-    }
-
-    return parser_ok;
-}
-
-static parser_error_t printERC20(uint8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outVal, uint16_t outValLen,
-                                 uint8_t pageIdx, uint8_t *pageCount) {
-    if (outKey == NULL || outVal == NULL || pageCount == NULL) {
+parser_error_t printEthHash(const parser_context_t *ctx, char *outKey, uint16_t outKeyLen, char *outVal,
+                            uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
+    if (ctx == NULL || outKey == NULL || outVal == NULL || pageCount == NULL) {
         return parser_unexpected_error;
     }
-    MEMZERO(outKey, outKeyLen);
-    MEMZERO(outVal, outValLen);
-    *pageCount = 1;
-
-    const eth_base_t *legacy = &eth_tx_obj.tx;
-    char tokenSymbol[10] = {0};
-    uint8_t decimals = 0;
-    CHECK_ERROR(getERC20Token(&eth_tx_obj, tokenSymbol, &decimals));
-    bool hideContract = (memcmp(tokenSymbol, "?? ", 3) != 0);
-
-    displayIdx += (displayIdx && hideContract) ? 1 : 0;
-    switch (displayIdx) {
-        case 0:
-            snprintf(outKey, outKeyLen, "To");
-            rlp_t to = {.kind = RLP_KIND_STRING, .ptr = (eth_tx_obj.tx.data.ptr + 4 + 12), .rlpLen = ETH_ADDRESS_LEN};
-            CHECK_ERROR(printEVMAddress(&to, outVal, outValLen, pageIdx, pageCount));
-            break;
-
-        case 1:
-            snprintf(outKey, outKeyLen, "Token Contract");
-            rlp_t contractAddress = {.kind = RLP_KIND_STRING, .ptr = eth_tx_obj.tx.to.ptr, .rlpLen = ETH_ADDRESS_LEN};
-            CHECK_ERROR(printEVMAddress(&contractAddress, outVal, outValLen, pageIdx, pageCount));
-            break;
-
-        case 2:
-            snprintf(outKey, outKeyLen, "Value");
-            CHECK_ERROR(printERC20Value(&eth_tx_obj, outVal, outValLen, pageIdx, pageCount));
-            break;
-
-        case 3:
-            snprintf(outKey, outKeyLen, "Nonce");
-            CHECK_ERROR(printRLPNumber(&legacy->nonce, outVal, outValLen, pageIdx, pageCount));
-            break;
-
-        case 4:
-            snprintf(outKey, outKeyLen, "Gas price");
-            CHECK_ERROR(printRLPNumber(&legacy->gasPrice, outVal, outValLen, pageIdx, pageCount));
-            break;
-
-        case 5:
-            snprintf(outKey, outKeyLen, "Gas limit");
-            CHECK_ERROR(printRLPNumber(&legacy->gasLimit, outVal, outValLen, pageIdx, pageCount));
-            break;
-
-        default:
-            return parser_display_page_out_of_range;
-    }
-
-    return parser_ok;
-}
-
-parser_error_t _getItemEth(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
-                           char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
-    // At the moment, clear signing is available only for ERC20
-    if (validateERC20(&eth_tx_obj)) {
-        return printERC20(displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
-    }
-
-    // Otherwise, check that Blindsign is enabled
-    if (!app_mode_blindsign()) {
-        return parser_blindsign_mode_required;
-    }
-
-    if (displayIdx > 1) {
-        return parser_display_idx_out_of_range;
-    }
-
     // we need to get keccak hash of the transaction data
     uint8_t hash[32] = {0};
+#if defined(LEDGER_SPECIFIC)
     keccak_digest(ctx->buffer, ctx->bufferLen, hash, 32);
+#endif
 
     // now get the hex string of the hash
     char hex[65] = {0};
@@ -311,28 +244,57 @@ parser_error_t _getItemEth(const parser_context_t *ctx, uint8_t displayIdx, char
     return parser_ok;
 }
 
+parser_error_t _validateTxEth() {
+    eth_tx_obj.is_blindsign = true;
+    if (eth_tx_obj.tx.data.rlpLen == 0 || validateERC20(&eth_tx_obj)) {
+        app_mode_skip_blindsign_ui();
+        eth_tx_obj.is_blindsign = false;
+    } else if (!app_mode_blindsign()) {
+        return parser_blindsign_mode_required;
+    }
+
+    return parser_ok;
+}
+
+static parser_error_t printERC20Transfer(uint8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outVal,
+                                         uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
+    if (outKey == NULL || outVal == NULL || pageCount == NULL) {
+        return parser_unexpected_error;
+    }
+    MEMZERO(outKey, outKeyLen);
+    MEMZERO(outVal, outValLen);
+    *pageCount = 1;
+
+    return printERC20TransferAppSpecific(&eth_tx_obj, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx,
+                                         pageCount);
+}
+
+static parser_error_t printGeneric(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
+                                   char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
+    if (outKey == NULL || outVal == NULL || pageCount == NULL) {
+        return parser_unexpected_error;
+    }
+    MEMZERO(outKey, outKeyLen);
+    MEMZERO(outVal, outValLen);
+    *pageCount = 1;
+
+    return printGenericAppSpecific(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
+}
+
+parser_error_t _getItemEth(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
+                           char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
+    // At the moment, clear signing is available only for ERC20
+    if (eth_tx_obj.is_erc20_transfer) {
+        return printERC20Transfer(displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
+    }
+
+    return printGeneric(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
+}
+
 // returns the number of items to display on the screen.
 // Note: we might need to add a transaction state object,
 // Defined with one parameter for now.
-parser_error_t _getNumItemsEth(uint8_t *numItems) {
-    if (numItems == NULL) {
-        return parser_unexpected_error;
-    }
-    // Verify that tx is ERC20
-
-    if (validateERC20(&eth_tx_obj)) {
-        char tokenSymbol[10] = {0};
-        uint8_t decimals = 0;
-        CHECK_ERROR(getERC20Token(&eth_tx_obj, tokenSymbol, &decimals));
-        // If token is not recognized, print value address
-        *numItems = (memcmp(tokenSymbol, "?? ", 3) != 0) ? 5 : 6;
-        return parser_ok;
-    }
-
-    // Eth transaction hash.
-    *numItems = 1;
-    return parser_ok;
-}
+parser_error_t _getNumItemsEth(uint8_t *numItems) { return getNumItemsEthAppSpecific(numItems); }
 
 // https://github.com/LedgerHQ/ledger-live/commit/b93a421866519b80fdd8a029caea97323eceae93
 parser_error_t _computeV(parser_context_t *ctx, eth_tx_t *tx_obj, unsigned int info, uint8_t *v,

@@ -21,6 +21,18 @@ extern "C" {
 
 #include <stdint.h>
 
+#include "parser_common.h"
+#include "parser_impl_evm.h"
+
+parser_error_t getNumItemsEthAppSpecific(uint8_t *numItems);
+
+parser_error_t printERC20TransferAppSpecific(eth_tx_t *ethTxObj, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
+                                             char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount);
+
+parser_error_t printGenericAppSpecific(const parser_context_t *ctx, uint8_t displayIdx, char *outKey,
+                                       uint16_t outKeyLen, char *outVal, uint16_t outValLen, uint8_t pageIdx,
+                                       uint8_t *pageCount);
+
 #ifdef __cplusplus
 }
 #endif
