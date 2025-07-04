@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  (c) 2018 - 2023 Zondax AG
+ *   (c) 2018 - 2024 Zondax AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,34 +15,11 @@
  ********************************************************************************/
 #pragma once
 
-#include <stdint.h>
-
-#include "coin_evm.h"
-#include "parser_common.h"
-#include "parser_impl_evm.h"
-#include "rlp.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define ERC20_DATA_LENGTH 68  // 4 + 32 + 32
-#define MAX_SYMBOL_LEN 10
-
-typedef struct {
-    uint8_t address[ETH_ADDR_LEN];
-    char symbol[MAX_SYMBOL_LEN];
-    uint8_t decimals;
-} erc20_tokens_t;
-
-// External variables for supported tokens configuration
-extern const erc20_tokens_t supportedTokens[];
-extern const uint8_t supportedTokensSize;
-
-bool validateERC20(eth_tx_t *ethObj);
-parser_error_t getERC20Token(const eth_tx_t *ethObj, char tokenSymbol[MAX_SYMBOL_LEN], uint8_t *decimals);
-parser_error_t printERC20Value(const eth_tx_t *ethObj, char *outVal, uint16_t outValLen, uint8_t pageIdx,
-                               uint8_t *pageCount);
+#include <stdint.h>
 
 #ifdef __cplusplus
 }

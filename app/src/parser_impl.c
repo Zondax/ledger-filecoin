@@ -287,10 +287,9 @@ __Z_INLINE parser_error_t readMethod(fil_base_tx_t *tx, CborValue *value) {
                 tx->numparams = 1;
 
                 // If Invoke + ERC20 Transfer discard encoded cbor bytes at the beginning
-                if (methodValue == INVOKE_EVM_METHOD && tx->params[0] == 0x58 &&
-                    tx->params[1] == ERC20_TRANSFER_DATA_LENGTH &&
+                if (methodValue == INVOKE_EVM_METHOD && tx->params[0] == 0x58 && tx->params[1] == ERC20_DATA_LENGTH &&
                     memcmp(tx->params + 2, ERC20_TRANSFER_PREFIX, sizeof(ERC20_TRANSFER_PREFIX)) == 0) {
-                    MEMMOVE(tx->params, tx->params + 2, ERC20_TRANSFER_DATA_LENGTH);
+                    MEMMOVE(tx->params, tx->params + 2, ERC20_DATA_LENGTH);
                 }
                 break;
             }

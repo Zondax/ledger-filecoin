@@ -30,8 +30,6 @@
 #include "zxformat.h"
 
 eth_tx_t eth_tx_obj;
-#define FILECOIN_MAINNET_CHAINID 314
-#define FILECOIN_CALIBRATION_CHAINID 314159
 
 static parser_error_t readChainID(parser_context_t *ctx, rlp_t *chainId) {
     if (ctx == NULL || chainId == NULL) {
@@ -40,14 +38,27 @@ static parser_error_t readChainID(parser_context_t *ctx, rlp_t *chainId) {
 
     CHECK_ERROR(rlp_read(ctx, chainId));
     uint64_t tmpChainId = 0;
-    CHECK_ERROR(be_bytes_to_u64(chainId->ptr, chainId->rlpLen, &tmpChainId))
+    if (chainId->rlpLen > 1) {
+        CHECK_ERROR(be_bytes_to_u64(chainId->ptr, chainId->rlpLen, &tmpChainId))
+    } else if (chainId->kind == RLP_KIND_BYTE) {
+        // case were the prefix is the byte itself
+        tmpChainId = chainId->ptr[0];
+    } else {
+        return parser_unexpected_error;
+    }
 
-    // Check allowed values for chain id
-    if (tmpChainId != FILECOIN_MAINNET_CHAINID && tmpChainId != FILECOIN_CALIBRATION_CHAINID) {
+    if (supported_networks_evm_len == 0) {
         return parser_invalid_chain_id;
     }
 
-    return parser_ok;
+    // Check allowed values for chain id using external configuration
+    for (uint8_t i = 0; i < supported_networks_evm_len; i++) {
+        if (tmpChainId == supported_networks_evm[i]) {
+            return parser_ok;
+        }
+    }
+
+    return parser_invalid_chain_id;
 }
 
 static parser_error_t parse_legacy_tx(parser_context_t *ctx, eth_tx_t *tx_obj) {
@@ -91,23 +102,51 @@ static parser_error_t parse_legacy_tx(parser_context_t *ctx, eth_tx_t *tx_obj) {
 }
 
 static parser_error_t parse_2930(parser_context_t *ctx, eth_tx_t *tx_obj) {
-    // the chain_id is the first field for this transaction
-    // later we can implement the parser for the other fields
+    if (ctx == NULL || tx_obj == NULL) {
+        return parser_unexpected_error;
+    }
     CHECK_ERROR(readChainID(ctx, &tx_obj->chainId));
+    CHECK_ERROR(rlp_read(ctx, &tx_obj->tx.nonce));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.gasPrice)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.gasLimit)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.to)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.value)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.data)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.access_list)));
+
+    // R and S fields should be empty
+    if (ctx->offset < ctx->bufferLen) {
+        return parser_unexpected_characters;
+    }
 
     return parser_ok;
 }
 
 static parser_error_t parse_1559(parser_context_t *ctx, eth_tx_t *tx_obj) {
-    // the chain_id is the first field for this transaction
-    // later we can implement the parser for the other fields
+    if (ctx == NULL || tx_obj == NULL) {
+        return parser_unexpected_error;
+    }
+
     CHECK_ERROR(readChainID(ctx, &tx_obj->chainId));
+    CHECK_ERROR(rlp_read(ctx, &tx_obj->tx.nonce));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.max_priority_fee_per_gas)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.max_fee_per_gas)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.gasLimit)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.to)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.value)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.data)));
+    CHECK_ERROR(rlp_read(ctx, &(tx_obj->tx.access_list)));
+
+    // R and S fields should be empty
+    if (ctx->offset < ctx->bufferLen) {
+        return parser_unexpected_characters;
+    }
 
     return parser_ok;
 }
 
 static parser_error_t readTxnType(parser_context_t *ctx, eth_tx_type_e *type) {
-    if (ctx == NULL || type == NULL || ctx->bufferLen == 0 || ctx->offset != 0) {
+    if (ctx == NULL || type == NULL || ctx->bufferLen == 0) {
         return parser_unexpected_error;
     }
     // Check first byte:
@@ -148,7 +187,7 @@ parser_error_t _readEth(parser_context_t *ctx, eth_tx_t *tx_obj) {
         return parser_unexpected_characters;
     }
 
-    parser_context_t txCtx = {.buffer = list.ptr, .bufferLen = list.rlpLen, .offset = 0, .tx_type = eth_tx};
+    parser_context_t txCtx = {.buffer = list.ptr, .bufferLen = list.rlpLen, .offset = 0};
     switch (tx_obj->tx_type) {
         case eip1559: {
             return parse_1559(&txCtx, tx_obj);

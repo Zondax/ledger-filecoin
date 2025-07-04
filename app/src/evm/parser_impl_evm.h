@@ -63,6 +63,10 @@ typedef struct {
     bool is_blindsign;
 } eth_tx_t;
 
+// External variables for supported networks configuration
+extern const uint64_t supported_networks_evm[];
+extern const uint8_t supported_networks_evm_len;
+
 extern eth_tx_t eth_tx_obj;
 
 parser_error_t _readEth(parser_context_t *ctx, eth_tx_t *eth_tx_obj);
