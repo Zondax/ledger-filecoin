@@ -46,8 +46,6 @@ void tx_initialize() {
 
 void tx_context_fil() { ctx_parsed_tx.tx_type = fil_tx; }
 
-void tx_context_eth() { ctx_parsed_tx.tx_type = eth_tx; }
-
 void tx_context_raw_bytes() { ctx_parsed_tx.tx_type = raw_bytes; }
 
 bool tx_is_rawbytes() { return ctx_parsed_tx.tx_type == raw_bytes; }
@@ -108,14 +106,6 @@ zxerr_t tx_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char *ou
     // Convert error codes
     if (err == parser_no_data || err == parser_display_idx_out_of_range || err == parser_display_page_out_of_range)
         return zxerr_no_data;
-
-    if (err != parser_ok) return zxerr_unknown;
-
-    return zxerr_ok;
-}
-
-zxerr_t tx_compute_eth_v(unsigned int info, uint8_t *v) {
-    parser_error_t err = parser_compute_eth_v(&ctx_parsed_tx, info, v);
 
     if (err != parser_ok) return zxerr_unknown;
 

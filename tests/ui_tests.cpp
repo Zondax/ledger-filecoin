@@ -26,6 +26,7 @@
 #include "expected_output.h"
 #include "gmock/gmock.h"
 #include "parser.h"
+#include "parser_evm.h"
 #include "testcases.h"
 
 using ::testing::TestWithParam;
@@ -101,7 +102,11 @@ void check_testcase(const testcase_t &tc, bool a, parser_context_t ctx) {
         hdPath[1] = HDPATH_1_TESTNET;
     }
 
-    err = parser_parse(&ctx, buffer, bufferLen);
+    if (ctx.tx_type == eth_tx) {
+        err = parser_parse_eth(&ctx, buffer, bufferLen);
+    } else {
+        err = parser_parse(&ctx, buffer, bufferLen);
+    }
 
     if (tc.valid) {
         ASSERT_EQ(err, parser_ok) << parser_getErrorDescription(err);
@@ -111,7 +116,12 @@ void check_testcase(const testcase_t &tc, bool a, parser_context_t ctx) {
         return;
     }
 
-    err = parser_validate(&ctx);
+    if (ctx.tx_type == eth_tx) {
+        err = parser_validate_eth(&ctx);
+    } else {
+        err = parser_validate(&ctx);
+    }
+
     ASSERT_EQ(err, parser_ok) << parser_getErrorDescription(err);
 
     auto output = dumpUI(&ctx, 40, 37);

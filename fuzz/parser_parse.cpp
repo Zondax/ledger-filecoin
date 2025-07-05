@@ -3,6 +3,7 @@
 #include <cstdio>
 
 #include "parser.h"
+#include "parser_evm.h"
 #include "zxformat.h"
 
 #ifdef NDEBUG
@@ -30,14 +31,22 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
 
     /* assert(size <= UINT16_MAX && "too big!"); */
 
-    rc = parser_validate(&ctx);
+    if (ctx.tx_type == eth_tx) {
+        rc = parser_validate_eth(&ctx);
+    } else {
+        rc = parser_validate(&ctx);
+    }
     if (rc != parser_ok) {
         // fprintf(stderr, "validation error: %s\n", parser_getErrorDescription(rc));
         return 0;
     }
 
     uint8_t num_items;
-    rc = parser_getNumItems(&ctx, &num_items);
+    if (ctx.tx_type == eth_tx) {
+        rc = parser_getNumItemsEth(&ctx, &num_items);
+    } else {
+        rc = parser_getNumItems(&ctx, &num_items);
+    }
     if (rc != parser_ok) {
         fprintf(stderr, "error in parser_getNumItems: %s\n", parser_getErrorDescription(rc));
         assert(false);
@@ -47,8 +56,13 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
         uint8_t page_idx = 0;
         uint8_t page_count = 1;
         while (page_idx < page_count) {
-            rc = parser_getItem(&ctx, i, PARSER_KEY, sizeof(PARSER_KEY), PARSER_VALUE, sizeof(PARSER_VALUE), page_idx,
-                                &page_count);
+            if (ctx.tx_type == eth_tx) {
+                rc = parser_getItemEth(&ctx, i, PARSER_KEY, sizeof(PARSER_KEY), PARSER_VALUE, sizeof(PARSER_VALUE),
+                                       page_idx, &page_count);
+            } else {
+                rc = parser_getItem(&ctx, i, PARSER_KEY, sizeof(PARSER_KEY), PARSER_VALUE, sizeof(PARSER_VALUE),
+                                    page_idx, &page_count);
+            }
 
             if (rc != parser_ok) {
                 assert(fprintf(stderr, "error getting item %u at page index %u: %s\n", (unsigned)i, (unsigned)page_idx,

@@ -22,9 +22,9 @@
 
 #include "app_mode.h"
 #include "cbor.h"
-#include "common/parser_common.h"
 #include "crypto.h"
 #include "fil_utils.h"
+#include "parser_common.h"
 #include "parser_impl.h"
 #include "parser_txdef.h"
 #include "zxformat.h"
@@ -117,7 +117,7 @@ parser_error_t _getItemRawBytes(__Z_UNUSED const parser_context_t *ctx, uint8_t 
 
     // Check that Blindsign is enabled
     if (!app_mode_blindsign()) {
-        return parser_blindsign_required;
+        return parser_blindsign_mode_required;
     }
 
     // get the hash of the buffer

@@ -18,6 +18,7 @@
 
 #include "app_mode.h"
 #include "coin.h"
+#include "coin_evm.h"
 #include "crypto.h"
 #include "zxerror.h"
 #include "zxformat.h"
