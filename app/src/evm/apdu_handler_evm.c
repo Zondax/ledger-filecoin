@@ -21,7 +21,7 @@
 #include "coin_evm.h"
 #include "crypto_evm.h"
 #include "evm_addr.h"
-// #include "evm_eip191.h"
+#include "evm_eip191.h"
 #include "evm_utils.h"
 #include "tx_evm.h"
 #include "view.h"
@@ -291,21 +291,21 @@ void handleSignEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
     *flags |= IO_ASYNCH_REPLY;
 }
 
-// void handleSignEip191(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
-//     zemu_log_stack("handleSignEip191");
-//     if (!process_chunk_eip191(tx, rx)) {
-//         THROW(APDU_CODE_OK);
-//     }
+void handleSignEip191(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
+    zemu_log_stack("handleSignEip191");
+    if (!process_chunk_eip191(tx, rx)) {
+        THROW(APDU_CODE_OK);
+    }
 
-//     CHECK_APP_CANARY()
-//     if (!eip191_msg_parse()) {
-//         *flags |= IO_ASYNCH_REPLY;
-//         view_blindsign_error_show();
-//         THROW(APDU_CODE_DATA_INVALID);
-//     }
-//     CHECK_APP_CANARY()
+    CHECK_APP_CANARY()
+    if (!eip191_msg_parse()) {
+        *flags |= IO_ASYNCH_REPLY;
+        view_blindsign_error_show();
+        THROW(APDU_CODE_DATA_INVALID);
+    }
+    CHECK_APP_CANARY()
 
-//     view_review_init(eip191_msg_getItem, eip191_msg_getNumItems, app_sign_eip191);
-//     view_review_show(REVIEW_MSG);
-//     *flags |= IO_ASYNCH_REPLY;
-// }
+    view_review_init(eip191_msg_getItem, eip191_msg_getNumItems, app_sign_evm_eip191);
+    view_review_show(REVIEW_MSG);
+    *flags |= IO_ASYNCH_REPLY;
+}

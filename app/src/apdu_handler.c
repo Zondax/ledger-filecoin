@@ -325,6 +325,14 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     handleSignEth(flags, tx, rx);
                     break;
                 }
+                case INS_SIGN_PERSONAL_MESSAGE: {
+                    CHECK_PIN_VALIDATED()
+                    if (cla != CLA_ETH) {
+                        THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+                    }
+                    handleSignEip191(flags, tx, rx);
+                    break;
+                }
                 default:
                     THROW(APDU_CODE_INS_NOT_SUPPORTED);
             }
