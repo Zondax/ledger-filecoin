@@ -91,6 +91,8 @@ const char *parser_getErrorDescription(parser_error_t err) {
             return "Invalid rlp data";
         case parser_invalid_chain_id:
             return "Invalid eth chainId";
+        case parser_chain_id_not_configured:
+            return "ChainId not configured";
         case parser_invalid_rs_values:
             return "Invalid rs values";
         case parser_invalid_cid:

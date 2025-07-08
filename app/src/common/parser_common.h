@@ -63,6 +63,7 @@ typedef enum {
     parser_unsupported_tx,
     parser_invalid_rlp_data,
     parser_invalid_chain_id,
+    parser_chain_id_not_configured,
     parser_invalid_rs_values,
     parser_invalid_cid,
     parser_invalid_deal_duration,

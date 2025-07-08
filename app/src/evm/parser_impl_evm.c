@@ -59,8 +59,8 @@ static parser_error_t readChainID(parser_context_t *ctx, rlp_t *chainId) {
         return parser_unexpected_error;
     }
 
-    if (supported_networks_evm_len == 0) {
-        return parser_invalid_chain_id;
+    if (supported_networks_evm_len < 1) {
+        return parser_chain_id_not_configured;
     }
 
     // Check allowed values for chain id using external configuration
