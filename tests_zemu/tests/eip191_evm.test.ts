@@ -16,7 +16,7 @@
 import Zemu from '@zondax/zemu'
 // @ts-ignore
 import FilecoinApp, { CHAIN_TYPE } from "@zondax/ledger-filecoin";
-import { ETH_PATH, EXPECTED_ETH_ADDRESS, EXPECTED_ETH_PK, defaultOptions, models } from './common'
+import { ETH_PATH, EXPECTED_ETH_PK, defaultOptions, models } from './common'
 import { ec } from 'elliptic'
 jest.setTimeout(90000)
 const sha3 = require('js-sha3')

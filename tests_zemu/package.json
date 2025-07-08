@@ -19,7 +19,7 @@
     "format:check": "FORCE_COLOR=1 prettier --check .",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
-    "test": "ts-node tests/pullImageKillOld.ts && jest --maxConcurrency 2",
+    "test": "ts-node tests/pullImageKillOld.ts && jest tests/raw.test.ts --maxConcurrency 2 && jest tests/standard.test.ts tests/eip191_evm.test.ts tests/eth_tests.test.ts tests/multisig.test.ts --maxConcurrency 2",
     "try": "node try.mjs",
     "upgrade": "bunx npm-check-updates -i"
   },
