@@ -18,11 +18,13 @@
 
 #include "actions.h"
 #include "app_main.h"
+#include "app_mode.h"
 #include "coin_evm.h"
 #include "crypto_evm.h"
 #include "evm_addr.h"
 #include "evm_eip191.h"
 #include "evm_utils.h"
+#include "parser.h"
 #include "tx_evm.h"
 #include "view.h"
 #include "view_internal.h"
@@ -265,6 +267,9 @@ void handleSignEth(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
         THROW(APDU_CODE_OK);
     }
 
+    // Reset BLS UI for next transaction
+    app_mode_skip_blindsign_ui();
+
     CHECK_APP_CANARY()
 
     uint8_t error_code;
@@ -297,8 +302,15 @@ void handleSignEip191(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t 
         THROW(APDU_CODE_OK);
     }
 
+    // Reset BLS UI for next transaction
+    app_mode_skip_blindsign_ui();
+
     CHECK_APP_CANARY()
     if (!eip191_msg_parse()) {
+        const char *error_msg = parser_getErrorDescription(parser_blindsign_mode_required);
+        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
+        MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
+        *tx += (error_msg_length);
         *flags |= IO_ASYNCH_REPLY;
         view_blindsign_error_show();
         THROW(APDU_CODE_DATA_INVALID);
