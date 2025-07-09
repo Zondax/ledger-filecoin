@@ -16,6 +16,8 @@ export const EXPECTED_ETH_PK =
 export const EXPECTED_ETH_ADDRESS =
   "0xcadff9350e9548bc68cb1e44d744bd9a801d5a5b";
 
+export const EIP191_FVM_PREFIX = Buffer.from("\x19Filecoin Signed Message:\n");
+
 const APP_PATH_X = Resolve("../app/output/app_x.elf");
 const APP_PATH_SP = Resolve("../app/output/app_s2.elf");
 const APP_PATH_ST = Resolve("../app/output/app_stax.elf");
@@ -34,3 +36,4 @@ export const defaultOptions = {
   custom: `-s "${APP_SEED}"`,
   X11: false,
 };
+
