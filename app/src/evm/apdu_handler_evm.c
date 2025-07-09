@@ -79,6 +79,47 @@ static void handle_first_chunk(uint32_t rx, uint8_t **data, uint32_t *len) {
     tx_initialized = true;
 }
 
+static bool process_eth_more_case(uint8_t *data, uint32_t len) {
+    if (!tx_initialized) {
+        THROW(APDU_CODE_TX_NOT_INITIALIZED);
+    }
+
+    uint64_t read = 0;
+    uint64_t to_read = 0;
+    uint64_t max_len = 0;
+
+    uint64_t buff_len = tx_get_buffer_length();
+    uint8_t *buff_data = tx_get_buffer();
+
+    if (get_tx_rlp_len(buff_data, buff_len, &read, &to_read) != rlp_ok) {
+        THROW(APDU_CODE_DATA_INVALID);
+    }
+
+    uint64_t rlp_read = buff_len - read;
+
+    // either the entire buffer of the remaining bytes we expect
+    uint64_t missing = to_read - rlp_read;
+    max_len = len;
+
+    if (missing < len) {
+        max_len = missing;
+    }
+    uint64_t added = tx_append(data, max_len);
+
+    if (added != max_len) {
+        tx_initialized = false;
+        THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
+    }
+
+    // check if this chunk was the last one
+    if (missing - len == 0) {
+        tx_initialized = false;
+        return true;
+    }
+
+    return false;
+}
+
 uint32_t bytes_to_read;
 
 bool process_chunk_eip191(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
@@ -184,40 +225,7 @@ bool process_chunk_eth(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
             return false;
         }
         case P1_ETH_MORE: {
-            if (!tx_initialized) {
-                THROW(APDU_CODE_TX_NOT_INITIALIZED);
-            }
-
-            uint64_t buff_len = tx_get_buffer_length();
-            uint8_t *buff_data = tx_get_buffer();
-
-            if (get_tx_rlp_len(buff_data, buff_len, &read, &to_read) != rlp_ok) {
-                THROW(APDU_CODE_DATA_INVALID);
-            }
-
-            uint64_t rlp_read = buff_len - read;
-
-            // either the entire buffer of the remaining bytes we expect
-            uint64_t missing = to_read - rlp_read;
-            max_len = len;
-
-            if (missing < len) {
-                max_len = missing;
-            }
-            added = tx_append(data, max_len);
-
-            if (added != max_len) {
-                tx_initialized = false;
-                THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
-            }
-
-            // check if this chunk was the last one
-            if (missing - len == 0) {
-                tx_initialized = false;
-                return true;
-            }
-
-            return false;
+            return process_eth_more_case(data, len);
         }
     }
     THROW(APDU_CODE_INVALIDP1P2);
