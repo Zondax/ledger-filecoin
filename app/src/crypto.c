@@ -20,6 +20,7 @@
 
 #include "base32.h"
 #include "coin.h"
+#include "coin_evm.h"
 #include "cx.h"
 #include "cx_blake2b.h"
 #include "tx.h"
@@ -59,18 +60,6 @@ catch_cx_error:
     return error;
 }
 
-__Z_INLINE zxerr_t keccak_hash(const unsigned char *in, unsigned int inLen, unsigned char *out, unsigned int outLen) {
-    // return actual size using value from signatureLength
-    cx_sha3_t keccak;
-    if (cx_keccak_init_no_throw(&keccak, outLen * 8) != CX_OK) return zxerr_unknown;
-    CHECK_CX_OK(cx_hash_no_throw((cx_hash_t *)&keccak, CX_LAST, in, inLen, out, outLen));
-
-    return zxerr_ok;
-}
-
-zxerr_t keccak_digest(const unsigned char *in, unsigned int inLen, unsigned char *out, unsigned int outLen) {
-    return keccak_hash(in, inLen, out, outLen);
-}
 zxerr_t blake_hash_setup(cx_blake2b_t *hasher) {
     if (hasher == NULL) {
         return zxerr_no_data;
@@ -209,37 +198,6 @@ zxerr_t crypto_sign_raw_bytes(uint8_t *buffer, uint16_t signatureMaxlen, const u
     return _sign(buffer, signatureMaxlen, digest, BLAKE2B_256_SIZE, sigSize, NULL);
 }
 
-// Sign an ethereum related transaction
-zxerr_t crypto_sign_eth(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen,
-                        uint16_t *sigSize) {
-    if (buffer == NULL || message == NULL || sigSize == NULL || signatureMaxlen < sizeof(signature_t)) {
-        return zxerr_invalid_crypto_settings;
-    }
-
-    uint8_t message_digest[KECCAK_256_SIZE] = {0};
-    CHECK_ZXERR(keccak_digest(message, messageLen, message_digest, KECCAK_256_SIZE))
-
-    unsigned int info = 0;
-    zxerr_t error = _sign(buffer, signatureMaxlen, message_digest, KECCAK_256_SIZE, sigSize, &info);
-    if (error != zxerr_ok) {
-        return zxerr_invalid_crypto_settings;
-    }
-
-    // we need to fix V
-    uint8_t v = 0;
-    error = tx_compute_eth_v(info, &v);
-
-    if (error != zxerr_ok) return zxerr_invalid_crypto_settings;
-
-    // need to reorder signature as hw-eth-app expects v at the beginning.
-    // so rsv -> vrs
-    uint8_t rs_size = sizeof_field(signature_t, r) + sizeof_field(signature_t, s);
-    memmove(buffer + 1, buffer, rs_size);
-    buffer[0] = v;
-
-    return error;
-}
-
 typedef struct {
     uint8_t publicKey[SECP256K1_PK_LEN];
 
@@ -287,35 +245,5 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrL
     }
 
     *addrLen = sizeof(answer_t);
-    return zxerr_ok;
-}
-
-zxerr_t crypto_fillEthAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrLen) {
-    if (buffer == NULL || buffer_len < sizeof(answer_eth_t) || addrLen == NULL) {
-        return zxerr_no_data;
-    }
-    MEMZERO(buffer, buffer_len);
-    answer_eth_t *const answer = (answer_eth_t *)buffer;
-
-    CHECK_ZXERR(
-        crypto_extractPublicKey(&answer->publicKey[1], sizeof_field(answer_eth_t, publicKey) - 1, &fil_chain_code))
-
-    answer->publicKey[0] = SECP256K1_PK_LEN;
-
-    uint8_t hash[KECCAK_256_SIZE] = {0};
-
-    CHECK_ZXERR(keccak_digest(&answer->publicKey[2], SECP256K1_PK_LEN - 1, hash, KECCAK_256_SIZE))
-
-    answer->address[0] = ETH_ADDR_LEN * 2;
-
-    // get hex of the eth address(last 20 bytes of pubkey hash)
-    char str[41] = {0};
-
-    // take the last 20-bytes of the hash, they are the ethereum address
-    array_to_hexstr(str, 41, hash + 12, ETH_ADDR_LEN);
-    MEMCPY(answer->address + 1, str, 40);
-
-    *addrLen = sizeof_field(answer_eth_t, publicKey) + sizeof_field(answer_eth_t, address);
-
     return zxerr_ok;
 }

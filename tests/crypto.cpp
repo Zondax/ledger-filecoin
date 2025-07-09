@@ -21,6 +21,7 @@
 
 #include <iostream>
 
+#include "coin_evm.h"
 #include "crypto_helper.h"
 #include "gmock/gmock.h"
 

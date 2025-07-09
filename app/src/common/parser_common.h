@@ -22,7 +22,7 @@ extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 
-#define CHECK_PARSER_ERR(__CALL)              \
+#define CHECK_ERROR(__CALL)                   \
     {                                         \
         parser_error_t __err = __CALL;        \
         CHECK_APP_CANARY()                    \
@@ -63,13 +63,14 @@ typedef enum {
     parser_unsupported_tx,
     parser_invalid_rlp_data,
     parser_invalid_chain_id,
+    parser_chain_id_not_configured,
     parser_invalid_rs_values,
     parser_invalid_cid,
     parser_invalid_deal_duration,
     parser_invalid_prefix,
     // Customs
     parser_expert_mode_required,
-    parser_blindsign_required,
+    parser_blindsign_mode_required,
 } parser_error_t;
 
 // Define the three types

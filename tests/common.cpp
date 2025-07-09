@@ -17,6 +17,7 @@
 
 #include <fmt/core.h>
 #include <parser.h>
+#include <parser_evm.h>
 
 #include <sstream>
 #include <string>
@@ -25,7 +26,12 @@ std::vector<std::string> dumpUI(parser_context_t *ctx, uint16_t maxKeyLen, uint1
     auto answer = std::vector<std::string>();
 
     uint8_t numItems;
-    parser_error_t err = parser_getNumItems(ctx, &numItems);
+    parser_error_t err;
+    if (ctx->tx_type == eth_tx) {
+        err = parser_getNumItemsEth(ctx, &numItems);
+    } else {
+        err = parser_getNumItems(ctx, &numItems);
+    }
     if (err != parser_ok) {
         return answer;
     }
@@ -39,8 +45,13 @@ std::vector<std::string> dumpUI(parser_context_t *ctx, uint16_t maxKeyLen, uint1
         while (pageIdx < pageCount) {
             std::stringstream ss;
 
-            err =
-                parser_getItem(ctx, (uint8_t)idx, keyBuffer, maxKeyLen, valueBuffer, maxValueLen, pageIdx, &pageCount);
+            if (ctx->tx_type == eth_tx) {
+                err = parser_getItemEth(ctx, (uint8_t)idx, keyBuffer, maxKeyLen, valueBuffer, maxValueLen, pageIdx,
+                                        &pageCount);
+            } else {
+                err = parser_getItem(ctx, (uint8_t)idx, keyBuffer, maxKeyLen, valueBuffer, maxValueLen, pageIdx,
+                                     &pageCount);
+            }
 
             ss << fmt::format("{} | {}", idx, keyBuffer);
             if (pageCount > 1) {

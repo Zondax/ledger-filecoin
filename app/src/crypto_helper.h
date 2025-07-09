@@ -26,7 +26,6 @@ extern "C" {
 
 extern uint32_t hdPath[MAX_BIP32_PATH];
 extern uint32_t hdPath_len;
-extern uint8_t fil_chain_code;
 
 #define ADDRESS_PROTOCOL_LEN 1
 
@@ -47,11 +46,7 @@ extern uint8_t fil_chain_code;
 #define ADDRESS_PROTOCOL_ACTOR_PAYLOAD_LEN 20
 #define ADDRESS_PROTOCOL_BLS_PAYLOAD_LEN 48
 #define ADDRESS_PROTOCOL_DELEGATED_MAX_SUBADDRESS_LEN 54
-
-#define SELECTOR_LENGTH 4
-#define BIGINT_LENGTH 32
 #define F4_ETH_ADDRESS_BYTES_LEN 22
-
 zxerr_t blake_hash_init();
 zxerr_t blake_hash_update(const uint8_t *in, uint16_t inLen);
 zxerr_t blake_hash_finish(uint8_t *out, uint16_t outLen);

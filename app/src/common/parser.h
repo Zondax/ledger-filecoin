@@ -26,6 +26,8 @@ extern "C" {
 
 const char *parser_getErrorDescription(parser_error_t err);
 
+parser_error_t parser_init_context(parser_context_t *ctx, const uint8_t *buffer, uint16_t bufferSize);
+
 //// parses a tx buffer
 parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data, size_t dataLen);
 
@@ -38,8 +40,6 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_item
 // retrieves a readable output for each field / page
 parser_error_t parser_getItem(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
                               char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount);
-
-parser_error_t parser_compute_eth_v(parser_context_t *ctx, unsigned int info, uint8_t *v);
 
 parser_error_t parser_rawbytes_init(uint8_t *buf, size_t buf_len);
 parser_error_t parser_rawbytes_update(uint8_t *buf, size_t buf_len);

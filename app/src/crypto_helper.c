@@ -21,7 +21,6 @@
 
 uint32_t hdPath[MAX_BIP32_PATH];
 uint32_t hdPath_len;
-uint8_t fil_chain_code;
 
 bool isTestnet() { return hdPath[0] == HDPATH_0_TESTNET && hdPath[1] == HDPATH_1_TESTNET; }
 
