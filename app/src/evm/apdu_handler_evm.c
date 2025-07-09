@@ -62,6 +62,23 @@ void extract_eth_path(uint32_t rx, uint32_t offset) {
     hdPathEth_len = path_len;
 }
 
+static void handle_first_chunk(uint32_t rx, uint8_t **data, uint32_t *len) {
+    tx_initialize();
+    tx_reset();
+    extract_eth_path(rx, OFFSET_DATA);
+
+    const uint32_t path_len_bytes = sizeof(uint32_t) * hdPathEth_len;
+
+    if (*len < path_len_bytes + 1) {
+        THROW(APDU_CODE_WRONG_LENGTH);
+    }
+
+    *data += path_len_bytes + 1;
+    *len -= path_len_bytes + 1;
+
+    tx_initialized = true;
+}
+
 uint32_t bytes_to_read;
 
 bool process_chunk_eip191(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
@@ -79,22 +96,8 @@ bool process_chunk_eip191(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
     uint32_t len = rx - OFFSET_DATA;
     uint64_t added;
     switch (payloadType) {
-        case P1_ETH_FIRST:
-            tx_initialize();
-            tx_reset();
-            extract_eth_path(rx, OFFSET_DATA);
-            // there is not warranties that the first chunk
-            // contains the serialized path only;
-            // so we need to offset the data to point to the first transaction
-            // byte
-            uint32_t path_len = sizeof(uint32_t) * hdPathEth_len;
-
-            // plus the first offset data containing the path len
-            if (len < path_len) {
-                THROW(APDU_CODE_WRONG_LENGTH);
-            }
-            data += path_len + 1;
-            len -= path_len + 1;
+        case P1_ETH_FIRST: {
+            handle_first_chunk(rx, &data, &len);
 
             // now process the chunk
             bytes_to_read = U4BE(data, 0);
@@ -103,7 +106,6 @@ bool process_chunk_eip191(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
             if (added != len) {
                 THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
             }
-            tx_initialized = true;
 
             if (bytes_to_read == 0) {
                 tx_initialized = false;
@@ -111,7 +113,8 @@ bool process_chunk_eip191(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
             }
 
             return false;
-        case P1_ETH_MORE:
+        }
+        case P1_ETH_MORE: {
             if (!tx_initialized) {
                 THROW(APDU_CODE_TX_NOT_INITIALIZED);
             }
@@ -130,6 +133,7 @@ bool process_chunk_eip191(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
             }
 
             return false;
+        }
     }
 
     THROW(APDU_CODE_INVALIDP1P2);
@@ -156,24 +160,9 @@ bool process_chunk_eth(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
 
     uint64_t added;
     switch (payloadType) {
-        case P1_ETH_FIRST:
-            tx_initialize();
-            tx_reset();
-            extract_eth_path(rx, OFFSET_DATA);
-            // there is not warranties that the first chunk
-            // contains the serialized path only;
-            // so we need to offset the data to point to the first transaction
-            // byte
-            uint32_t path_len = sizeof(uint32_t) * hdPathEth_len;
+        case P1_ETH_FIRST: {
+            handle_first_chunk(rx, &data, &len);
 
-            // plus the first offset data containing the path len
-            data += path_len + 1;
-            if (len < path_len) {
-                THROW(APDU_CODE_WRONG_LENGTH);
-            }
-
-            // now process the chunk
-            len -= path_len + 1;
             if (get_tx_rlp_len(data, len, &read, &to_read) != rlp_ok) {
                 THROW(APDU_CODE_DATA_INVALID);
             }
@@ -187,15 +176,14 @@ bool process_chunk_eth(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
                 THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
             }
 
-            tx_initialized = true;
-
             // if the number of bytes read and the number of bytes to read
             //  is the same as what we read...
             if ((saturating_add(read, to_read) - len) == 0) {
                 return true;
             }
             return false;
-        case P1_ETH_MORE:
+        }
+        case P1_ETH_MORE: {
             if (!tx_initialized) {
                 THROW(APDU_CODE_TX_NOT_INITIALIZED);
             }
@@ -230,6 +218,7 @@ bool process_chunk_eth(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
             }
 
             return false;
+        }
     }
     THROW(APDU_CODE_INVALIDP1P2);
     return false;
