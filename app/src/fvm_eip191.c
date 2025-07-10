@@ -61,7 +61,7 @@ zxerr_t fvm_eip191_msg_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyL
     switch (displayIdx) {
         case 0: {
             snprintf(outKey, outKeyLen, "Sign");
-            snprintf(outVal, outValLen, "Personal Message");
+            snprintf(outVal, outValLen, "FVM Personal Message");
             return zxerr_ok;
         }
         case 1: {
