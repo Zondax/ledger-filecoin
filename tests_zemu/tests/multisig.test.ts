@@ -16,7 +16,7 @@
 
 import Zemu from "@zondax/zemu";
 // @ts-ignore
-import FilecoinApp from "@zondax/ledger-filecoin";
+import { FilecoinApp } from "@zondax/ledger-filecoin";
 import * as secp256k1 from "secp256k1";
 import { models, defaultOptions, PATH_TESTNET } from "./common";
 import * as multisigData from "./multisig.json";
@@ -61,8 +61,6 @@ describe.each(models)("Multisig", function (m) {
 
         const pkResponse = await app.getAddressAndPubKey(PATH_TESTNET);
         console.log(pkResponse);
-        expect(pkResponse.return_code).toEqual(0x9000);
-        expect(pkResponse.error_message).toEqual("No errors");
 
         // do not wait here so we can get snapshots and interact with the app
         const signatureRequest = app.sign(PATH_TESTNET, txBlob);
@@ -73,9 +71,6 @@ describe.each(models)("Multisig", function (m) {
 
         let resp = await signatureRequest;
         console.log(resp, m.name, name);
-
-        expect(resp.return_code).toEqual(0x9000);
-        expect(resp.error_message).toEqual("No errors");
 
         // Verify signature
         const pk = Uint8Array.from(pkResponse.compressed_pk);

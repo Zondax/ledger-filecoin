@@ -36,4 +36,3 @@ export const defaultOptions = {
   custom: `-s "${APP_SEED}"`,
   X11: false,
 };
-

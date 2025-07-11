@@ -5,12 +5,17 @@ const FilecoinApp = require("@zondax/ledger-filecoin").default;
 const { CHAIN_TYPE } = require("@zondax/ledger-filecoin");
 import * as secp256k1 from "secp256k1";
 import { getBlakeHash, getDigest } from "./tests/utils";
-import { ETH_PATH, EXPECTED_ETH_PK, PATH, EIP191_FVM_PREFIX } from './tests/common'
-const sha3 = require('js-sha3')
-import { ec } from 'elliptic'
+import {
+  ETH_PATH,
+  EXPECTED_ETH_PK,
+  PATH,
+  EIP191_FVM_PREFIX,
+} from "./tests/common";
+const sha3 = require("js-sha3");
+import { ec } from "elliptic";
 
-const msg_txn_string = Buffer.from('Hello World!', 'utf8');
-const msg_txn_hex = Buffer.from('\x00Hello World!', 'utf8');
+const msg_txn_string = Buffer.from("Hello World!", "utf8");
+const msg_txn_hex = Buffer.from("\x00Hello World!", "utf8");
 
 async function get_address(app: any) {
   const resp = await app.getAddressAndPubKey(PATH, true);
@@ -73,22 +78,35 @@ async function sign(app: any) {
 
 async function sign_evm_eip191(app: any, msg_txn: Buffer) {
   try {
-    const signatureRequest = app.signPersonalMessage(ETH_PATH, msg_txn.toString('hex'), CHAIN_TYPE.EVM);
+    const signatureRequest = app.signPersonalMessage(
+      ETH_PATH,
+      msg_txn.toString("hex"),
+      CHAIN_TYPE.EVM,
+    );
 
     let resp = await signatureRequest;
     console.log(resp);
 
-    const header = Buffer.from('\x19Ethereum Signed Message:\n', 'utf8')
-    const msgLengthString = String(msg_txn.length)
-    const msg = Buffer.concat([header, Buffer.from(msgLengthString, 'utf8'), msg_txn])
-    const msgHash = sha3.keccak256(msg)
+    const header = Buffer.from("\x19Ethereum Signed Message:\n", "utf8");
+    const msgLengthString = String(msg_txn.length);
+    const msg = Buffer.concat([
+      header,
+      Buffer.from(msgLengthString, "utf8"),
+      msg_txn,
+    ]);
+    const msgHash = sha3.keccak256(msg);
     const signature_obj = {
-      r: Buffer.from(resp.r, 'hex'),
-      s: Buffer.from(resp.s, 'hex'),
-    }
+      r: Buffer.from(resp.r, "hex"),
+      s: Buffer.from(resp.s, "hex"),
+    };
     // Verify signature
-    const EC = new ec('secp256k1')
-    const signatureOK = EC.verify(msgHash, signature_obj, Buffer.from(EXPECTED_ETH_PK, 'hex'), 'hex')
+    const EC = new ec("secp256k1");
+    const signatureOK = EC.verify(
+      msgHash,
+      signature_obj,
+      Buffer.from(EXPECTED_ETH_PK, "hex"),
+      "hex",
+    );
     console.log("signature success: ", signatureOK);
   } catch (e) {
     console.log(e);
@@ -100,7 +118,11 @@ async function sign_fvm_eip191(app: any, msg_txn: Buffer) {
     const pkResponse = await app.getAddressAndPubKey(PATH);
     console.log(pkResponse);
 
-    const signatureRequest = app.signPersonalMessage(PATH, msg_txn.toString('hex'), CHAIN_TYPE.FVM);
+    const signatureRequest = app.signPersonalMessage(
+      PATH,
+      msg_txn.toString("hex"),
+      CHAIN_TYPE.FVM,
+    );
 
     let resp = await signatureRequest;
     console.log(resp);
@@ -108,8 +130,12 @@ async function sign_fvm_eip191(app: any, msg_txn: Buffer) {
     // Construct EIP-191 message format: "\x19Filecoin Signed Message:\n" + len + message
     const messageLengthBuffer = Buffer.alloc(4);
     messageLengthBuffer.writeUInt32BE(msg_txn.length, 0);
-    
-    const eip191Message = Buffer.concat([EIP191_FVM_PREFIX, messageLengthBuffer, msg_txn]);
+
+    const eip191Message = Buffer.concat([
+      EIP191_FVM_PREFIX,
+      messageLengthBuffer,
+      msg_txn,
+    ]);
     const messageHash = getBlakeHash(eip191Message);
 
     // Verify signature
@@ -117,19 +143,18 @@ async function sign_fvm_eip191(app: any, msg_txn: Buffer) {
     const signature = secp256k1.signatureImport(
       Uint8Array.from(resp.signature_der),
     );
-    
+
     const isSignatureValid = secp256k1.ecdsaVerify(
-      signature, 
-      Uint8Array.from(messageHash), 
-      publicKey
+      signature,
+      Uint8Array.from(messageHash),
+      publicKey,
     );
-    
+
     console.log("signature success: ", isSignatureValid);
   } catch (e) {
     console.log(e);
   }
 }
-
 
 async function main() {
   const transport = await TransportNodeHid.open();
@@ -149,7 +174,6 @@ async function main() {
   await sign_fvm_eip191(app, msg_txn_string);
 
   await sign(app);
-  
 }
 
 (async () => {
