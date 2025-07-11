@@ -93,21 +93,29 @@ zxerr_t fvm_eip191_msg_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyL
     return zxerr_ok;
 }
 
-bool fvm_eip191_msg_parse() {
-    const uint8_t *message = tx_get_buffer() + sizeof(uint32_t);
+parser_error_t fvm_eip191_msg_parse() {
+    const uint32_t declared_len = U4BE(tx_get_buffer(), 0);
+
     const uint16_t messageLength = tx_get_buffer_length() - sizeof(uint32_t);
+
+    // Verify that the declared length matches the actual remaining bytes
+    if (declared_len != messageLength) {
+        return parser_unexpected_buffer_end;
+    }
+
+    const uint8_t *message = tx_get_buffer() + sizeof(uint32_t);
 
     // Check if all characters are printable
     for (uint16_t i = 0; i < messageLength; i++) {
         if (!IS_PRINTABLE(message[i])) {
             if (!app_mode_blindsign()) {
-                return false;
+                return parser_blindsign_mode_required;
             }
             break;
         }
     }
 
-    return true;
+    return parser_ok;
 }
 
 zxerr_t fvm_eip191_hash_message(const uint8_t *message, uint16_t messageLen, uint8_t *hash) {

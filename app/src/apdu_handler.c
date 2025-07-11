@@ -267,13 +267,16 @@ __Z_INLINE void handleSignFvmEip191(volatile uint32_t *flags, volatile uint32_t 
     }
 
     CHECK_APP_CANARY()
-    if (!fvm_eip191_msg_parse()) {
-        const char *error_msg = parser_getErrorDescription(parser_blindsign_mode_required);
+    const parser_error_t error = fvm_eip191_msg_parse();
+    if (error != parser_ok) {
+        const char *error_msg = parser_getErrorDescription(error);
         const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
         MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
         *tx += (error_msg_length);
-        *flags |= IO_ASYNCH_REPLY;
-        view_blindsign_error_show();
+        if (error == parser_blindsign_mode_required) {
+            *flags |= IO_ASYNCH_REPLY;
+            view_blindsign_error_show();
+        }
         THROW(APDU_CODE_DATA_INVALID);
     }
     CHECK_APP_CANARY()

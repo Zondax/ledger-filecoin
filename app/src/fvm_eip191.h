@@ -19,6 +19,7 @@
 #include <stdint.h>
 
 #include "coin_evm.h"
+#include "parser_common.h"
 #include "zxerror.h"
 #include "zxmacros.h"
 
@@ -26,7 +27,7 @@
 extern "C" {
 #endif
 
-bool fvm_eip191_msg_parse();
+parser_error_t fvm_eip191_msg_parse();
 zxerr_t fvm_eip191_msg_getNumItems(uint8_t *num_items);
 zxerr_t fvm_eip191_msg_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outVal, uint16_t outValLen,
                                uint8_t pageIdx, uint8_t *pageCount);
