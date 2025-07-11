@@ -191,9 +191,6 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
 
     tx_context_fil();
 
-    // Reset BLS UI for next transaction
-    app_mode_skip_blindsign_ui();
-
     CHECK_APP_CANARY()
 
     uint8_t error_code;
@@ -236,9 +233,6 @@ __Z_INLINE void handleSignRawBytes(volatile uint32_t *flags, volatile uint32_t *
         THROW(APDU_CODE_OK);
     }
 
-    // Reset BLS UI for next transaction
-    app_mode_skip_blindsign_ui();
-
     tx_context_raw_bytes();
 
     view_idle_show(0, NULL);
@@ -271,9 +265,6 @@ __Z_INLINE void handleSignFvmEip191(volatile uint32_t *flags, volatile uint32_t 
     if (!process_chunk(tx, rx)) {
         THROW(APDU_CODE_OK);
     }
-
-    // Reset BLS UI for next transaction
-    app_mode_skip_blindsign_ui();
 
     CHECK_APP_CANARY()
     if (!fvm_eip191_msg_parse()) {
@@ -312,6 +303,9 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
             // Handle this case as ins number is the same as normal fil sign
             // instruction
             if (instruction == INS_GET_ADDR_ETH && cla == CLA_ETH) handleGetAddrEth(flags, tx, rx);
+
+            // Reset BLS UI for next transaction
+            app_mode_skip_blindsign_ui();
 
             switch (instruction) {
                 case INS_GET_VERSION: {
