@@ -20,7 +20,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "test": "ts-node tests/pullImageKillOld.ts && jest tests/raw.test.ts && jest --testPathIgnorePatterns 'tests/raw.test.ts' --maxConcurrency 2",
-    "try": "node try.mjs",
+    "try": "ts-node try.ts",
     "upgrade": "bunx npm-check-updates -i"
   },
   "resolutions": {
