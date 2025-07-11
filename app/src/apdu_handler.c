@@ -204,6 +204,7 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
 
         // Check if expert mode is needed
         if (error_msg_length == 18 && strcmp(error_msg, "ExpertModeRequired") == 0) {
+            *flags |= IO_ASYNCH_REPLY;
             view_custom_error_show("Expert Mode", "Required");
         }
         THROW(APDU_CODE_DATA_INVALID);
