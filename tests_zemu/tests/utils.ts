@@ -18,4 +18,8 @@ export function getDigest(message: any) {
   return blake.blake2bFinal(blakeCtx);
 }
 
-module.exports = { getCID, getDigest };
+export function getBlakeHash(message: Buffer): Buffer {
+  const blakeCtx = blake.blake2bInit(32);
+  blake.blake2bUpdate(blakeCtx, message);
+  return Buffer.from(blake.blake2bFinal(blakeCtx));
+}

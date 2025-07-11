@@ -25,11 +25,14 @@
 #include "addr.h"
 #include "apdu_handler_evm.h"
 #include "app_main.h"
+#include "app_mode.h"
 #include "coin.h"
 #include "coin_evm.h"
 #include "crypto.h"
 #include "evm_addr.h"
 #include "evm_utils.h"
+#include "fvm_eip191.h"
+#include "parser.h"
 #include "tx.h"
 #include "view.h"
 #include "view_internal.h"
@@ -181,11 +184,11 @@ __Z_INLINE void handleGetAddr(volatile uint32_t *flags, volatile uint32_t *tx, u
 }
 
 __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
+    zemu_log("HandleSignFil\n");
     if (!process_chunk(tx, rx)) {
         THROW(APDU_CODE_OK);
     }
 
-    ZEMU_LOGF(50, "HandleSignFil\n")
     tx_context_fil();
 
     CHECK_APP_CANARY()
@@ -201,6 +204,7 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
 
         // Check if expert mode is needed
         if (error_msg_length == 18 && strcmp(error_msg, "ExpertModeRequired") == 0) {
+            *flags |= IO_ASYNCH_REPLY;
             view_custom_error_show("Expert Mode", "Required");
         }
         THROW(APDU_CODE_DATA_INVALID);
@@ -257,6 +261,32 @@ __Z_INLINE void handleSignRawBytes(volatile uint32_t *flags, volatile uint32_t *
     *flags |= IO_ASYNCH_REPLY;
 }
 
+__Z_INLINE void handleSignFvmEip191(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
+    zemu_log("handleSignFvmEip191\n");
+    if (!process_chunk(tx, rx)) {
+        THROW(APDU_CODE_OK);
+    }
+
+    CHECK_APP_CANARY()
+    const parser_error_t error = fvm_eip191_msg_parse();
+    if (error != parser_ok) {
+        const char *error_msg = parser_getErrorDescription(error);
+        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
+        MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
+        *tx += (error_msg_length);
+        if (error == parser_blindsign_mode_required) {
+            *flags |= IO_ASYNCH_REPLY;
+            view_blindsign_error_show();
+        }
+        THROW(APDU_CODE_DATA_INVALID);
+    }
+    CHECK_APP_CANARY()
+
+    view_review_init(fvm_eip191_msg_getItem, fvm_eip191_msg_getNumItems, app_sign_fvm_eip191);
+    view_review_show(REVIEW_MSG);
+    *flags |= IO_ASYNCH_REPLY;
+}
+
 void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     volatile uint16_t sw = 0;
 
@@ -277,6 +307,9 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
             // Handle this case as ins number is the same as normal fil sign
             // instruction
             if (instruction == INS_GET_ADDR_ETH && cla == CLA_ETH) handleGetAddrEth(flags, tx, rx);
+
+            // Reset BLS UI for next transaction
+            app_mode_skip_blindsign_ui();
 
             switch (instruction) {
                 case INS_GET_VERSION: {
@@ -327,10 +360,13 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                 }
                 case INS_SIGN_PERSONAL_MESSAGE: {
                     CHECK_PIN_VALIDATED()
-                    if (cla != CLA_ETH) {
+                    if (cla == CLA_ETH) {
+                        handleSignEip191(flags, tx, rx);
+                    } else if (cla == CLA) {
+                        handleSignFvmEip191(flags, tx, rx);
+                    } else {
                         THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
                     }
-                    handleSignEip191(flags, tx, rx);
                     break;
                 }
                 default:

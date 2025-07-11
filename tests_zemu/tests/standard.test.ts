@@ -477,13 +477,7 @@ describe("Standard", function () {
       console.log(pkResponse);
       expect(pkResponse.return_code).toEqual(0x9000);
       expect(pkResponse.error_message).toEqual("No errors");
-
-      const signNonExpert = await app.sign(PATH, txBlob);
-      console.log(signNonExpert);
-      expect(signNonExpert.return_code).toEqual(0x6984);
-      expect(signNonExpert.error_message).toEqual(
-        "Data is invalid : ExpertModeRequired",
-      );
+      const signNonExpert = app.sign(PATH, txBlob);
 
       await Zemu.sleep(500);
 
@@ -507,6 +501,10 @@ describe("Standard", function () {
         `${m.prefix.toLowerCase()}-invoke_evm`,
         nav.schedule,
       );
+
+      const resp1 = await signNonExpert;
+      console.log(resp1);
+      expect(resp1.return_code).toEqual(0x6984);
 
       await sim.toggleExpertMode();
 
