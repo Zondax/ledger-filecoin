@@ -83,7 +83,7 @@ zxerr_t fvm_eip191_msg_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyL
 
             // print message
             snprintf(outKey, outKeyLen, "Msg");
-            pageString(outVal, outValLen, (const char *)message, pageIdx, pageCount);
+            pageStringExt(outVal, outValLen, (const char *)message, messageLength, pageIdx, pageCount);
             return zxerr_ok;
         }
         default:
