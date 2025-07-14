@@ -1,8 +1,7 @@
 const TransportNodeHid = require("@ledgerhq/hw-transport-node-hid").default;
 const ledger_logs = require("@ledgerhq/logs");
 
-const FilecoinApp = require("@zondax/ledger-filecoin").default;
-const { CHAIN_TYPE } = require("@zondax/ledger-filecoin");
+const { FilecoinApp } = require("@zondax/ledger-filecoin");
 import * as secp256k1 from "secp256k1";
 import { getBlakeHash, getDigest } from "./tests/utils";
 import {
@@ -42,10 +41,12 @@ async function sign_raw_bytes(app: any, amount: number) {
   const prefix = Buffer.from("Filecoin Sign Bytes:\n");
   const txBlob = Buffer.concat([prefix, raw_bytes]);
 
-  // do not wait here..
-  const signatureRequest = await app.signRawBytes(PATH, txBlob);
-
-  console.log(JSON.stringify(signatureRequest));
+  try {
+    const signatureRequest = await app.signRawBytes(PATH, txBlob);
+    console.log(JSON.stringify(signatureRequest));
+  } catch (e) {
+    console.log(e);
+  }
 }
 
 async function sign(app: any) {
@@ -78,10 +79,9 @@ async function sign(app: any) {
 
 async function sign_evm_eip191(app: any, msg_txn: Buffer) {
   try {
-    const signatureRequest = app.signPersonalMessage(
+    const signatureRequest = app.signPersonalMessageEVM(
       ETH_PATH,
       msg_txn.toString("hex"),
-      CHAIN_TYPE.EVM,
     );
 
     let resp = await signatureRequest;
@@ -118,10 +118,9 @@ async function sign_fvm_eip191(app: any, msg_txn: Buffer) {
     const pkResponse = await app.getAddressAndPubKey(PATH);
     console.log(pkResponse);
 
-    const signatureRequest = app.signPersonalMessage(
+    const signatureRequest = app.signPersonalMessageFVM(
       PATH,
-      msg_txn.toString("hex"),
-      CHAIN_TYPE.FVM,
+      msg_txn,
     );
 
     let resp = await signatureRequest;
@@ -165,14 +164,14 @@ async function main() {
   const app = new FilecoinApp(transport);
 
   // sign 2MiB of random data
-  // await sign_raw_bytes(app, 1 * 1024);
+  await sign_raw_bytes(app, 1 * 1024);
 
   await sign_evm_eip191(app, msg_txn_hex);
   await sign_evm_eip191(app, msg_txn_string);
 
   await sign_fvm_eip191(app, msg_txn_hex);
   await sign_fvm_eip191(app, msg_txn_string);
-
+  
   await sign(app);
 }
 

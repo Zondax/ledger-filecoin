@@ -30,7 +30,8 @@
   "dependencies": {
     "@ledgerhq/hw-transport-node-hid": "6.29.8",
     "@zondax/ledger-filecoin": "^2.1.1-beta",
-    "@zondax/zemu": "^0.55.3"
+    "@zondax/zemu": "^0.55.3",
+    "varint": "^6.0.0"
   },
   "devDependencies": {
     "@ethereumjs/common": "^10.0.0",
