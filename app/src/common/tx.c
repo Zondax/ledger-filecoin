@@ -67,15 +67,16 @@ uint8_t *tx_get_buffer() {
 }
 
 const char *tx_parse(uint8_t *error_code) {
-    uint8_t err = parser_parse(&ctx_parsed_tx, tx_get_buffer(), tx_get_buffer_length());
+    *error_code = parser_parse(&ctx_parsed_tx, tx_get_buffer(), tx_get_buffer_length());
 
-    if (err != parser_ok) return parser_getErrorDescription(err);
+    if (*error_code != parser_ok) {
+        return parser_getErrorDescription(*error_code);
+    }
 
-    err = parser_validate(&ctx_parsed_tx);
-    *error_code = err;
+    *error_code = parser_validate(&ctx_parsed_tx);
     CHECK_APP_CANARY()
 
-    if (err != parser_ok) return parser_getErrorDescription(err);
+    if (*error_code != parser_ok) return parser_getErrorDescription(*error_code);
 
     return NULL;
 }

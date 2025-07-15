@@ -23,7 +23,7 @@ import Zemu, {
 } from "@zondax/zemu";
 
 // @ts-ignore
-import FilecoinApp from "@zondax/ledger-filecoin";
+import { FilecoinApp } from "@zondax/ledger-filecoin";
 import { getDigest } from "./utils";
 import * as secp256k1 from "secp256k1";
 import { models, defaultOptions, PATH } from "./common";
@@ -69,9 +69,7 @@ describe("Standard", function () {
 
       console.log(resp);
 
-      expect(resp.return_code).toEqual(0x9000);
-      expect(resp.error_message).toEqual("No errors");
-      expect(resp).toHaveProperty("test_mode");
+      expect(resp).toHaveProperty("testMode");
       expect(resp).toHaveProperty("major");
       expect(resp).toHaveProperty("minor");
       expect(resp).toHaveProperty("patch");
@@ -89,9 +87,6 @@ describe("Standard", function () {
       const resp = await app.getAddressAndPubKey("m/44'/461'/5'/0/3");
 
       console.log(resp);
-
-      expect(resp.return_code).toEqual(0x9000);
-      expect(resp.error_message).toEqual("No errors");
 
       const expected_address_string =
         "f1mk3zcefvlgpay4f32c5vmruk5gqig6dumc7pz6q";
@@ -128,9 +123,6 @@ describe("Standard", function () {
 
       const resp = await respRequest;
 
-      expect(resp.return_code).toEqual(0x9000);
-      expect(resp.error_message).toEqual("No errors");
-
       const expected_address_string =
         "f1mk3zcefvlgpay4f32c5vmruk5gqig6dumc7pz6q";
       const expected_pk =
@@ -156,8 +148,6 @@ describe("Standard", function () {
 
       const pkResponse = await app.getAddressAndPubKey(PATH);
       console.log(pkResponse);
-      expect(pkResponse.return_code).toEqual(0x9000);
-      expect(pkResponse.error_message).toEqual("No errors");
 
       // do not wait here..
       const signatureRequest = app.sign(PATH, txBlob);
@@ -171,9 +161,6 @@ describe("Standard", function () {
 
       let resp = await signatureRequest;
       console.log(resp);
-
-      expect(resp.return_code).toEqual(0x9000);
-      expect(resp.error_message).toEqual("No errors");
 
       // Verify signature
       const pk = Uint8Array.from(pkResponse.compressed_pk);
@@ -202,15 +189,9 @@ describe("Standard", function () {
 
       const pkResponse = await app.getAddressAndPubKey(PATH);
       console.log(pkResponse);
-      expect(pkResponse.return_code).toEqual(0x9000);
-      expect(pkResponse.error_message).toEqual("No errors");
 
       // do not wait here..
-      const signatureResponse = await app.sign(PATH, invalidMessage);
-      console.log(signatureResponse);
-
-      expect(signatureResponse.return_code).toEqual(0x6984);
-      expect(signatureResponse.error_message).toEqual(
+      await expect(app.sign(PATH, invalidMessage)).rejects.toThrow(
         "Data is invalid : Unexpected data type",
       );
     } finally {
@@ -234,8 +215,6 @@ describe("Standard", function () {
 
       const pkResponse = await app.getAddressAndPubKey(PATH);
       console.log(pkResponse);
-      expect(pkResponse.return_code).toEqual(0x9000);
-      expect(pkResponse.error_message).toEqual("No errors");
 
       // do not wait here so we can get snapshots and interact with the app
       const signatureRequest = app.sign(PATH, txBlob);
@@ -249,9 +228,6 @@ describe("Standard", function () {
 
       let resp = await signatureRequest;
       console.log(resp);
-
-      expect(resp.return_code).toEqual(0x9000);
-      expect(resp.error_message).toEqual("No errors");
 
       // Verify signature
       const pk = Uint8Array.from(pkResponse.compressed_pk);
@@ -281,15 +257,9 @@ describe("Standard", function () {
 
         const pkResponse = await app.getAddressAndPubKey(PATH);
         console.log(pkResponse);
-        expect(pkResponse.return_code).toEqual(0x9000);
-        expect(pkResponse.error_message).toEqual("No errors");
 
         // do not wait here..
-        const signatureResponse = await app.sign(PATH, invalidMessage);
-        console.log(signatureResponse);
-
-        expect(signatureResponse.return_code).toEqual(0x6984);
-        expect(signatureResponse.error_message).toEqual(
+        await expect(app.sign(PATH, invalidMessage)).rejects.toThrow(
           "Data is invalid : Unexpected data type",
         );
       } finally {
@@ -336,8 +306,6 @@ describe("Standard", function () {
 
       const pkResponse = await app.getAddressAndPubKey(PATH);
       console.log(pkResponse);
-      expect(pkResponse.return_code).toEqual(0x9000);
-      expect(pkResponse.error_message).toEqual("No errors");
 
       // do not wait here so we can get snapshots and interact with the app
       const signatureRequest = app.sign(PATH, txBlob);
@@ -351,9 +319,6 @@ describe("Standard", function () {
 
       let resp = await signatureRequest;
       console.log(resp);
-
-      expect(resp.return_code).toEqual(0x9000);
-      expect(resp.error_message).toEqual("No errors");
 
       // Verify signature
       const pk = Uint8Array.from(pkResponse.compressed_pk);
@@ -383,8 +348,6 @@ describe("Standard", function () {
 
         const pkResponse = await app.getAddressAndPubKey(PATH);
         console.log(pkResponse);
-        expect(pkResponse.return_code).toEqual(0x9000);
-        expect(pkResponse.error_message).toEqual("No errors");
 
         // do not wait here..
         const signatureRequest = app.sign(PATH, txBlob);
@@ -397,9 +360,6 @@ describe("Standard", function () {
 
         let resp = await signatureRequest;
         console.log(resp);
-
-        expect(resp.return_code).toEqual(0x9000);
-        expect(resp.error_message).toEqual("No errors");
 
         // Verify signature
         const pk = Uint8Array.from(pkResponse.compressed_pk);
@@ -415,8 +375,6 @@ describe("Standard", function () {
     },
   );
 
-
-
   test.concurrent.each(models)("InvokeEVM_ERC20Transfer", async function (m) {
     const sim = new Zemu(m.path);
     try {
@@ -430,8 +388,6 @@ describe("Standard", function () {
 
       const pkResponse = await app.getAddressAndPubKey(PATH);
       console.log(pkResponse);
-      expect(pkResponse.return_code).toEqual(0x9000);
-      expect(pkResponse.error_message).toEqual("No errors");
 
       // do not wait here..
       const signatureRequest = app.sign(PATH, txBlob);
@@ -445,9 +401,6 @@ describe("Standard", function () {
 
       let resp = await signatureRequest;
       console.log(resp);
-
-      expect(resp.return_code).toEqual(0x9000);
-      expect(resp.error_message).toEqual("No errors");
 
       // Verify signature
       const pk = Uint8Array.from(pkResponse.compressed_pk);
@@ -475,14 +428,14 @@ describe("Standard", function () {
 
       const pkResponse = await app.getAddressAndPubKey(PATH);
       console.log(pkResponse);
-      expect(pkResponse.return_code).toEqual(0x9000);
-      expect(pkResponse.error_message).toEqual("No errors");
+
       const signNonExpert = app.sign(PATH, txBlob);
 
       await Zemu.sleep(500);
 
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
+
       let nav = undefined;
       if (isTouchDevice(m.name)) {
         const okButton: IButton = {
@@ -496,15 +449,14 @@ describe("Standard", function () {
       } else {
         nav = new ClickNavigation([1, 0]);
       }
+
       await sim.navigate(
         ".",
         `${m.prefix.toLowerCase()}-invoke_evm`,
         nav.schedule,
       );
 
-      const resp1 = await signNonExpert;
-      console.log(resp1);
-      expect(resp1.return_code).toEqual(0x6984);
+      await expect(signNonExpert).rejects.toThrow("Data is invalid");
 
       await sim.toggleExpertMode();
 
@@ -521,9 +473,6 @@ describe("Standard", function () {
 
       let resp = await signatureRequest;
       console.log(resp);
-
-      expect(resp.return_code).toEqual(0x9000);
-      expect(resp.error_message).toEqual("No errors");
 
       // Verify signature
       const pk = Uint8Array.from(pkResponse.compressed_pk);
@@ -563,8 +512,6 @@ describe("Standard", function () {
 
         let resp = await signatureRequest;
         console.log(resp);
-        expect(resp.return_code).toEqual(0x9000);
-        expect(resp.error_message).toEqual("No errors");
       } finally {
         await sim.close();
       }
@@ -596,8 +543,6 @@ describe("Standard", function () {
 
         let resp = await signatureRequest;
         console.log(resp);
-        expect(resp.return_code).toEqual(0x9000);
-        expect(resp.error_message).toEqual("No errors");
       } finally {
         await sim.close();
       }

@@ -17,7 +17,7 @@
 import Zemu from "@zondax/zemu";
 
 // @ts-ignore
-import FilecoinApp from "@zondax/ledger-filecoin";
+import { FilecoinApp } from "@zondax/ledger-filecoin";
 import { getDigest } from "./utils";
 import * as secp256k1 from "secp256k1";
 import { models, defaultOptions, PATH } from "./common";
@@ -48,8 +48,6 @@ describe("RawBytes", function () {
 
       const pkResponse = await app.getAddressAndPubKey(PATH);
       console.log(pkResponse);
-      expect(pkResponse.return_code).toEqual(0x9000);
-      expect(pkResponse.error_message).toEqual("No errors");
 
       // do not wait here..
       const signatureRequest = app.signRawBytes(PATH, txBlob);
@@ -67,9 +65,6 @@ describe("RawBytes", function () {
       let resp = await signatureRequest;
       console.log(resp);
 
-      expect(resp.return_code).toEqual(0x9000);
-      expect(resp.error_message).toEqual("No errors");
-
       // Verify signature
       const pk = Uint8Array.from(pkResponse.compressed_pk);
       const digest = getDigest(txBlob);
@@ -83,4 +78,4 @@ describe("RawBytes", function () {
       await sim.close();
     }
   });
-}); 
+});
