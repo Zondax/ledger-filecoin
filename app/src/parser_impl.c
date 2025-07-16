@@ -405,7 +405,7 @@ uint8_t _getNumItems(__Z_UNUSED const parser_context_t *c, const fil_base_tx_t *
 
     // Items for InvokeEVM + ERC20 transfer
     if (isInvokeEVM_ERC20Transfer(v)) {
-        if (getNumItemsInvokeEVM((uint8_t*)&itemCount, v) != parser_ok) {
+        if (getNumItemsInvokeEVM((uint8_t *)&itemCount, v) != parser_ok) {
             return 0;
         }
         return (uint8_t)itemCount;
