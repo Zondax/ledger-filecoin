@@ -1,5 +1,5 @@
 /*******************************************************************************
- *   (c) 2019 Zondax GmbH
+ *   (c) 2019 Zondax AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -28,10 +28,6 @@ extern "C" {
 #include "crypto_helper.h"
 
 bool isTestnet();
-
-int prepareDigestToSign(const unsigned char *in, unsigned int inLen, unsigned char *out, unsigned int outLen);
-
-zxerr_t keccak_digest(const unsigned char *in, unsigned int inLen, unsigned char *out, unsigned int outLen);
 
 zxerr_t blake_hash_cid(const unsigned char *in, unsigned int inLen, unsigned char *out, unsigned int outLen);
 

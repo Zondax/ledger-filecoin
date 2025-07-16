@@ -194,7 +194,7 @@ parser_error_t _getItemFil(const parser_context_t *ctx, uint8_t displayIdx, char
         return parser_expert_mode_required;
     }
 
-    uint8_t adjustedIndex = displayIdx;
+    uint32_t adjustedIndex = displayIdx;
     if (parser_tx_obj.base_tx.to.buffer[0] != ADDRESS_PROTOCOL_DELEGATED) {
         adjustedIndex++;
     }
@@ -207,7 +207,10 @@ parser_error_t _getItemFil(const parser_context_t *ctx, uint8_t displayIdx, char
     // Method] + Params (variable length) Expert mode: 8 fields [To | From | Value
     // | Gas Limit | Gas Fee Cap | Gas Premium | Nonce | Method] + Params
     // (variable length)
-    switch (adjustedIndex) {
+    if (adjustedIndex > UINT8_MAX) {
+        return parser_unexpected_value;
+    }
+    switch ((uint8_t)adjustedIndex) {
         case 0:
             snprintf(outKey, outKeyLen, "To ");
             return printEthAddress(&parser_tx_obj.base_tx.to, outVal, outValLen, pageIdx, pageCount);

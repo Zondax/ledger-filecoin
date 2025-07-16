@@ -401,14 +401,14 @@ parser_error_t _validateTx(__Z_UNUSED const parser_context_t *c, __Z_UNUSED cons
 }
 
 uint8_t _getNumItems(__Z_UNUSED const parser_context_t *c, const fil_base_tx_t *v) {
-    uint8_t itemCount = 6;
+    uint32_t itemCount = 6;
 
     // Items for InvokeEVM + ERC20 transfer
     if (isInvokeEVM_ERC20Transfer(v)) {
-        if (getNumItemsInvokeEVM(&itemCount, v) != parser_ok) {
+        if (getNumItemsInvokeEVM((uint8_t*)&itemCount, v) != parser_ok) {
             return 0;
         }
-        return itemCount;
+        return (uint8_t)itemCount;
     }
 
     if (app_mode_expert()) {
@@ -423,5 +423,6 @@ uint8_t _getNumItems(__Z_UNUSED const parser_context_t *c, const fil_base_tx_t *
         itemCount++;
     }
 
-    return itemCount + v->numparams;
+    uint32_t total = itemCount + v->numparams;
+    return (uint8_t)total;
 }
