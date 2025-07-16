@@ -355,14 +355,17 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     if (cla != CLA_ETH) {
                         THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
                     }
+                    tx_context_eth();
                     handleSignEth(flags, tx, rx);
                     break;
                 }
                 case INS_SIGN_PERSONAL_MESSAGE: {
                     CHECK_PIN_VALIDATED()
                     if (cla == CLA_ETH) {
+                        tx_context_eth();
                         handleSignEip191(flags, tx, rx);
                     } else if (cla == CLA) {
+                        tx_context_fil();
                         handleSignFvmEip191(flags, tx, rx);
                     } else {
                         THROW(APDU_CODE_COMMAND_NOT_ALLOWED);

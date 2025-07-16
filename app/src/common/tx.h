@@ -23,6 +23,7 @@
 // transaction initializer for the buffer and transaction type.
 void tx_context_fil();
 void tx_context_raw_bytes();
+void tx_context_eth();
 
 // Signing is differently depending tx is rawBytes type
 bool tx_is_rawbytes();
