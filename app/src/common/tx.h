@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  (c) 2019 Zondax GmbH
+ *  (c) 2019 Zondax AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
 // transaction initializer for the buffer and transaction type.
 void tx_context_fil();
 void tx_context_raw_bytes();
+void tx_context_eth();
 
 // Signing is differently depending tx is rawBytes type
 bool tx_is_rawbytes();

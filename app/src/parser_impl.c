@@ -401,21 +401,24 @@ parser_error_t _validateTx(__Z_UNUSED const parser_context_t *c, __Z_UNUSED cons
 }
 
 uint8_t _getNumItems(__Z_UNUSED const parser_context_t *c, const fil_base_tx_t *v) {
-    uint8_t itemCount = 6;
+    uint32_t itemCount = 6;
 
     // Items for InvokeEVM + ERC20 transfer
     if (isInvokeEVM_ERC20Transfer(v)) {
-        if (getNumItemsInvokeEVM(&itemCount, v) != parser_ok) {
+        if (getNumItemsInvokeEVM((uint8_t *)&itemCount, v) != parser_ok) {
             return 0;
         }
-        return itemCount;
+        if (itemCount > UINT8_MAX) {
+            return 0;
+        }
+        return (uint8_t)itemCount;
     }
 
     if (app_mode_expert()) {
         itemCount = 8;
     }
 
-    // For f4 addresses dispaly f4 and 0x addresses
+    // For f4 addresses display f4 and 0x addresses
     if (v->from.buffer[0] == ADDRESS_PROTOCOL_DELEGATED) {
         itemCount++;
     }
@@ -423,5 +426,10 @@ uint8_t _getNumItems(__Z_UNUSED const parser_context_t *c, const fil_base_tx_t *
         itemCount++;
     }
 
-    return itemCount + v->numparams;
+    uint32_t total = itemCount + v->numparams;
+    if (total > UINT8_MAX) {
+        return 0;
+    }
+
+    return (uint8_t)total;
 }

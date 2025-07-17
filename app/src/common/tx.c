@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  (c) 2019 Zondax GmbH
+ *  (c) 2019 Zondax AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -47,6 +47,8 @@ void tx_initialize() {
 void tx_context_fil() { ctx_parsed_tx.tx_type = fil_tx; }
 
 void tx_context_raw_bytes() { ctx_parsed_tx.tx_type = raw_bytes; }
+
+void tx_context_eth() { ctx_parsed_tx.tx_type = eth_tx; }
 
 bool tx_is_rawbytes() { return ctx_parsed_tx.tx_type == raw_bytes; }
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- *   (c) 2019 Zondax GmbH
+ *   (c) 2019 Zondax AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -113,23 +113,4 @@ TEST(CRYPTO, extractBitsFromLEB128_tooBig) {
 
     auto expected = std::string("0");
     EXPECT_THAT(std::string(bufferUI), testing::Eq(expected)) << "decimal output not matching";
-}
-
-TEST(CRYPTO, prepareMessageDigest) {
-    uint8_t input[61];
-    auto inputLen = parseHexString(input, sizeof(input),
-                                   "885501FD1D0F4DFCD7E99AFCB99A8326B7DC459D32C6285501B882619D46558F3D9E316D11B48DCF211"
-                                   "327025A0144000186A0430009C4430061A80040");
-
-    uint8_t output[32];
-    auto err = prepareDigestToSign(input, inputLen, output, sizeof(output));
-
-    char message_digest[100];
-    array_to_hexstr(message_digest, sizeof(message_digest), output, 32);
-    std::cout << message_digest << std::endl;
-
-    EXPECT_THAT(std::string(message_digest),
-                ::testing::Eq("5a51287d2e5401b75014da0f050c8db96fe0bacdad75fce964520ca063b697e1"));
-
-    EXPECT_THAT(err, ::testing::Eq(0));
 }

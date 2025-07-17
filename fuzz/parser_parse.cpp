@@ -12,8 +12,10 @@
 
 using std::size_t;
 
+namespace {
 static char PARSER_KEY[16384];
 static char PARSER_VALUE[16384];
+}  // namespace
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     parser_context_t ctx;
@@ -23,7 +25,15 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     array_to_hexstr(buffer, sizeof(buffer), data, size);
     // fprintf(stderr, "input blob: %s\n", buffer);
 
-    rc = parser_parse(&ctx, data, size);
+    // The first byte of the input is used to determine the transaction type.
+    ctx.tx_type = (tx_type_t)(data[0] % 3);
+
+    if (ctx.tx_type == eth_tx) {
+        rc = parser_parse_eth(&ctx, data, size);
+    } else {
+        rc = parser_parse(&ctx, data, size);
+    }
+
     if (rc != parser_ok) {
         // fprintf(stderr, "parser error: %s\n", parser_getErrorDescription(rc));
         return 0;
@@ -48,7 +58,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
         rc = parser_getNumItems(&ctx, &num_items);
     }
     if (rc != parser_ok) {
-        fprintf(stderr, "error in parser_getNumItems: %s\n", parser_getErrorDescription(rc));
+        (void)fprintf(stderr, "error in parser_getNumItems: %s\n", parser_getErrorDescription(rc));
         assert(false);
     }
 
