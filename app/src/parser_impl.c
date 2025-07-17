@@ -408,6 +408,9 @@ uint8_t _getNumItems(__Z_UNUSED const parser_context_t *c, const fil_base_tx_t *
         if (getNumItemsInvokeEVM((uint8_t *)&itemCount, v) != parser_ok) {
             return 0;
         }
+        if (itemCount > UINT8_MAX) {
+            return 0;
+        }
         return (uint8_t)itemCount;
     }
 
@@ -415,7 +418,7 @@ uint8_t _getNumItems(__Z_UNUSED const parser_context_t *c, const fil_base_tx_t *
         itemCount = 8;
     }
 
-    // For f4 addresses dispaly f4 and 0x addresses
+    // For f4 addresses display f4 and 0x addresses
     if (v->from.buffer[0] == ADDRESS_PROTOCOL_DELEGATED) {
         itemCount++;
     }
@@ -424,5 +427,9 @@ uint8_t _getNumItems(__Z_UNUSED const parser_context_t *c, const fil_base_tx_t *
     }
 
     uint32_t total = itemCount + v->numparams;
+    if (total > UINT8_MAX) {
+        return 0;
+    }
+
     return (uint8_t)total;
 }
