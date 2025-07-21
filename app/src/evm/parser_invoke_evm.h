@@ -1,5 +1,5 @@
 /*******************************************************************************
- *   (c) 2018 - 2024 Zondax AG
+ *  (c) 2018 - 2024 Zondax AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,23 +15,22 @@
  ********************************************************************************/
 #pragma once
 
+#include <stdint.h>
+
+#include "parser_common.h"
+#include "parser_txdef.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stdint.h>
+#define INVOKE_EVM_METHOD 3844450837
 
-#include "parser_common.h"
-#include "parser_impl_evm.h"
+bool isInvokeEVM_ERC20Transfer(const fil_base_tx_t *txObj);
+parser_error_t getNumItemsInvokeEVM(uint8_t *numItems, const fil_base_tx_t *txObj);
 
-parser_error_t getNumItemsEthAppSpecific(uint8_t *numItems);
-
-parser_error_t printERC20TransferAppSpecific(eth_tx_t *ethTxObj, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
-                                             char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount);
-
-parser_error_t printGenericAppSpecific(const parser_context_t *ctx, uint8_t displayIdx, char *outKey,
-                                       uint16_t outKeyLen, char *outVal, uint16_t outValLen, uint8_t pageIdx,
-                                       uint8_t *pageCount);
+parser_error_t printInvokeEVM(const fil_base_tx_t *txObj, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
+                              char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount);
 
 #ifdef __cplusplus
 }

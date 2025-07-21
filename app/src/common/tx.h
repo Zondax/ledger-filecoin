@@ -16,8 +16,9 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
-#include "coin.h"
 #include "zxerror.h"
 
 // transaction initializer for the buffer and transaction type.

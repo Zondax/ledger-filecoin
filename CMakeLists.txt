@@ -146,11 +146,11 @@ file(GLOB_RECURSE LIB_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/crypto_helper.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/crypto_test.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/base32.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser_impl_evm_specific.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/evm/parser_impl_evm_specific.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/evm/parser_invoke_evm.c
 
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/evm/parser_impl_evm.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/evm/parser_evm.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/evm/parser_invoke_evm.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/evm/rlp.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/evm/uint256.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/evm/evm_erc20.c
@@ -169,6 +169,7 @@ target_include_directories(app_lib PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/lib
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/common
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/evm
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/evm
         )
 
