@@ -100,7 +100,7 @@ zxerr_t blake_hash(const uint8_t *in, uint16_t inLen, uint8_t *out, uint16_t out
         return zxerr_unknown;
     }
     cx_blake2b_t ctx;
-    if (cx_blake2b_init_no_throw(&ctx, outLen * 8) != CX_OK) return zxerr_unknown;
+    CHECK_CX_OK(cx_blake2b_init_no_throw(&ctx, outLen * 8));
     CHECK_CX_OK(cx_hash_no_throw(&ctx.header, CX_LAST, in, inLen, out, outLen));
 
     return zxerr_ok;
@@ -110,7 +110,7 @@ zxerr_t blake_hash_cid(const unsigned char *in, unsigned int inLen, unsigned cha
     uint8_t prefix[] = PREFIX;
 
     cx_blake2b_t ctx;
-    if (cx_blake2b_init_no_throw(&ctx, outLen * 8) != CX_OK) return zxerr_unknown;
+    CHECK_CX_OK(cx_blake2b_init_no_throw(&ctx, outLen * 8));
     CHECK_CX_OK(cx_hash_no_throw(&ctx.header, 0, prefix, sizeof(prefix), NULL, 0));
     CHECK_CX_OK(cx_hash_no_throw(&ctx.header, CX_LAST, in, inLen, out, outLen));
 
@@ -156,7 +156,9 @@ zxerr_t _sign(uint8_t *output, uint16_t outputLen, const uint8_t *message, uint1
     if (err_c == no_error) {
         *sigSize = sizeof_field(signature_t, r) + sizeof_field(signature_t, s) + sizeof_field(signature_t, v) +
                    signatureLength;
-        if (info != NULL) *info = tmpInfo;
+        if (info != NULL) {
+            *info = tmpInfo;
+        }
         error = zxerr_ok;
     }
 
@@ -193,7 +195,9 @@ zxerr_t crypto_sign_raw_bytes(uint8_t *buffer, uint16_t signatureMaxlen, const u
         return zxerr_invalid_crypto_settings;
     }
 
-    if (messageLen != BLAKE2B_256_SIZE) return zxerr_invalid_crypto_settings;
+    if (messageLen != BLAKE2B_256_SIZE) {
+        return zxerr_invalid_crypto_settings;
+    }
 
     return _sign(buffer, signatureMaxlen, digest, BLAKE2B_256_SIZE, sigSize, NULL);
 }

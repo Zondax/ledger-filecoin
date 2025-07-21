@@ -28,6 +28,7 @@ import { getDigest } from "./utils";
 import * as secp256k1 from "secp256k1";
 import { models, defaultOptions, PATH } from "./common";
 import { IButton, SwipeDirection } from "@zondax/zemu/dist/types";
+import { getTouchElement } from "@zondax/zemu/dist/buttons";
 
 jest.setTimeout(600000);
 
@@ -438,14 +439,9 @@ describe("Standard", function () {
 
       let nav = undefined;
       if (isTouchDevice(m.name)) {
-        const okButton: IButton = {
-          x: 200,
-          y: 540,
-          delay: 0.25,
-          direction: SwipeDirection.NoSwipe,
-        };
+        const confirmButton: IButton = getTouchElement(m.name, ButtonKind.ConfirmYesButton)
         nav = new TouchNavigation(m.name, [ButtonKind.ConfirmYesButton]);
-        nav.schedule[0].button = okButton;
+        nav.schedule[0].button = confirmButton;
       } else {
         nav = new ClickNavigation([1, 0]);
       }

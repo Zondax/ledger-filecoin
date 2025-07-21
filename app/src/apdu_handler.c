@@ -203,7 +203,7 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
         *tx += (error_msg_length);
 
         // Check if expert mode is needed
-        if (error_msg_length == 18 && strcmp(error_msg, "ExpertModeRequired") == 0) {
+        if (error_code == parser_expert_mode_required) {
             *flags |= IO_ASYNCH_REPLY;
             view_custom_error_show("Expert Mode", "Required");
         }

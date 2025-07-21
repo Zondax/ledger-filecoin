@@ -36,7 +36,6 @@ parser_error_t getNumItemsInvokeEVM(uint8_t *numItems, const fil_base_tx_t *txOb
     if (txObj->value.len != 0 || txObj->to.len != F4_ETH_ADDRESS_BYTES_LEN ||
         addressIdentifier != F4_ETH_ADDRESS_IDENTIFIER) {
         return parser_unexpected_error;
-        ;
     }
     rlp_t tmpValue = {0};
     rlp_t tokenContract = {.ptr = txObj->to.buffer + 2, .rlpLen = ETH_ADDRESS_LEN, .kind = RLP_KIND_STRING};

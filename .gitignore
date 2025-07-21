@@ -78,7 +78,7 @@ cmake-build-fuzz/
 /build
 /app/build/
 
-fuzz/corpora
+fuzz/corpora/
 fuzz/coverage/
 fuzz/logs/
 fuzz-*.log
