@@ -96,8 +96,14 @@ const erc20_tokens_t supportedTokens[] = {
 
 const uint8_t supportedTokensSize = sizeof(supportedTokens) / sizeof(supportedTokens[0]);
 
-parser_error_t printERC20TransferAppSpecific(eth_tx_t *ethTxObj, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
-                                             char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
+parser_error_t printERC20TransferAppSpecific(const parser_context_t *ctx, eth_tx_t *ethTxObj, uint8_t displayIdx,
+                                             char *outKey, uint16_t outKeyLen, char *outVal, uint16_t outValLen,
+                                             uint8_t pageIdx, uint8_t *pageCount) {
+    if (ctx == NULL || ethTxObj == NULL || outKey == NULL || outVal == NULL || pageCount == NULL) {
+        return parser_unexpected_error;
+    }
+
+    UNUSED(ctx);
     const eth_base_t *legacy = &ethTxObj->tx;
     char tokenSymbol[10] = {0};
     uint8_t decimals = 0;
