@@ -108,7 +108,7 @@ parser_error_t printERC20TransferAppSpecific(const parser_context_t *ctx, eth_tx
     char tokenSymbol[10] = {0};
     uint8_t decimals = 0;
     CHECK_ERROR(getERC20Token(ethTxObj, tokenSymbol, &decimals));
-    bool hideContract = (memcmp(tokenSymbol, "?? ", 3) != 0);
+    bool hideContract = (MEMCMP(tokenSymbol, "?? ", 3) != 0);
 
     displayIdx += (displayIdx && hideContract) ? 1 : 0;
     switch (displayIdx) {
@@ -151,18 +151,18 @@ parser_error_t printERC20TransferAppSpecific(const parser_context_t *ctx, eth_tx
     return parser_ok;
 }
 
-parser_error_t getNumItemsEthAppSpecific(uint8_t *numItems) {
+parser_error_t getNumItemsEthAppSpecific(eth_tx_t *ethTxObj, uint8_t *numItems) {
     if (numItems == NULL) {
         return parser_unexpected_error;
     }
     // Verify that tx is ERC20
 
-    if (validateERC20(&eth_tx_obj)) {
+    if (validateERC20(ethTxObj)) {
         char tokenSymbol[10] = {0};
         uint8_t decimals = 0;
-        CHECK_ERROR(getERC20Token(&eth_tx_obj, tokenSymbol, &decimals));
+        CHECK_ERROR(getERC20Token(ethTxObj, tokenSymbol, &decimals));
         // If token is not recognized, print value address
-        *numItems = (memcmp(tokenSymbol, "?? ", 3) != 0) ? 5 : 6;
+        *numItems = (MEMCMP(tokenSymbol, "?? ", 3) != 0) ? 5 : 6;
         return parser_ok;
     }
 
@@ -171,10 +171,12 @@ parser_error_t getNumItemsEthAppSpecific(uint8_t *numItems) {
     return parser_ok;
 }
 
-parser_error_t printGenericAppSpecific(const parser_context_t *ctx, uint8_t displayIdx, char *outKey,
-                                       uint16_t outKeyLen, char *outVal, uint16_t outValLen, uint8_t pageIdx,
-                                       uint8_t *pageCount) {
-    UNUSED(displayIdx);
+parser_error_t printGenericAppSpecific(const parser_context_t *ctx, __Z_UNUSED const eth_tx_t *ethTxObj,
+                                       __Z_UNUSED uint8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outVal,
+                                       uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
+    if (ctx == NULL || outKey == NULL || outVal == NULL || pageCount == NULL) {
+        return parser_unexpected_error;
+    }
 
     // Always enable blindsign for EVM transactions in Filecoin
     if (!app_mode_blindsign()) {

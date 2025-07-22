@@ -64,7 +64,7 @@ parser_error_t raw_bytes_init(uint8_t *buf, size_t buf_len) {
     uint8_t prefix_len = strlen(messagePrefix);
 
     // check for prefix
-    if (memcmp(messagePrefix, (const char *)msg, prefix_len)) return parser_invalid_prefix;
+    if (MEMCMP(messagePrefix, (const char *)msg, prefix_len)) return parser_invalid_prefix;
 
     // Initialize the other fields of the raw_bytes state.
     parser_tx_obj.raw_bytes_tx.total = total;
