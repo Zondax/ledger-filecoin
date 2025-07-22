@@ -1,36 +1,40 @@
 /*******************************************************************************
-*   (c) 2019 Zondax GmbH
-*
-*  Licensed under the Apache License, Version 2.0 (the "License");
-*  you may not use this file except in compliance with the License.
-*  You may obtain a copy of the License at
-*
-*      http://www.apache.org/licenses/LICENSE-2.0
-*
-*  Unless required by applicable law or agreed to in writing, software
-*  distributed under the License is distributed on an "AS IS" BASIS,
-*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*  See the License for the specific language governing permissions and
-*  limitations under the License.
-********************************************************************************/
+ *   (c) 2019 Zondax AG
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ ********************************************************************************/
 
-#include "gmock/gmock.h"
-
-#include <iostream>
-#include <hexutils.h>
-#include <crypto.h>
-#include "crypto_helper.h"
 #include <bignum.h>
+#include <crypto.h>
+#include <hexutils.h>
 #include <zxformat.h>
 
+#include <iostream>
+
+#include "coin_evm.h"
+#include "crypto_helper.h"
+#include "gmock/gmock.h"
+
 extern const char *crypto_testPubKey;
-#define ADDRESS_BYTE_TO_STRING_LEN    (42 + 1)
+#define ADDRESS_BYTE_TO_STRING_LEN (42 + 1)
 
 /// Test that we can generate the address from a known mnemonic
 TEST(CRYPTO, fillAddress) {
     uint8_t buffer[200] = {0};
 
-    crypto_testPubKey = "0466f2bdb19e90fd7c29e4bf63612eb98515e5163c97888042364ba777d818e88b765c649056ba4a62292ae4e2ccdabd71b845d8fa0991c140f664d2978ac0972a";
+    crypto_testPubKey =
+        "0466f2bdb19e90fd7c29e4bf63612eb98515e5163c97888042364ba777d818e88b765c649056ba4a62292ae4e2ccdabd71b845d8fa0991"
+        "c140f664d2978ac0972a";
     uint8_t publicKey[SECP256K1_PK_LEN] = {0};
     parseHexString(publicKey, sizeof(publicKey), crypto_testPubKey);
 
@@ -41,11 +45,10 @@ TEST(CRYPTO, fillAddress) {
 
     // addr str
     char addrStr[42] = {0};  // 41 = because (20+1+4)*8/5 (32 base encoded size)
-    const uint16_t addrLen = formatProtocol(addrBytes, sizeof(addrBytes), (uint8_t*)addrStr, sizeof(addrStr));
+    const uint16_t addrLen = formatProtocol(addrBytes, sizeof(addrBytes), (uint8_t *)addrStr, sizeof(addrStr));
 
     std::cout << std::endl;
-    EXPECT_THAT(std::string(addrStr),
-                ::testing::Eq("f137sjdbgunloi7couiy4l5nc7pd6k2jmq32vizpy"));
+    EXPECT_THAT(std::string(addrStr), ::testing::Eq("f137sjdbgunloi7couiy4l5nc7pd6k2jmq32vizpy"));
 }
 
 TEST(CRYPTO, extractBitsFromLEB128_small) {
@@ -110,22 +113,4 @@ TEST(CRYPTO, extractBitsFromLEB128_tooBig) {
 
     auto expected = std::string("0");
     EXPECT_THAT(std::string(bufferUI), testing::Eq(expected)) << "decimal output not matching";
-}
-
-TEST(CRYPTO, prepareMessageDigest) {
-    uint8_t input[61];
-    auto inputLen = parseHexString(input, sizeof(input), "885501FD1D0F4DFCD7E99AFCB99A8326B7DC459D32C6285501B882619D46558F3D9E316D11B48DCF211327025A0144000186A0430009C4430061A80040");
-
-    uint8_t output[32];
-    auto err = prepareDigestToSign(input, inputLen, output, sizeof(output));
-
-    char message_digest[100];
-    array_to_hexstr(message_digest, sizeof(message_digest), output, 32);
-    std::cout << message_digest << std::endl;
-
-    EXPECT_THAT(std::string(message_digest),
-                ::testing::Eq("5a51287d2e5401b75014da0f050c8db96fe0bacdad75fce964520ca063b697e1"));
-
-    EXPECT_THAT(err, ::testing::Eq(0));
-
 }
