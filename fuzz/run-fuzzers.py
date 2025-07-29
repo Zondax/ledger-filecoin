@@ -1,84 +1,38 @@
 #!/usr/bin/env python3
+"""
+Local convenience wrapper for running fuzzers
+"""
 
 import os
-import random
-import shlex
-import subprocess
+import sys
 
-MAX_SECONDS_PER_RUN = 600
-MUTATE_DEPTH = random.randint(1, 20)
+# Add the common fuzzing module to path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+common_fuzzing_path = os.path.join(project_root, "deps", "ledger-zxlib", "fuzzing")
 
-# Create coverage directory specifically in fuzz/coverage
-coverage_dir = os.path.abspath(os.path.join('fuzz', 'coverage'))
-os.makedirs(coverage_dir, exist_ok=True)
+sys.path.insert(0, common_fuzzing_path)
 
-# Create logs directory specifically in fuzz/logs
-logs_dir = os.path.abspath(os.path.join('fuzz', 'logs'))
-os.makedirs(logs_dir, exist_ok=True)
+try:
+    from run_fuzzers import main
+    from fuzz_config import MAX_SECONDS, FUZZER_JOBS
 
-# (fuzzer name, max length, max time scale factor)
-CONFIGS = [
-    ('parser_parse', 17000, 4),
-]
+    # Override default arguments to point to this project root
+    if "--project-root" not in sys.argv:
+        sys.argv.extend(["--project-root", project_root])
 
-for config in CONFIGS:
-    fuzzer, max_len, scale_factor = config
-    max_time = MAX_SECONDS_PER_RUN * scale_factor
-    print(f'######## {fuzzer} ########')
+    # Override max-seconds if not provided
+    if "--max-seconds" not in sys.argv:
+        sys.argv.extend(["--max-seconds", str(MAX_SECONDS)])
 
-    artifact_dir = os.path.join('fuzz', 'corpora', f'{fuzzer}-artifacts')
-    corpus_dir = os.path.join('fuzz', 'corpora', f'{fuzzer}')
-    fuzz_path = os.path.abspath(os.path.join(f'build/fuzz-{fuzzer}'))
+    # Override jobs if not provided
+    if "--jobs" not in sys.argv:
+        sys.argv.extend(["--jobs", str(FUZZER_JOBS)])
 
-    os.makedirs(artifact_dir, exist_ok=True)
-    os.makedirs(corpus_dir, exist_ok=True)
+    # Run the common fuzzer
+    sys.exit(main())
 
-    env = os.environ.copy()
-    env['ASAN_OPTIONS'] = (
-        'halt_on_error=1:'
-        'print_stacktrace=1:'
-        'detect_stack_use_after_return=true:'
-        'detect_stack_use_after_scope=true:'
-        'symbolize=1:'
-        'print_module_map=2:'
-        'handle_segv=1:'
-        'handle_sigbus=1:'
-        'handle_abort=1:'
-        'handle_sigfpe=1:'
-        'allow_user_segv_handler=0:'
-        'use_sigaltstack=1:'
-        'detect_odr_violation=1:'
-        'fast_unwind_on_malloc=0'
-    )
-    
-    env['UBSAN_OPTIONS'] = (
-        'halt_on_error=1:'
-        'print_stacktrace=1:'
-        'symbolize=1:'
-        'print_summary=1:'
-        'silence_unsigned_overflow=0'
-    )
-    
-    # Configure libFuzzer to output coverage files to fuzz/coverga directory
-    env['LLVM_PROFILE_FILE'] = f'{coverage_dir}/%p.profraw'
-
-    # Convert relative paths to absolute paths since we're changing working directory
-    artifact_dir = os.path.abspath(artifact_dir)
-    corpus_dir = os.path.abspath(corpus_dir)
-    
-    cmd = [fuzz_path, f'-max_total_time={max_time}',
-           f'-timeout=20',
-           f'-rss_limit_mb=2048',
-           f'-jobs=16',
-           f'-max_len={max_len}',
-           f'-mutate_depth={MUTATE_DEPTH}',
-           f'-artifact_prefix={artifact_dir}/',
-           corpus_dir]
-    print(' '.join(shlex.quote(c) for c in cmd))
-
-    original_cwd = os.getcwd()
-    try:
-        os.chdir(logs_dir)
-        subprocess.call(cmd, env=env)
-    finally:
-        os.chdir(original_cwd)
+except ImportError as e:
+    print(f"Error: Cannot import common fuzzing module: {e}")
+    print("Make sure deps/ledger-zxlib/fuzzing/run_fuzzers.py exists")
+    sys.exit(1)
