@@ -76,7 +76,7 @@ __Z_INLINE void app_sign_evm_eip191() {
 
 __Z_INLINE void app_sign_fvm_eip191() {
     const uint8_t *message = tx_get_buffer();
-    const uint16_t messageLength = tx_get_buffer_length();
+    const uint16_t messageLength = tx_get_buffer_length() - sizeof(uint32_t);
     uint16_t replyLen = 0;
     uint8_t hash[32] = {0};
 

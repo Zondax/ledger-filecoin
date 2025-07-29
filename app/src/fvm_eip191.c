@@ -137,8 +137,15 @@ zxerr_t fvm_eip191_hash_message(const uint8_t *message, uint16_t messageLen, uin
     // First add the FVM_SIGN_MAGIC prefix
     CHECK_ZXERR(blake_hash_update((uint8_t *)FVM_SIGN_MAGIC, sizeof(FVM_SIGN_MAGIC) - 1));
 
-    // | len(message) | message |
-    CHECK_ZXERR(blake_hash_update(message, messageLen));
+    char len_str[12] = {0};
+    uint32_to_str(len_str, sizeof(len_str), messageLen);
+
+    // Update len
+    CHECK_ZXERR(blake_hash_update((uint8_t *)len_str, strlen(len_str)));
+
+    // Update message
+    CHECK_ZXERR(blake_hash_update(message + sizeof(uint32_t), messageLen));
+
     // Finalize the hash
     CHECK_ZXERR(blake_hash_finish(hash, 32));
 
