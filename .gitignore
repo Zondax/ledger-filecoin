@@ -78,11 +78,6 @@ cmake-build-fuzz/
 /build
 /app/build/
 
-fuzz/corpora/
-fuzz/coverage/
-fuzz/logs/
-fuzz-*.log
-
 \deps/*
 !\deps/nanos-secure-sdk
 !\deps/nanox-secure-sdk
