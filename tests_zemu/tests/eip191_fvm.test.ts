@@ -80,12 +80,10 @@ describe.each(models)("EIP191", function (m) {
         const signatureResponse = await signatureRequest;
 
         // Construct EIP-191 message format: "\x19Filecoin Signed Message:\n" + len + message
-        const messageLengthBuffer = Buffer.alloc(4);
-        messageLengthBuffer.writeUInt32BE(data.message.length, 0);
-
+        const msgLengthString = String(data.message.length);
         const eip191Message = Buffer.concat([
           EIP191_FVM_PREFIX,
-          messageLengthBuffer,
+          Buffer.from(msgLengthString, "utf8"),
           data.message,
         ]);
         const messageHash = getBlakeHash(eip191Message);
