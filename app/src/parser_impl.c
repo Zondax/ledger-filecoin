@@ -426,8 +426,8 @@ uint8_t _getNumItems(__Z_UNUSED const parser_context_t *c, const fil_base_tx_t *
         itemCount++;
     }
 
-    uint32_t total = itemCount + v->numparams;
-    if (total > UINT8_MAX) {
+    uint32_t total;
+    if (__builtin_add_overflow(itemCount, v->numparams, &total) || total > UINT8_MAX) {
         return 0;
     }
 

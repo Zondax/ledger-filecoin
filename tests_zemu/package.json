@@ -30,28 +30,28 @@
   "dependencies": {
     "@ledgerhq/hw-transport-node-hid": "6.29.9",
     "@zondax/ledger-filecoin": "^3.0.0",
-    "@zondax/zemu": "^0.60.0",
+    "@zondax/zemu": "^0.61.10",
     "varint": "^6.0.0"
   },
   "devDependencies": {
     "@ethereumjs/common": "^10.0.0",
     "@ethereumjs/tx": "^10.0.0",
-    "@ledgerhq/hw-app-eth": "6.45.12",
+    "@ledgerhq/hw-app-eth": "6.45.14",
     "@types/elliptic": "^6.4.18",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.1.0",
+    "@types/node": "^24.2.1",
     "@types/secp256k1": "^4.0.6",
-    "@typescript-eslint/eslint-plugin": "^8.38.0",
-    "@typescript-eslint/parser": "^8.38.0",
+    "@typescript-eslint/eslint-plugin": "^8.39.1",
+    "@typescript-eslint/parser": "^8.39.1",
     "blakejs": "^1.2.1",
     "bn.js": "^5.2.2",
     "crypto-js": "4.2.0",
     "elliptic": "^6.6.1",
-    "eslint": "^9.32.0",
+    "eslint": "^9.33.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-jest": "^29.0.1",
-    "eslint-plugin-prettier": "^5.5.3",
+    "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-tsdoc": "^0.4.0",
     "eslint-plugin-unused-imports": "^4.1.4",
     "jest": "30.0.5",
@@ -61,8 +61,8 @@
     "prettier": "^3.6.2",
     "secp256k1": "^5.0.1",
     "sort-package-json": "^3.4.0",
-    "ts-jest": "^29.4.0",
+    "ts-jest": "^29.4.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.2"
   }
 }
