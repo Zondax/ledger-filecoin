@@ -46,6 +46,10 @@ void extractHDPath(uint32_t rx, uint32_t offset, uint32_t path_len) {
         THROW(APDU_CODE_DATA_INVALID);
     }
 
+    if (rx < offset) {
+        THROW(APDU_CODE_WRONG_LENGTH);
+    }
+
     if ((rx - offset) < sizeof(uint32_t) * path_len) {
         THROW(APDU_CODE_WRONG_LENGTH);
     }
