@@ -34,6 +34,10 @@ static zxerr_t crypto_extractPublicKey(uint8_t *pubKey, uint16_t pubKeyLen, uint
         return zxerr_invalid_crypto_settings;
     }
 
+    if (hdPath_len > MAX_BIP32_PATH || hdPath_len == 0) {
+        return zxerr_invalid_crypto_settings;
+    }
+
     cx_ecfp_public_key_t cx_publicKey = {0};
     cx_ecfp_private_key_t cx_privateKey = {0};
     uint8_t privateKeyData[SECP256K1_SK_LEN] = {0};
@@ -135,7 +139,11 @@ zxerr_t _sign(uint8_t *output, uint16_t outputLen, const uint8_t *message, uint1
         return zxerr_invalid_crypto_settings;
     }
 
-    cx_ecfp_private_key_t cx_privateKey;
+    if (hdPath_len > MAX_BIP32_PATH || hdPath_len == 0) {
+        return zxerr_invalid_crypto_settings;
+    }
+
+    cx_ecfp_private_key_t cx_privateKey = {0};
     uint8_t privateKeyData[SECP256K1_SK_LEN] = {0};
     size_t signatureLength = sizeof_field(signature_t, der_signature);
     uint32_t tmpInfo = 0;

@@ -1,8 +1,9 @@
+#include "parser.h"
+
 #include <cassert>
 #include <cstdint>
 #include <cstdio>
 
-#include "parser.h"
 #include "parser_evm.h"
 #include "zxformat.h"
 
