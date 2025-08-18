@@ -172,8 +172,18 @@ parser_error_t readBigInt(bigint_t *bigint, CborValue *value) {
 }
 
 bool format_quantity(const bigint_t *b, uint8_t *bcd, uint16_t bcdSize, char *bignum, uint16_t bignumSize) {
+    if (b == NULL || bignum == NULL || bignumSize == 0) {
+        return false;
+    }
+
     if (b->len < 2) {
-        snprintf(bignum, bignumSize, "0");
+        if (bignumSize < 2) {
+            return false;
+        }
+        int result = snprintf(bignum, bignumSize, "0");
+        if (result < 0 || result >= bignumSize) {
+            return false;
+        }
         return true;
     }
 
@@ -277,7 +287,6 @@ parser_error_t parse_cid(cid_t *cid, CborValue *value) {
     return parser_invalid_cid;
 }
 
-// return lenght
 parser_error_t printCid(cid_t *cid, char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
     // 100-bytes is good enough
     char outBuffer[100] = {0};
@@ -286,6 +295,14 @@ parser_error_t printCid(cid_t *cid, char *outVal, uint16_t outValLen, uint8_t pa
     // https://github.com/multiformats/go-multibase/blob/master/multibase.go#L98
     // filecoin uses base32 which base prefix is b.
     *outBuffer = 'b';
+
+    // Ensure base32-encoded output fits into outBuffer:
+    // encoded_len = ceil(8 * cid->len / 5)
+    // need 1 byte for 'b' prefix and 1 for terminating NUL
+    size_t enc_len = (8 * cid->len + 4) / 5;
+    if (enc_len > (sizeof(outBuffer) - 2)) {
+        return parser_no_data;
+    }
 
     if (base32_encode(cid->str, cid->len, outBuffer + 1, sizeof(outBuffer) - 1) == 0) {
         return parser_no_data;

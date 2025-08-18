@@ -42,6 +42,14 @@ static bool tx_initialized = false;
 static uint32_t msg_counter = 0;
 
 void extractHDPath(uint32_t rx, uint32_t offset, uint32_t path_len) {
+    if (path_len == 0 || path_len > MAX_BIP32_PATH) {
+        THROW(APDU_CODE_DATA_INVALID);
+    }
+
+    if (rx < offset) {
+        THROW(APDU_CODE_WRONG_LENGTH);
+    }
+
     if ((rx - offset) < sizeof(uint32_t) * path_len) {
         THROW(APDU_CODE_WRONG_LENGTH);
     }
