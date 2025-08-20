@@ -139,7 +139,7 @@ const SIGN_TEST_DATA_BLINDISIGN = [
 ];
 
 describe.each(models)("ETH", function (m) {
-  test.concurrent.each(models)("get address", async function (m) {
+  test.concurrent.each(models)(`get address for ${m.name}`, async function (m) {
     const sim = new Zemu(m.path);
     try {
       await sim.start({ ...defaultOptions, model: m.name });
@@ -159,7 +159,7 @@ describe.each(models)("ETH", function (m) {
     }
   });
 
-  test.concurrent.each(models)("show address", async function (m) {
+  test.concurrent.each(models)(`show address for ${m.name}`, async function (m) {
     const sim = new Zemu(m.path);
     try {
       await sim.start({
@@ -186,7 +186,7 @@ describe.each(models)("ETH", function (m) {
   });
 
   test.concurrent.each(SIGN_TEST_DATA_CLEARSIGN)(
-    "clear transaction:  $name",
+    `clear transaction: $name for ${m.name}`,
     async function (data) {
       const sim = new Zemu(m.path);
       try {
@@ -237,7 +237,7 @@ describe.each(models)("ETH", function (m) {
   );
 
   test.concurrent.each(SIGN_TEST_DATA_BLINDISIGN)(
-    "blind sign transaction:  $name",
+    `blind sign transaction: $name for ${m.name}`,
     async function (data) {
       const sim = new Zemu(m.path);
       try {

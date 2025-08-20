@@ -27,15 +27,15 @@ import { FilecoinApp } from "@zondax/ledger-filecoin";
 import { getDigest } from "./utils";
 import * as secp256k1 from "secp256k1";
 import { models, defaultOptions, PATH } from "./common";
-import { IButton, SwipeDirection } from "@zondax/zemu/dist/types";
+import { IButton } from "@zondax/zemu/dist/types";
 import { getTouchElement } from "@zondax/zemu/dist/buttons";
 
 jest.setTimeout(600000);
 
-describe("Standard", function () {
-  test.concurrent.each(models)(
-    "can start and stop container",
-    async function (m) {
+describe.each(models)("Standard", function (m) {
+  test.concurrent(
+    `can start and stop container for ${m.name}`,
+    async function () {
       const sim = new Zemu(m.path);
       try {
         console.log("model: ", m.name);
@@ -46,7 +46,7 @@ describe("Standard", function () {
     },
   );
 
-  test.concurrent.each(models)("main menu", async function (m) {
+  test.concurrent(`main menu for ${m.name}`, async function () {
     const sim = new Zemu(m.path);
     try {
       await sim.start({ ...defaultOptions, model: m.name });
@@ -61,7 +61,7 @@ describe("Standard", function () {
     }
   });
 
-  test.concurrent.each(models)("get app version", async function (m) {
+  test.concurrent(`get app version for ${m.name}`, async function () {
     const sim = new Zemu(m.path);
     try {
       await sim.start({ ...defaultOptions, model: m.name });
@@ -79,7 +79,7 @@ describe("Standard", function () {
     }
   });
 
-  test.concurrent.each(models)("get address", async function (m) {
+  test.concurrent(`get address for ${m.name}`, async function () {
     const sim = new Zemu(m.path);
     try {
       await sim.start({ ...defaultOptions, model: m.name });
@@ -101,7 +101,7 @@ describe("Standard", function () {
     }
   });
 
-  test.concurrent.each(models)("show address", async function (m) {
+  test.concurrent(`show address for ${m.name}`, async function () {
     const sim = new Zemu(m.path);
     try {
       await sim.start({
@@ -136,7 +136,7 @@ describe("Standard", function () {
     }
   });
 
-  test.concurrent.each(models)("sign basic & verify", async function (m) {
+  test.concurrent(`sign basic & verify for ${m.name}`, async function () {
     const sim = new Zemu(m.path);
     try {
       await sim.start({ ...defaultOptions, model: m.name });
@@ -176,7 +176,7 @@ describe("Standard", function () {
     }
   });
 
-  test.concurrent.each(models)("sign basic - invalid", async function (m) {
+  test.concurrent(`sign basic - invalid for ${m.name}`, async function () {
     const sim = new Zemu(m.path);
     try {
       await sim.start({ ...defaultOptions, model: m.name });
@@ -193,14 +193,14 @@ describe("Standard", function () {
 
       // do not wait here..
       await expect(app.sign(PATH, invalidMessage)).rejects.toThrow(
-        "Data is invalid",
+        "Data is invalid : Unexpected data type",
       );
     } finally {
       await sim.close();
     }
   });
 
-  test.concurrent.each(models)("sign proposal expert ", async function (m) {
+  test.concurrent(`sign proposal expert for ${m.name}`, async function () {
     const sim = new Zemu(m.path);
     try {
       await sim.start({ ...defaultOptions, model: m.name });
@@ -243,9 +243,9 @@ describe("Standard", function () {
     }
   });
 
-  test.concurrent.each(models)(
-    "sign proposal -- unsupported method",
-    async function (m) {
+  test.concurrent(
+    `sign proposal -- unsupported method for ${m.name}`,
+    async function () {
       const sim = new Zemu(m.path);
       try {
         await sim.start({ ...defaultOptions, model: m.name });
@@ -261,7 +261,7 @@ describe("Standard", function () {
 
         // do not wait here..
         await expect(app.sign(PATH, invalidMessage)).rejects.toThrow(
-          "Data is invalid",
+          "Data is invalid : Unexpected data type",
         );
       } finally {
         await sim.close();
@@ -269,7 +269,7 @@ describe("Standard", function () {
     },
   );
 
-  test.concurrent.each(models)("test change owner", async function (m) {
+  test.concurrent(`test change owner for ${m.name}`, async function () {
     const sim = new Zemu(m.path);
     try {
       await sim.start({ ...defaultOptions, model: m.name });
@@ -309,9 +309,9 @@ describe("Standard", function () {
     }
   });
 
-  test.concurrent.each(models)(
-    "transfer using protocol 4 addresses",
-    async function (m) {
+  test.concurrent(
+    `transfer using protocol 4 addresses for ${m.name}`,
+    async function () {
       const sim = new Zemu(m.path);
       try {
         await sim.start({ ...defaultOptions, model: m.name });
@@ -351,7 +351,7 @@ describe("Standard", function () {
     },
   );
 
-  test.concurrent.each(models)("InvokeEVM_ERC20Transfer", async function (m) {
+  test.concurrent(`InvokeEVM_ERC20Transfer for ${m.name}`, async function () {
     const sim = new Zemu(m.path);
     try {
       await sim.start({ ...defaultOptions, model: m.name });
@@ -391,7 +391,7 @@ describe("Standard", function () {
     }
   });
 
-  test.concurrent.each(models)("InvokeEVM", async function (m) {
+  test.concurrent(`InvokeEVM for ${m.name}`, async function () {
     const sim = new Zemu(m.path);
     try {
       await sim.start({ ...defaultOptions, model: m.name });
@@ -427,7 +427,7 @@ describe("Standard", function () {
         nav.schedule,
       );
 
-      await expect(signNonExpert).rejects.toThrow("Data is invalid");
+      await expect(signNonExpert).rejects.toThrow("Data is invalid : ExpertModeRequired");
 
       sim.clearTransportError();
       await sim.toggleExpertMode();
@@ -460,9 +460,10 @@ describe("Standard", function () {
   });
 
   // https://github.com/Zondax/ledger-filecoin/issues/166
-  test.concurrent.each(models.filter((m) => m.name != "nanos"))(
-    "Issue #166",
-    async function (m) {
+  if (m.name != "nanos") {
+    test.concurrent(
+      `Issue #166 for ${m.name}`,
+      async function () {
       const sim = new Zemu(m.path);
       try {
         await sim.start({ ...defaultOptions, model: m.name });
@@ -488,12 +489,13 @@ describe("Standard", function () {
         await sim.close();
       }
     },
-  );
+    );
+  }
 
   // Test to cover issue https://github.com/Zondax/ledger-filecoin/issues/173
-  test.concurrent.each(models)(
-    "Parse Bytes Params - issue #173",
-    async function (m) {
+  test.concurrent(
+    `Parse Bytes Params - issue #173 for ${m.name}`,
+    async function () {
       const sim = new Zemu(m.path);
       try {
         await sim.start({ ...defaultOptions, model: m.name });

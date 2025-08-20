@@ -42,7 +42,7 @@ const SIGN_TEST_DATA = [
 ];
 describe.each(models)("EIP191", function (m) {
   test.concurrent.each(SIGN_TEST_DATA)(
-    "sign transaction:  $name",
+    `sign transaction: $name for ${m.name}`,
     async function (data) {
       const sim = new Zemu(m.path);
       try {
