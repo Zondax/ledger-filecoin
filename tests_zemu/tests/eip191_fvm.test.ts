@@ -117,7 +117,7 @@ describe.each(models)("EIP191", function (m) {
 
 describe.each(models)("EIP191 no bls", function (m) {
   // only test personal_sign_non_printable_msg
-  test.only.each(SIGN_TEST_DATA.filter(d => d.name === 'personal_sign_non_printable_msg'))(
+  test.concurrent.each(SIGN_TEST_DATA.filter(d => d.name === 'personal_sign_non_printable_msg'))(
     `sign no bls transaction $name for ${m.name}`,
     async function (data) {
       const sim = new Zemu(m.path);
