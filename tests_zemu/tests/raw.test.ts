@@ -62,7 +62,7 @@ describe.each(models)("RawBytes", function (m) {
         true,
       );
 
-      let resp = await signatureRequest;
+      const resp = await signatureRequest;
       console.log(resp);
 
       // Verify signature

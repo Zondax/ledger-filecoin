@@ -69,7 +69,7 @@ describe.each(models)("Multisig", function (m) {
         await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
         await sim.compareSnapshotsAndApprove(".", testcase);
 
-        let resp = await signatureRequest;
+        const resp = await signatureRequest;
         console.log(resp, m.name, name);
 
         // Verify signature

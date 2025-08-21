@@ -160,7 +160,7 @@ describe.each(models)("Standard", function (m) {
         `${m.prefix.toLowerCase()}-sign_basic`,
       );
 
-      let resp = await signatureRequest;
+      const resp = await signatureRequest;
       console.log(resp);
 
       // Verify signature
@@ -227,7 +227,7 @@ describe.each(models)("Standard", function (m) {
         `${m.prefix.toLowerCase()}-sign_proposal_expert`,
       );
 
-      let resp = await signatureRequest;
+      const resp = await signatureRequest;
       console.log(resp);
 
       // Verify signature
@@ -293,7 +293,7 @@ describe.each(models)("Standard", function (m) {
         `${m.prefix.toLowerCase()}-change_owner`,
       );
 
-      let resp = await signatureRequest;
+      const resp = await signatureRequest;
       console.log(resp);
 
       // Verify signature
@@ -334,7 +334,7 @@ describe.each(models)("Standard", function (m) {
           `${m.prefix.toLowerCase()}-sign_transfer_protocol4`,
         );
 
-        let resp = await signatureRequest;
+        const resp = await signatureRequest;
         console.log(resp);
 
         // Verify signature
@@ -375,7 +375,7 @@ describe.each(models)("Standard", function (m) {
         `${m.prefix.toLowerCase()}-sign_erc20_transfer`,
       );
 
-      let resp = await signatureRequest;
+      const resp = await signatureRequest;
       console.log(resp);
 
       // Verify signature
@@ -443,7 +443,7 @@ describe.each(models)("Standard", function (m) {
         2,
       );
 
-      let resp = await signatureRequest;
+      const resp = await signatureRequest;
       console.log(resp);
 
       // Verify signature
@@ -483,7 +483,7 @@ describe.each(models)("Standard", function (m) {
           `${m.prefix.toLowerCase()}-issue-166`,
         );
 
-        let resp = await signatureRequest;
+        const resp = await signatureRequest;
         console.log(resp);
       } finally {
         await sim.close();
@@ -515,7 +515,7 @@ describe.each(models)("Standard", function (m) {
           `${m.prefix.toLowerCase()}-issue-173`,
         );
 
-        let resp = await signatureRequest;
+        const resp = await signatureRequest;
         console.log(resp);
       } finally {
         await sim.close();

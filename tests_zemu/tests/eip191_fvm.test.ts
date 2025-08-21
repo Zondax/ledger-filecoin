@@ -29,9 +29,6 @@ import { IButton } from "@zondax/zemu/dist/types";
 
 jest.setTimeout(90000);
 
-// @ts-ignore
-const blake = require("blakejs");
-
 const SIGN_TEST_DATA = [
   {
     name: "personal_sign_msg",

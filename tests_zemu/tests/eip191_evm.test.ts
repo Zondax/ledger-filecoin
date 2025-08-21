@@ -68,7 +68,7 @@ describe.each(models)("EIP191", function (m) {
           1500,
           data.blind,
         );
-        let resp = await signatureRequest;
+        const resp = await signatureRequest;
         console.log(resp);
         const header = Buffer.from("\x19Ethereum Signed Message:\n", "utf8");
         const msgLengthString = String(msgData.length);

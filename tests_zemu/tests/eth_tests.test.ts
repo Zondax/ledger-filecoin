@@ -25,21 +25,8 @@ import {
   EXPECTED_ETH_PK,
 } from "./common";
 import { ec } from "elliptic";
-import Eth from "@ledgerhq/hw-app-eth";
 
 jest.setTimeout(180000);
-
-type NftInfo = {
-  token_address: string;
-  token_name: string;
-  chain_id: number;
-};
-
-type TestData = {
-  name: string;
-  op: Buffer;
-  nft_info: NftInfo | undefined;
-};
 
 const SIGN_TEST_DATA_CLEARSIGN = [
   {
@@ -213,7 +200,7 @@ describe.each(models)("ETH", function (m) {
           `${m.prefix.toLowerCase()}-eth-${data.name}`,
         );
 
-        let resp = await signatureRequest;
+        const resp = await signatureRequest;
         console.log(resp);
 
         const EC = new ec("secp256k1");
@@ -270,7 +257,7 @@ describe.each(models)("ETH", function (m) {
           true,
         );
 
-        let resp = await signatureRequest;
+        const resp = await signatureRequest;
         console.log(resp);
 
         const EC = new ec("secp256k1");
