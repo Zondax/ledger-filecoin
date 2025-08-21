@@ -306,7 +306,7 @@ __Z_INLINE void handleSignFvmEip191(volatile uint32_t *flags, volatile uint32_t 
 
 void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     volatile uint16_t sw = 0;
-    
+
     // Reset error message offset at the beginning of each command
     G_error_message_offset = 0;
 
