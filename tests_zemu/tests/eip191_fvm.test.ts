@@ -131,9 +131,7 @@ describe.each(models)("EIP191 no bls", function (m) {
         await Zemu.sleep(500);
   
         // Wait until we are not in the main menu
-        console.log("STEP 0");
         await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
-        console.log("STEP 1");
 
         let nav = undefined;
         if (isTouchDevice(m.name)) {
