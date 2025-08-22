@@ -24,8 +24,8 @@ import { models, defaultOptions, PATH } from "./common";
 
 jest.setTimeout(600000);
 
-describe("RawBytes", function () {
-  test.each(models)("RawBytes", async function (m) {
+describe.each(models)("RawBytes", function (m) {
+  test(`RawBytes for ${m.name}`, async function () {
     const sim = new Zemu(m.path);
     try {
       await sim.start({ ...defaultOptions, model: m.name });
@@ -62,7 +62,7 @@ describe("RawBytes", function () {
         true,
       );
 
-      let resp = await signatureRequest;
+      const resp = await signatureRequest;
       console.log(resp);
 
       // Verify signature
