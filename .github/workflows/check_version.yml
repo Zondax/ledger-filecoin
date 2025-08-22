@@ -10,47 +10,7 @@ on:
       - dev
 
 jobs:
-  configure:
-    runs-on: ubuntu-latest
-    outputs:
-      uid_gid: ${{ steps.get-user.outputs.uid_gid }}
-    steps:
-      - id: get-user
-        run: echo "uid_gid=$(id -u):$(id -g)" >> $GITHUB_OUTPUT
-
-  get_version:
-    needs: configure
-    runs-on: ubuntu-latest
-    container:
-      image: zondax/ledger-app-builder:latest
-      options: --user ${{ needs.configure.outputs.uid_gid }}
-    env:
-      SDK_VARNAME: NANOSP_SDK
-      BOLOS_SDK: /opt/nanosplus-secure-sdk
-    outputs:
-      version: ${{ steps.store-version.outputs.version }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-      - run: make version
-      - id: store-version
-        run: echo "version=$(cat ./app/app.version)" >> $GITHUB_OUTPUT
-
-  check_app_version:
-    needs: get_version
-    runs-on: ubuntu-latest
-    steps:
-      - id: checkTag
-        uses: mukunku/tag-exists-action@v1.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag: ${{ needs.get_version.outputs.version }}
-
-      - run: echo ${{ steps.checkTag.outputs.exists }}
-
-      - name: Tag exists
-        if: ${{ steps.checkTag.outputs.exists == 'true' }}
-        run: exit 1
+  ledger-check-version:
+    uses: Zondax/_workflows/.github/workflows/_ledger_check_version.yml@ledger/ci
+    with:
+      runs-on: ${{ github.repository_owner == 'zondax' && 'zondax-runners' || 'ubuntu-latest' }}
