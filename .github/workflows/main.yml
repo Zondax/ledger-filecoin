@@ -11,7 +11,7 @@ on:
 
 jobs:
   ledger-build:
-    uses: Zondax/_workflows/.github/workflows/_ledger_main.yml@ledger/ci
+    uses: Zondax/_workflows/.github/workflows/_ledger_main.yml@v3
     with:
       runs-on: ${{ github.repository_owner == 'zondax' && 'zondax-runners' || 'ubuntu-latest' }}
       has-rust: false

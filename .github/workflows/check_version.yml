@@ -11,6 +11,6 @@ on:
 
 jobs:
   ledger-check-version:
-    uses: Zondax/_workflows/.github/workflows/_ledger_check_version.yml@ledger/ci
+    uses: Zondax/_workflows/.github/workflows/_ledger_check_version.yml@v3
     with:
       runs-on: ${{ github.repository_owner == 'zondax' && 'zondax-runners' || 'ubuntu-latest' }}

@@ -20,4 +20,4 @@ on:
 
 jobs:
   ledger-guidelines-enforcer:
-    uses: Zondax/_workflows/.github/workflows/_ledger_guidelines_enforcer.yml@ledger/ci
+    uses: Zondax/_workflows/.github/workflows/_ledger_guidelines_enforcer.yml@v3
