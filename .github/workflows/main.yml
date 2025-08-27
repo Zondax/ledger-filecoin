@@ -6,8 +6,8 @@ on:
     branches:
       - main
       - develop
-      - master # for safety reasons
-      - dev  # for safety reasons
+      - master
+      - dev
 
 jobs:
   configure:
@@ -17,16 +17,60 @@ jobs:
     steps:
       - id: get-user
         run: echo "uid_gid=$(id -u):$(id -g)" >> $GITHUB_OUTPUT
-  
+
   build_application:
     name: Build application using the reusable workflow
     uses: LedgerHQ/ledger-app-workflows/.github/workflows/reusable_build.yml@v1
     with:
       upload_app_binaries_artifact: "compiled_app_binaries"
+      builder: ledger-app-builder
 
-  build:
-    runs-on: ${{ github.repository_owner == 'zondax' && 'zondax-runners' || 'ubuntu-latest' }}
+  cpp_tests:
+    runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install deps
+        run: |
+          sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10
+          make deps
+      - run: make cpp_test
+
+
+  build_ledger:
+    needs: [
+      configure
+    ]
+    runs-on: ubuntu-latest
+    container:
+      image: zondax/ledger-app-builder:latest
+      options: --user root
+      env:
+        BOLOS_SDK: /opt/nanosplus-secure-sdk
+    outputs:
+      size: ${{steps.build.outputs.size}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Build Standard app
+        id: build
+        shell: bash -l {0}
+        run: |
+          make PRODUCTION_BUILD=0
+          echo "size=$(python3 deps/ledger-zxlib/scripts/getSize.py s2)" >> $GITHUB_OUTPUT
+
+  test_zemu:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test
+        run: |
+          id
+          echo $HOME
+          echo $DISPLAY
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -37,72 +81,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: true
-      - name: Install CMake 3.28
-        run: |
-          wget https://github.com/Kitware/CMake/releases/download/v3.28.0/cmake-3.28.0-linux-x86_64.sh
-          sudo mkdir /opt/cmake
-          sudo sh cmake-3.28.0-linux-x86_64.sh --skip-license --prefix=/opt/cmake
-          sudo ln -sf /opt/cmake/bin/cmake /usr/local/bin/cmake
-          sudo ln -sf /opt/cmake/bin/ctest /usr/local/bin/ctest
-      - name: Verify CMake version
-        run: cmake --version
-      - name: Install deps
-        run: |
-          sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10
-          make deps
-      - name: Run CMake
-        run: mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug .. && make
-      - run: make cpp_test
-
-  build_ledger:
-    needs: configure
-    runs-on: ubuntu-latest
-    container:
-      image: zondax/ledger-app-builder:latest
-      options: --user ${{ needs.configure.outputs.uid_gid }}
-      env:
-        BOLOS_SDK: /opt/nanos-secure-sdk
-    outputs:
-      size: ${{steps.build.outputs.size}}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-      - name: Build Standard app
-        id: build
-        shell: bash -l {0}
-        run: |
-          make
-          echo "size=$(python3 deps/ledger-zxlib/scripts/getSize.py s)" >> $GITHUB_OUTPUT
-
-  size_nano_s:
-    needs: build_ledger
-    runs-on: ubuntu-latest
-    env:
-      NANOS_LIMIT_SIZE: 136
-    steps:
-      - run: |
-          echo "LNS app size: ${{needs.build_ledger.outputs.size}} KiB"
-          [ ${{needs.build_ledger.outputs.size}} -le $NANOS_LIMIT_SIZE ]
-
-  test_zemu:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Test
-        run: |
-          id
-          echo $HOME
-          echo $DISPLAY
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: true
       - run: sudo apt-get update -y && sudo apt-get install -y libusb-1.0.0 libudev-dev
       - name: Install node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
       - name: Install yarn
         run: |
           npm install -g yarn
@@ -116,70 +99,39 @@ jobs:
           name: snapshots-tmp
           path: tests_zemu/snapshots-tmp/
 
-  build_package_nanos:
-    needs: [configure, build, build_ledger, test_zemu]
-    if: ${{ github.ref == 'refs/heads/main' }}
-    runs-on: ubuntu-latest
-    container:
-      image: zondax/ledger-app-builder:latest
-      options: --user ${{ needs.configure.outputs.uid_gid }}
-      env:
-        BOLOS_SDK: /opt/nanos-secure-sdk
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-      - name: Install deps
-        run: pip install ledgerblue
-
-      - name: Build NanoS
-        shell: bash -l {0}
-        run: |
-          PRODUCTION_BUILD=0 make
-          mv ./app/pkg/installer_s.sh ./app/pkg/installer_nanos.sh
-      - name: Set tag
-        id: nanos
-        run: echo "tag_name=$(./app/pkg/installer_nanos.sh version)" >> $GITHUB_OUTPUT
-      - name: Create or Update Release (1)
-        id: create_release_0
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-        with:
-          files: ./app/pkg/installer_nanos.sh
-          tag_name: ${{ steps.nanos.outputs.tag_name }}
-          draft: false
-          prerelease: false
-
   build_package_nanosp:
-    needs: [configure, build, build_ledger, test_zemu]
-    if: ${{ github.ref == 'refs/heads/main' }}
+    needs:
+      [
+        configure,
+        cpp_tests,
+        build_ledger,
+        test_zemu,
+      ]
     runs-on: ubuntu-latest
     container:
       image: zondax/ledger-app-builder:latest
-      options: --user ${{ needs.configure.outputs.uid_gid }}
+      options: --user root
       env:
         BOLOS_SDK: /opt/nanosplus-secure-sdk
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: recursive
       - name: Install deps
-        run: pip install ledgerblue
-
+        run: pip install --break-system-packages ledgerblue
       - name: Build NanoSP
         shell: bash -l {0}
         run: |
-          PRODUCTION_BUILD=0 make
+          make PRODUCTION_BUILD=0
           mv ./app/pkg/installer_s2.sh ./app/pkg/installer_nanos_plus.sh
       - name: Set tag
         id: nanosp
         run: echo "tag_name=$(./app/pkg/installer_nanos_plus.sh version)" >> $GITHUB_OUTPUT
       - name: Update Release
-        id: update_release_2
-        uses: softprops/action-gh-release@v1
+        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' }}
+        id: update_release_nanosp
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
@@ -189,71 +141,83 @@ jobs:
           prerelease: false
 
   build_package_stax:
-    needs: [configure, build, build_ledger, test_zemu]
-    if: ${{ github.ref == 'refs/heads/main' }}
+    needs:
+      [
+        configure,
+        cpp_tests,
+        build_ledger,
+        test_zemu,
+      ]
     runs-on: ubuntu-latest
     container:
       image: zondax/ledger-app-builder:latest
-      options: --user ${{ needs.configure.outputs.uid_gid }}
+      options: --user root
       env:
         BOLOS_SDK: /opt/stax-secure-sdk
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: recursive
       - name: Install deps
-        run: pip install ledgerblue
-
+        run: pip install --break-system-packages ledgerblue
       - name: Build Stax
         shell: bash -l {0}
         run: |
-          PRODUCTION_BUILD=0 make
+          make PRODUCTION_BUILD=0
       - name: Set tag
         id: stax
         run: echo "tag_name=$(./app/pkg/installer_stax.sh version)" >> $GITHUB_OUTPUT
       - name: Update Release
-        id: update_release_2
-        uses: softprops/action-gh-release@v1
+        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' }}
+        id: update_release_stax
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
-          files: ./app/pkg/installer_stax.sh
+          files: |
+            ./app/pkg/installer_stax.sh
           tag_name: ${{ steps.stax.outputs.tag_name }}
           draft: false
           prerelease: false
 
   build_package_flex:
-    needs: [configure, build, build_ledger, test_zemu]
-    if: ${{ github.ref == 'refs/heads/main' }}
+    needs:
+      [
+        configure,
+        cpp_tests,
+        build_ledger,
+        test_zemu,
+      ]
     runs-on: ubuntu-latest
     container:
       image: zondax/ledger-app-builder:latest
-      options: --user ${{ needs.configure.outputs.uid_gid }}
+      options: --user root
       env:
         BOLOS_SDK: /opt/flex-secure-sdk
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: recursive
       - name: Install deps
-        run: pip install ledgerblue
-
+        run: pip install --break-system-packages ledgerblue
       - name: Build Flex
         shell: bash -l {0}
         run: |
-          PRODUCTION_BUILD=0 make
+          make PRODUCTION_BUILD=0
       - name: Set tag
         id: flex
         run: echo "tag_name=$(./app/pkg/installer_flex.sh version)" >> $GITHUB_OUTPUT
       - name: Update Release
-        id: update_release_2
-        uses: softprops/action-gh-release@v1
+        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' }}
+        id: update_release_flex
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
-          files: ./app/pkg/installer_flex.sh
+          files: |
+            ./app/pkg/installer_flex.sh
           tag_name: ${{ steps.flex.outputs.tag_name }}
           draft: false
           prerelease: false
