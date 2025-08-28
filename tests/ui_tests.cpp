@@ -1,38 +1,40 @@
 /*******************************************************************************
-*   (c) 2019 Zondax GmbH
-*
-*  Licensed under the Apache License, Version 2.0 (the "License");
-*  you may not use this file except in compliance with the License.
-*  You may obtain a copy of the License at
-*
-*      http://www.apache.org/licenses/LICENSE-2.0
-*
-*  Unless required by applicable law or agreed to in writing, software
-*  distributed under the License is distributed on an "AS IS" BASIS,
-*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*  See the License for the specific language governing permissions and
-*  limitations under the License.
-********************************************************************************/
+ *   (c) 2019 Zondax AG
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ ********************************************************************************/
 
-#include "gmock/gmock.h"
-
-#include <iostream>
-#include <fstream>
-#include <json/json.h>
-#include <hexutils.h>
 #include <app_mode.h>
-#include "parser.h"
-#include "common.h"
+#include <hexutils.h>
+
+#include <fstream>
+#include <iostream>
 #include <memory>
-#include "testcases.h"
+#include <nlohmann/json.hpp>
+
+#include "common.h"
 #include "expected_output.h"
+#include "gmock/gmock.h"
+#include "parser.h"
+#include "parser_evm.h"
+#include "testcases.h"
 
 using ::testing::TestWithParam;
 
 class JsonTests : public ::testing::TestWithParam<testcase_t> {
-public:
+   public:
     struct PrintToStringParamName {
-        template<class ParamType>
+        template <class ParamType>
         std::string operator()(const testing::TestParamInfo<ParamType> &info) const {
             auto p = static_cast<testcase_t>(info.param);
             std::stringstream ss;
@@ -43,18 +45,17 @@ public:
 };
 
 std::string CleanTestname(std::string s) {
-    s.erase(remove_if(s.begin(), s.end(), [](char v) -> bool {
-        return v == ':' || v == ' ' || v == '/' || v == '-' || v == '.' || v == '_' || v == '#';
-    }), s.end());
+    s.erase(remove_if(s.begin(), s.end(),
+                      [](char v) -> bool {
+                          return v == ':' || v == ' ' || v == '/' || v == '-' || v == '.' || v == '_' || v == '#';
+                      }),
+            s.end());
     return s;
 }
 
 template <typename Generator>
 std::vector<testcase_t> GetJsonTestCases(const std::string &jsonFile, Generator gen_ui_output) {
     auto answer = std::vector<testcase_t>();
-
-    Json::CharReaderBuilder builder;
-    Json::Value obj;
 
     std::string fullPathJsonFile = std::string(TESTVECTORS_DIR) + jsonFile;
 
@@ -64,8 +65,8 @@ std::vector<testcase_t> GetJsonTestCases(const std::string &jsonFile, Generator 
     }
 
     // Retrieve all test cases
-    JSONCPP_STRING errs;
-    Json::parseFromStream(builder, inFile, &obj, &errs);
+    nlohmann::json obj;
+    inFile >> obj;
     std::cout << "Number of testcases: " << obj.size() << std::endl;
 
     for (auto &i : obj) {
@@ -74,23 +75,13 @@ std::vector<testcase_t> GetJsonTestCases(const std::string &jsonFile, Generator 
         auto outputs = gen_ui_output(i, false);
         auto outputs_expert = gen_ui_output(i, true);
 
-        bool valid = true;
-        if (i.isMember("valid")) {
-            valid = i["valid"].asBool();
-        }
+        bool valid = i.value("valid", true);
 
-        auto name = CleanTestname(i["description"].asString());
+        auto name = CleanTestname(i.value("description", std::string("")));
 
-        answer.push_back(testcase_t{
-                answer.size() + 1,
-                name,
-                i["encoded_tx_hex"].asString(),
-                valid,
-                i["testnet"].asBool(),
-                i["error"].asString(),
-                outputs,
-                outputs_expert
-        });
+        answer.push_back(testcase_t{answer.size() + 1, name, i.value("encoded_tx_hex", std::string("")), valid,
+                                    i.value("testnet", false), i.value("error", std::string("")), outputs,
+                                    outputs_expert});
     }
 
     return answer;
@@ -111,7 +102,11 @@ void check_testcase(const testcase_t &tc, bool a, parser_context_t ctx) {
         hdPath[1] = HDPATH_1_TESTNET;
     }
 
-    err = parser_parse(&ctx, buffer, bufferLen);
+    if (ctx.tx_type == eth_tx) {
+        err = parser_parse_eth(&ctx, buffer, bufferLen);
+    } else {
+        err = parser_parse(&ctx, buffer, bufferLen);
+    }
 
     if (tc.valid) {
         ASSERT_EQ(err, parser_ok) << parser_getErrorDescription(err);
@@ -121,7 +116,12 @@ void check_testcase(const testcase_t &tc, bool a, parser_context_t ctx) {
         return;
     }
 
-    err = parser_validate(&ctx);
+    if (ctx.tx_type == eth_tx) {
+        err = parser_validate_eth(&ctx);
+    } else {
+        err = parser_validate(&ctx);
+    }
+
     ASSERT_EQ(err, parser_ok) << parser_getErrorDescription(err);
 
     auto output = dumpUI(&ctx, 40, 37);
@@ -158,9 +158,9 @@ void check_testcase_fil_base(const testcase_t &tc, bool a) {
 ///////////////////////////////////////////////////////////////////////
 
 class VerifyTestVectors : public ::testing::TestWithParam<testcase_t> {
-public:
+   public:
     struct PrintToStringParamName {
-        template<class ParamType>
+        template <class ParamType>
         std::string operator()(const testing::TestParamInfo<ParamType> &info) const {
             auto p = static_cast<testcase_t>(info.param);
             std::stringstream ss;
@@ -170,29 +170,24 @@ public:
     };
 };
 
-class VerifyEvmTransactions: public JsonTests{};
+class VerifyEvmTransactions : public JsonTests {};
 
-class VerifyInvokeContract: public JsonTests{};
+class VerifyInvokeContract : public JsonTests {};
 
 GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(VerifyTestVectors);
 
-INSTANTIATE_TEST_SUITE_P(
-        EVMTransactions,
-        VerifyEvmTransactions,
-        ::testing::ValuesIn(GetJsonTestCases("testvectors/evm.json", EVMGenerateExpectedUIOutput)), VerifyTestVectors::PrintToStringParamName()
-);
+INSTANTIATE_TEST_SUITE_P(EVMTransactions, VerifyEvmTransactions,
+                         ::testing::ValuesIn(GetJsonTestCases("testvectors/evm.json", EVMGenerateExpectedUIOutput)),
+                         VerifyTestVectors::PrintToStringParamName());
 
-INSTANTIATE_TEST_SUITE_P(
-        InvokeContract,
-        VerifyInvokeContract,
-        ::testing::ValuesIn(GetJsonTestCases("testvectors/invoke_contracts.json", InvokeContractGenerateExpectedUIOutput)), VerifyTestVectors::PrintToStringParamName()
-);
+INSTANTIATE_TEST_SUITE_P(InvokeContract, VerifyInvokeContract,
+                         ::testing::ValuesIn(GetJsonTestCases("testvectors/invoke_contracts.json",
+                                                              InvokeContractGenerateExpectedUIOutput)),
+                         VerifyTestVectors::PrintToStringParamName());
 
-INSTANTIATE_TEST_SUITE_P(
-        Multisig,
-        VerifyTestVectors,
-        ::testing::ValuesIn(GetJsonTestCases("testvectors/manual.json", GenerateExpectedUIOutput)), VerifyTestVectors::PrintToStringParamName()
-);
+INSTANTIATE_TEST_SUITE_P(Multisig, VerifyTestVectors,
+                         ::testing::ValuesIn(GetJsonTestCases("testvectors/manual.json", GenerateExpectedUIOutput)),
+                         VerifyTestVectors::PrintToStringParamName());
 
 TEST_P(VerifyTestVectors, CheckUIOutput_CurrentTX_Normal) { check_testcase_fil_base(GetParam(), true); }
 

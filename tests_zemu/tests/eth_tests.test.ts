@@ -16,7 +16,7 @@
 
 import Zemu, { ButtonKind, isTouchDevice } from "@zondax/zemu";
 // @ts-ignore
-import FilecoinApp from "@zondax/ledger-filecoin";
+import { FilecoinApp } from "@zondax/ledger-filecoin";
 import {
   models,
   defaultOptions,
@@ -149,11 +149,11 @@ describe.each(models)("ETH", function (m) {
 
       console.log(resp);
 
-      console.log(resp.publicKey.toString("hex"));
+      console.log(resp.publicKey.toString());
       console.log(resp.address);
 
-      expect(resp.publicKey.toString("hex")).toEqual(EXPECTED_ETH_PK);
-      expect(resp.address.toString("hex")).toEqual(EXPECTED_ETH_ADDRESS);
+      expect(resp.publicKey.toString()).toEqual(EXPECTED_ETH_PK);
+      expect(resp.address.toString()).toEqual(EXPECTED_ETH_ADDRESS);
     } finally {
       await sim.close();
     }
@@ -194,17 +194,17 @@ describe.each(models)("ETH", function (m) {
         const app = new FilecoinApp(sim.getTransport());
         const msg = data.op;
 
-        const testcase = `${m.prefix.toLowerCase()}-eth-sign-${data.name}`;
-
-        let eth = new Eth(sim.getTransport());
-
         // eth pubkey used for ETH_PATH: "m/44'/60'/0'/0'/5"
         // to verify signature
         const EXPECTED_PUBLIC_KEY =
           "024f1dd50f180bfd546339e75410b127331469837fa618d950f7cfb8be351b0020";
 
         // do not wait here..
-        const signatureRequest = app.signETHTransaction(ETH_PATH, msg, null);
+        const signatureRequest = app.signETHTransaction(
+          ETH_PATH,
+          msg.toString("hex"),
+          null,
+        );
         // Wait until we are not in the main menu
         await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
@@ -245,10 +245,6 @@ describe.each(models)("ETH", function (m) {
         const app = new FilecoinApp(sim.getTransport());
         const msg = data.op;
 
-        const testcase = `${m.prefix.toLowerCase()}-eth-sign-${data.name}`;
-
-        let eth = new Eth(sim.getTransport());
-
         await sim.toggleBlindSigning();
 
         // eth pubkey used for ETH_PATH: "m/44'/60'/0'/0'/5"
@@ -257,7 +253,11 @@ describe.each(models)("ETH", function (m) {
           "024f1dd50f180bfd546339e75410b127331469837fa618d950f7cfb8be351b0020";
 
         // do not wait here..
-        const signatureRequest = app.signETHTransaction(ETH_PATH, msg, null);
+        const signatureRequest = app.signETHTransaction(
+          ETH_PATH,
+          msg.toString("hex"),
+          null,
+        );
         // Wait until we are not in the main menu
         await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 

@@ -6,8 +6,8 @@ on:
     branches:
       - main
       - develop
-      - master # for safety reasons
-      - dev  # for safety reasons
+      - master
+      - dev
 
 jobs:
   configure:
@@ -26,6 +26,7 @@ jobs:
       options: --user ${{ needs.configure.outputs.uid_gid }}
     env:
       SDK_VARNAME: NANOSP_SDK
+      BOLOS_SDK: /opt/nanosplus-secure-sdk
     outputs:
       version: ${{ steps.store-version.outputs.version }}
     steps:

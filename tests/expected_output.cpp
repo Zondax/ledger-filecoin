@@ -1,28 +1,60 @@
 /*******************************************************************************
-*   (c) 2019 Zondax GmbH
-*
-*  Licensed under the Apache License, Version 2.0 (the "License");
-*  you may not use this file except in compliance with the License.
-*  You may obtain a copy of the License at
-*
-*      http://www.apache.org/licenses/LICENSE-2.0
-*
-*  Unless required by applicable law or agreed to in writing, software
-*  distributed under the License is distributed on an "AS IS" BASIS,
-*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*  See the License for the specific language governing permissions and
-*  limitations under the License.
-********************************************************************************/
-#include <fmt/core.h>
+ *   (c) 2019 Zondax AG
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ ********************************************************************************/
 #include <coin.h>
-#include "testcases.h"
-#include "zxmacros.h"
-#include "zxformat.h"
+#include <fmt/core.h>
+
 #include <iostream>
+
+#include "testcases.h"
+#include "zxformat.h"
+#include "zxmacros.h"
 const uint32_t fieldSize = 37;
 
-template<typename S, typename... Args>
-void addTo(std::vector<std::string> &answer, const S &format_str, Args &&... args) {
+// Helper function to safely get string from JSON value (handles both string and number types)
+std::string getStringValue(const nlohmann::json &obj, const std::string &key, const std::string &defaultValue = "") {
+    if (!obj.contains(key)) {
+        return defaultValue;
+    }
+    if (obj[key].is_string()) {
+        return obj[key].get<std::string>();
+    } else if (obj[key].is_number()) {
+        return std::to_string(obj[key].get<uint64_t>());
+    }
+    return defaultValue;
+}
+
+// Helper function to safely get uint64_t from JSON value
+uint64_t getUint64Value(const nlohmann::json &obj, const std::string &key, uint64_t defaultValue = 0) {
+    if (!obj.contains(key)) {
+        return defaultValue;
+    }
+    if (obj[key].is_number()) {
+        return obj[key].get<uint64_t>();
+    } else if (obj[key].is_string()) {
+        try {
+            return std::stoull(obj[key].get<std::string>());
+        } catch (...) {
+            return defaultValue;
+        }
+    }
+    return defaultValue;
+}
+
+template <typename S, typename... Args>
+void addTo(std::vector<std::string> &answer, const S &format_str, Args &&...args) {
     answer.push_back(fmt::format(format_str, args...));
 }
 
@@ -33,7 +65,7 @@ std::vector<std::string> FormatAddress(uint32_t prefix, const std::string &name,
 
     pageString(outBuffer, fieldSize, address.c_str(), 0, &numPages);
 
-    if(numPages == 0) {
+    if (numPages == 0) {
         auto pages = std::string("");
         snprintf(outBuffer, sizeof(outBuffer), "-- EMPTY --");
         addTo(answer, "{} | {}{}: {}", prefix, name, pages, outBuffer);
@@ -87,13 +119,10 @@ std::string FormatAmount(const std::string &amount) {
     return std::string(buffer);
 }
 
-std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool) {
+std::vector<std::string> GenerateExpectedUIOutput(const nlohmann::json &json, bool) {
     auto answer = std::vector<std::string>();
 
-    bool valid = true;
-    if (json.isMember("value")) {
-        valid = json["valid"].asBool();
-    }
+    bool valid = json.value("valid", true);
 
     if (!valid) {
         answer.emplace_back("Test case is not valid!");
@@ -103,21 +132,21 @@ std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool)
     ///
 
     auto message = json["message"];
-    auto from0x = message["from0x"].asString();
-    auto from = message["from"].asString();
+    auto from0x = getStringValue(message, "from0x");
+    auto from = getStringValue(message, "from");
 
-    auto to0x = message["to0x"].asString();
-    auto to = message["to"].asString();
-    auto nonce = message["nonce"].asUInt64();
+    auto to0x = getStringValue(message, "to0x");
+    auto to = getStringValue(message, "to");
+    auto nonce = getUint64Value(message, "nonce");
 
-    auto value = message["value"].asString();
-    auto gaslimit = message["gaslimit"].asString();
-    auto gaspremium = message["gaspremium"].asString();
-    auto gasfeecap = message["gasfeecap"].asString();
-    auto method = message["method"].asUInt64();
+    auto value = getStringValue(message, "value", "0");
+    auto gaslimit = getStringValue(message, "gaslimit", "0");
+    auto gaspremium = getStringValue(message, "gaspremium", "0");
+    auto gasfeecap = getStringValue(message, "gasfeecap", "0");
+    auto method = getUint64Value(message, "method");
 
-    auto numparams = message["numparams"].asUInt64();
-    auto params = message["params"];
+    auto numparams = getUint64Value(message, "numparams");
+    auto params = message.value("params", nlohmann::json::array());
     ///
 
     uint8_t idx = 0;
@@ -160,7 +189,7 @@ std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool)
     // Transfer method
     if (method == 0) {
         addTo(answer, "{} | Method : Transfer", idx, method);
-    // Invoke EVM method
+        // Invoke EVM method
     } else if (method == 3844450837) {
         addTo(answer, "{} | Method : Invoke EVM", idx, method);
     } else {
@@ -169,9 +198,17 @@ std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool)
     idx++;
 
     int paramIdx = 1;
-    for(auto value : params) {
+    for (auto value : params) {
         std::string paramText = "Params |" + std::to_string(paramIdx) + "| ";
-        auto paramsAddress = FormatAddress(idx + paramIdx - 1, paramText, value.asString());
+        std::string paramValue;
+        if (value.is_string()) {
+            paramValue = value.get<std::string>();
+        } else if (value.is_number()) {
+            paramValue = std::to_string(value.get<uint64_t>());
+        } else {
+            paramValue = "";
+        }
+        auto paramsAddress = FormatAddress(idx + paramIdx - 1, paramText, paramValue);
         answer.insert(answer.end(), paramsAddress.begin(), paramsAddress.end());
         paramIdx++;
     }
@@ -179,13 +216,10 @@ std::vector<std::string> GenerateExpectedUIOutput(const Json::Value &json, bool)
     return answer;
 }
 
-std::vector<std::string> EVMGenerateExpectedUIOutput(const Json::Value &json, bool) {
+std::vector<std::string> EVMGenerateExpectedUIOutput(const nlohmann::json &json, bool) {
     auto answer = std::vector<std::string>();
 
-    bool valid = true;
-    if (json.isMember("value")) {
-        valid = json["valid"].asBool();
-    }
+    bool valid = json.value("valid", true);
 
     if (!valid) {
         answer.emplace_back("Test case is not valid!");
@@ -194,12 +228,12 @@ std::vector<std::string> EVMGenerateExpectedUIOutput(const Json::Value &json, bo
 
     ///
     auto message = json["message"];
-    auto to = message["To"].asString();
-    auto contract = message["Contract"].asString();
-    auto value = message["Value"].asString();
-    auto nonce = message["Nonce"].asString();
-    auto gasPrice = message["GasPrice"].asString();
-    auto gasLimit = message["GasLimit"].asString();
+    auto to = getStringValue(message, "To");
+    auto contract = getStringValue(message, "Contract");
+    auto value = getStringValue(message, "Value");
+    auto nonce = getStringValue(message, "Nonce");
+    auto gasPrice = getStringValue(message, "GasPrice");
+    auto gasLimit = getStringValue(message, "GasLimit");
     ///
 
     uint8_t idx = 0;
@@ -227,13 +261,10 @@ std::vector<std::string> EVMGenerateExpectedUIOutput(const Json::Value &json, bo
     return answer;
 }
 
-std::vector<std::string> InvokeContractGenerateExpectedUIOutput(const Json::Value &json, bool expertMode) {
-        auto answer = std::vector<std::string>();
+std::vector<std::string> InvokeContractGenerateExpectedUIOutput(const nlohmann::json &json, bool expertMode) {
+    auto answer = std::vector<std::string>();
 
-    bool valid = true;
-    if (json.isMember("value")) {
-        valid = json["valid"].asBool();
-    }
+    bool valid = json.value("valid", true);
 
     if (!valid) {
         answer.emplace_back("Test case is not valid!");
@@ -243,22 +274,21 @@ std::vector<std::string> InvokeContractGenerateExpectedUIOutput(const Json::Valu
     ///
 
     auto message = json["message"];
-    auto from0x = message["from0x"].asString();
-    auto from = message["from"].asString();
+    auto from0x = getStringValue(message, "from0x");
+    auto from = getStringValue(message, "from");
 
-    auto to0x = message["to0x"].asString();
-    auto to = message["to"].asString();
-    auto nonce = message["nonce"].asUInt64();
+    auto to0x = getStringValue(message, "to0x");
+    auto to = getStringValue(message, "to");
+    auto nonce = getUint64Value(message, "nonce");
 
-    auto method = message["method"].asString();
-    auto value = message["value"].asString();
-    auto contract = message["Contract"].asString();
-    auto contractF4 = message["ContractF4"].asString();
+    auto method = getStringValue(message, "method");
+    auto value = getStringValue(message, "value");
+    auto contract = getStringValue(message, "Contract");
+    auto contractF4 = getStringValue(message, "ContractF4");
 
-
-    auto gaslimit = message["gaslimit"].asString();
-    auto gaspremium = message["gaspremium"].asString();
-    auto gasfeecap = message["gasfeecap"].asString();
+    auto gaslimit = getStringValue(message, "gaslimit", "0");
+    auto gaspremium = getStringValue(message, "gaspremium", "0");
+    auto gasfeecap = getStringValue(message, "gasfeecap", "0");
 
     ///
 

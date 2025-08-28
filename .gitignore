@@ -84,8 +84,18 @@ cmake-build-fuzz/
 !\deps/ledger-zxlib
 !\deps/tinycbor
 !\deps/tinycbor-ledger
-\fuzz-*.log
-\fuzz/corpora/*
 
 node_modules/.yarn-integrity
 \.vscode
+tests_zemu/yarn.lock
+
+# Additional fuzzing artifacts
+fuzz/corpora/
+fuzz/coverage/
+fuzz/logs/
+fuzz-*.log
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo

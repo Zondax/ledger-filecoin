@@ -15,11 +15,11 @@ on:
     branches:
       - main
       - develop
-      - master # for safety reasons
-      - dev  # for safety reasons
+      - master
+      - dev
 
 jobs:
   guidelines_enforcer:
     if: github.event.repository.private == false
-    name: Call Ledger guidelines_enforcer
+    name: Call Ledger guidelines enforcer
     uses: LedgerHQ/ledger-app-workflows/.github/workflows/reusable_guidelines_enforcer.yml@v1

@@ -1,16 +1,10 @@
-import Zemu from '@zondax/zemu'
+const Zemu = require("@zondax/zemu");
 
-const catchExit = async () => {
-  process.on('SIGINT', () => {
-    Zemu.stopAllEmuContainers(function () {
-      process.exit()
-    })
-  })
-}
-
+/**
+ * Initializes the emulator environment by setting up exit handlers,
+ * pulling the latest emulator image, and stopping any running emulator containers.
+ */
 module.exports = async () => {
-  await catchExit()
-  await Zemu.checkAndPullImage()
-  await Zemu.stopAllEmuContainers()
-}
-//
+  await Zemu.default.checkAndPullImage();
+  await Zemu.default.stopAllEmuContainers();
+};
