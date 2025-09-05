@@ -1,0 +1,21 @@
+name: Code Coverage
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+      - develop
+      - master
+      - dev
+      - feat/common_ci # Remove: only for testing
+
+jobs:
+  ledger-code-coverage:
+    uses: Zondax/_workflows/.github/workflows/_ledger_code_coverage.yml@ci-coverage
+    with:
+      runs-on: "${{ github.repository_owner == 'zondax' && 'zondax-runners' || 'ubuntu-latest' }}"
+      has-rust: false
+      has-cpp: true
+      enable-pr-comment: true
+      coverage-threshold: 60
