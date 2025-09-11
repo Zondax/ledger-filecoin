@@ -42,11 +42,11 @@ APP_SOURCE_PATH += $(CURDIR)/../deps/tinycbor-ledger
 
 # Application icons following guidelines:
 # https://developers.ledger.com/docs/embedded-app/design-requirements/#device-icon
-ICON_NANOS = nanos_icon.gif
 ICON_NANOX = nanox_icon.gif
 ICON_NANOSP = nanox_icon.gif
 ICON_STAX = stax_icon.gif
 ICON_FLEX = flex_icon.gif
+ICON_APEX_P = apex_p_icon.png
 
 # Application allowed derivation curves.
 # Possibles curves are: secp256k1, secp256r1, ed25519 and bls12381g1

@@ -31,7 +31,7 @@ bool isTestnet();
 
 zxerr_t blake_hash_cid(const unsigned char *in, unsigned int inLen, unsigned char *out, unsigned int outLen);
 
-#if defined(TARGET_NANOX) || defined(TARGET_NANOS2) || defined(TARGET_STAX) || defined(TARGET_FLEX)
+#if defined(TARGET_NANOX) || defined(TARGET_NANOS2) || defined(TARGET_STAX) || defined(TARGET_FLEX) || defined(TARGET_APEX_P)
 #else
 #include "blake2.h"
 typedef struct {
