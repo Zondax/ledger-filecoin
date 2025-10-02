@@ -19,7 +19,5 @@ on:
       - dev
 
 jobs:
-  guidelines_enforcer:
-    if: github.event.repository.private == false
-    name: Call Ledger guidelines enforcer
-    uses: LedgerHQ/ledger-app-workflows/.github/workflows/reusable_guidelines_enforcer.yml@v1
+  ledger-guidelines-enforcer:
+    uses: Zondax/_workflows/.github/workflows/_ledger_guidelines_enforcer.yml@v3
