@@ -60,7 +60,6 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(nlohmann_json)
 
 hunter_add_package(GTest)
-find_package(Threads REQUIRED)
 find_package(GTest CONFIG REQUIRED)
 
 # Fuzzing configuration is now handled by FuzzingCommon.cmake
