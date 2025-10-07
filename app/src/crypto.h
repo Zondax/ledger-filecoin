@@ -31,7 +31,7 @@ bool isTestnet();
 
 zxerr_t blake_hash_cid(const unsigned char *in, unsigned int inLen, unsigned char *out, unsigned int outLen);
 
-#if !defined(LEDGER_SPECIFIC) 
+#if !defined(LEDGER_SPECIFIC)
 #include "blake2.h"
 typedef struct {
     blake2b_state state;
