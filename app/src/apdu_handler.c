@@ -240,7 +240,7 @@ __Z_INLINE void handleSignRawBytes(volatile uint32_t *flags, volatile uint32_t *
         if ((msg_counter % 5) == 0) {
             char prompt[] = {"RawBytes:"};
             view_message_show(prompt, message);
-#if !defined(TARGET_STAX) && !defined(TARGET_FLEX)
+#if !defined(TARGET_STAX) && !defined(TARGET_FLEX) && !defined(TARGET_APEX_P)
             UX_WAIT_DISPLAYED();
 #endif
         }
