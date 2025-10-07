@@ -31,9 +31,6 @@ endif()
 ########################################################
 project(ledger-filecoin VERSION 0.0.0)
 
-# Include common fuzzing configuration
-include(deps/ledger-zxlib/fuzzing/FuzzingCommon.cmake)
-
 set(CMAKE_CXX_STANDARD 20)
 cmake_policy(SET CMP0025 NEW)
 cmake_policy(SET CMP0144 NEW)
@@ -41,11 +38,53 @@ cmake_policy(SET CMP0144 NEW)
 set(HUNTER_STATUS_DEBUG ON)
 set(HUNTER_TLS_VERIFY OFF)
 
+# Help CMake find threads (pthread is in libc on Linux)
+set(CMAKE_THREAD_LIBS_INIT "-lpthread")
+set(CMAKE_HAVE_THREADS_LIBRARY 1)
+set(CMAKE_USE_WIN32_THREADS_INIT 0)
+set(CMAKE_USE_PTHREADS_INIT 1)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+
+# Include fuzzing configuration only when fuzzing is enabled
+if(ENABLE_FUZZING)
+    include(deps/ledger-zxlib/fuzzing/FuzzingCommon.cmake)
+endif()
+
 enable_testing()
 
 string(APPEND CMAKE_C_FLAGS " -fno-omit-frame-pointer -g")
 string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -g")
 string(APPEND CMAKE_LINKER_FLAGS " -fno-omit-frame-pointer -g")
+
+# Coverage configuration (only if not using fuzzing)
+# Fuzzing builds will use FuzzingCommon.cmake's coverage setup
+if (ENABLE_COVERAGE AND NOT ENABLE_FUZZING)
+    message(STATUS "Coverage enabled")
+    message(STATUS "Compiler ID: ${CMAKE_CXX_COMPILER_ID}")
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        message(STATUS "Using Clang coverage flags")
+        set(COVERAGE_FLAGS "-fprofile-instr-generate -fcoverage-mapping")
+    elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        message(STATUS "Using GCC coverage flags")
+        set(COVERAGE_FLAGS "--coverage")
+    else()
+        message(WARNING "Unknown compiler ${CMAKE_CXX_COMPILER_ID}, coverage may not work")
+    endif ()
+
+    if(DEFINED COVERAGE_FLAGS)
+        string(APPEND CMAKE_C_FLAGS " ${COVERAGE_FLAGS}")
+        string(APPEND CMAKE_CXX_FLAGS " ${COVERAGE_FLAGS}")
+        string(APPEND CMAKE_LINKER_FLAGS " ${COVERAGE_FLAGS}")
+    endif()
+endif ()
+
+if (ENABLE_SANITIZERS AND NOT ENABLE_FUZZING)
+    message(STATUS "Sanitizers enabled")
+    set(SANITIZER_FLAGS "-fsanitize=address,undefined -fsanitize-recover=address,undefined")
+    string(APPEND CMAKE_C_FLAGS " ${SANITIZER_FLAGS}")
+    string(APPEND CMAKE_CXX_FLAGS " ${SANITIZER_FLAGS}")
+    string(APPEND CMAKE_LINKER_FLAGS " ${SANITIZER_FLAGS}")
+endif ()
 
 hunter_add_package(fmt)
 find_package(fmt CONFIG REQUIRED)
