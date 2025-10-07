@@ -53,6 +53,8 @@ describe.each(models)("RawBytes", function (m) {
       const signatureRequest = app.signRawBytes(PATH, txBlob);
 
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
+      // wait for the text to disappear
+      await sim.waitUntilTextDisappears("Chunk 0");
       await sim.compareSnapshotsAndApprove(
         ".",
         `${m.prefix.toLowerCase()}-sign_raw_bytes`,
