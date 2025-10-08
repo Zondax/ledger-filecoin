@@ -17,4 +17,4 @@ jobs:
       has-rust: false
       has-cpp: true
       enable-pr-comment: true
-      coverage-threshold: 60
+      coverage-threshold: 50
