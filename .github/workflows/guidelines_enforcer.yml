@@ -19,5 +19,6 @@ on:
       - dev
 
 jobs:
-  ledger-guidelines-enforcer:
-    uses: Zondax/_workflows/.github/workflows/_ledger_guidelines_enforcer.yml@v3
+  guidelines_enforcer:
+    name: Call Ledger guidelines_enforcer
+    uses: LedgerHQ/ledger-app-workflows/.github/workflows/reusable_guidelines_enforcer.yml@v1
