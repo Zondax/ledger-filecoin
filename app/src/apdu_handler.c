@@ -41,6 +41,9 @@
 static bool tx_initialized = false;
 static uint32_t msg_counter = 0;
 
+// Global variable to store error message offset for custom error display
+uint16_t G_error_message_offset = 0;
+
 void extractHDPath(uint32_t rx, uint32_t offset, uint32_t path_len) {
     if (path_len == 0 || path_len > MAX_BIP32_PATH) {
         THROW(APDU_CODE_DATA_INVALID);
@@ -212,6 +215,8 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
 
         // Check if expert mode is needed
         if (error_code == parser_expert_mode_required) {
+            // Store the error message offset for app_reply_error
+            G_error_message_offset = error_msg_length;
             *flags |= IO_ASYNCH_REPLY;
             view_custom_error_show("Expert Mode", "Required");
         }
@@ -235,7 +240,7 @@ __Z_INLINE void handleSignRawBytes(volatile uint32_t *flags, volatile uint32_t *
         if ((msg_counter % 5) == 0) {
             char prompt[] = {"RawBytes:"};
             view_message_show(prompt, message);
-#if !defined(TARGET_STAX) && !defined(TARGET_FLEX)
+#if !defined(TARGET_STAX) && !defined(TARGET_FLEX) && !defined(TARGET_APEX_P)
             UX_WAIT_DISPLAYED();
 #endif
         }
@@ -257,6 +262,8 @@ __Z_INLINE void handleSignRawBytes(volatile uint32_t *flags, volatile uint32_t *
         MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
         *tx += (error_msg_length);
         if (error_code == parser_blindsign_mode_required) {
+            // Store the error message offset for app_reply_error
+            G_error_message_offset = error_msg_length;
             *flags |= IO_ASYNCH_REPLY;
             view_blindsign_error_show();
         }
@@ -283,6 +290,8 @@ __Z_INLINE void handleSignFvmEip191(volatile uint32_t *flags, volatile uint32_t 
         MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
         *tx += (error_msg_length);
         if (error == parser_blindsign_mode_required) {
+            // Store the error message offset for app_reply_error
+            G_error_message_offset = error_msg_length;
             *flags |= IO_ASYNCH_REPLY;
             view_blindsign_error_show();
         }
@@ -297,6 +306,9 @@ __Z_INLINE void handleSignFvmEip191(volatile uint32_t *flags, volatile uint32_t 
 
 void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     volatile uint16_t sw = 0;
+
+    // Reset error message offset at the beginning of each command
+    G_error_message_offset = 0;
 
     BEGIN_TRY {
         TRY {

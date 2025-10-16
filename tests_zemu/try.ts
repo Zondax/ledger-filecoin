@@ -61,7 +61,7 @@ async function sign(app: any) {
 
     const signatureRequest = app.sign(PATH, txBlob);
 
-    let resp = await signatureRequest;
+    const resp = await signatureRequest;
     console.log(resp);
 
     // Verify signature
@@ -84,7 +84,7 @@ async function sign_evm_eip191(app: any, msg_txn: Buffer) {
       msg_txn.toString("hex"),
     );
 
-    let resp = await signatureRequest;
+    const resp = await signatureRequest;
     console.log(resp);
 
     const header = Buffer.from("\x19Ethereum Signed Message:\n", "utf8");
@@ -123,7 +123,7 @@ async function sign_fvm_eip191(app: any, msg_txn: Buffer) {
       msg_txn,
     );
 
-    let resp = await signatureRequest;
+    const resp = await signatureRequest;
     console.log(resp);
 
     // Construct EIP-191 message format: "\x19Filecoin Signed Message:\n" + len + message
@@ -163,6 +163,8 @@ async function main() {
   // const app = new AvalancheApp.default(transport);
   const app = new FilecoinApp(transport);
 
+  await get_address(app);
+  
   // sign 2MiB of random data
   await sign_raw_bytes(app, 1 * 1024);
 

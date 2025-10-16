@@ -32,8 +32,7 @@ extern uint32_t hdPath_len;
 #define BLAKE2B_256_SIZE 32
 #define KECCAK_256_SIZE 32
 
-#define PREFIX \
-    { 0x01, 0x71, 0xa0, 0xe4, 0x02, 0x20 }
+#define PREFIX {0x01, 0x71, 0xa0, 0xe4, 0x02, 0x20}
 
 #define ADDRESS_PROTOCOL_ID 0x00
 #define ADDRESS_PROTOCOL_SECP256K1 0x01

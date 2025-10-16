@@ -33,7 +33,7 @@
 
 #define TRANSFER_METHOD 0
 
-#if defined(TARGET_NANOX) || defined(TARGET_NANOS2) || defined(TARGET_STAX) || defined(TARGET_FLEX)
+#if defined(LEDGER_SPECIFIC)
 // For some reason NanoX requires this function
 void __assert_fail(__Z_UNUSED const char *assertion, __Z_UNUSED const char *file, __Z_UNUSED unsigned int line,
                    __Z_UNUSED const char *function) {

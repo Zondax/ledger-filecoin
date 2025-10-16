@@ -45,7 +45,7 @@ jest.setTimeout(90000);
 
 describe.each(models)("Multisig", function (m) {
   test.concurrent.each(TEST_DATA)(
-    "Multisig extended params",
+    `Multisig extended params: $name for ${m.name}`,
     async function ({ name, op }) {
       const sim = new Zemu(m.path);
       try {
@@ -69,7 +69,7 @@ describe.each(models)("Multisig", function (m) {
         await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
         await sim.compareSnapshotsAndApprove(".", testcase);
 
-        let resp = await signatureRequest;
+        const resp = await signatureRequest;
         console.log(resp, m.name, name);
 
         // Verify signature

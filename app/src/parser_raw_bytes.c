@@ -38,7 +38,7 @@ static const char messagePrefix[] = "Filecoin Sign Bytes:\n";
 parser_error_t raw_bytes_init(uint8_t *buf, size_t buf_len) {
     if (buf_len == 0) return parser_unexpected_buffer_end;
 
-#if defined(TARGET_NANOS2) || defined(TARGET_NANOX) || defined(TARGET_STAX) || defined(TARGET_FLEX)
+#if defined(LEDGER_SPECIFIC)
     // Setup hasher pointer. This will reduce stack usage
     if (blake_hash_setup(&parser_tx_obj.raw_bytes_tx.ctx_blake2b) != zxerr_ok) {
         return parser_unexpected_error;
