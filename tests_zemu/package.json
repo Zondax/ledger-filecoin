@@ -25,7 +25,8 @@
   },
   "resolutions": {
     "axios": "^1.10.0",
-    "glob": "^11.0.3"
+    "glob": "^11.0.3",
+    "strip-ansi": "^6.0.1"
   },
   "dependencies": {
     "@ledgerhq/hw-transport-node-hid": "6.29.13",
