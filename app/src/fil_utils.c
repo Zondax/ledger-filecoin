@@ -90,12 +90,17 @@ parser_error_t print0xToF0(const uint8_t *ethAddress, uint8_t ethAddressLen, cha
         return parser_unexpected_error;
     }
 
-    uint64_t id = 0;
-    for (uint8_t i = 1; i < ETH_ADDRESS_LEN; i++) {
-        id = (id << 8) + *(ethAddress + i);
+    // Canonical masked-ID addresses carry the actor ID in the low 8 bytes
+    // only; require the high bytes to be zero before folding into uint64_t.
+    for (uint8_t i = 1; i <= ETH_ADDRESS_LEN - sizeof(uint64_t) - 1; i++) {
+        if (*(ethAddress + i) != 0x00) {
+            return parser_value_out_of_range;
+        }
     }
-    if (id > UINT64_MAX) {
-        return parser_value_out_of_range;
+
+    uint64_t id = 0;
+    for (uint8_t i = ETH_ADDRESS_LEN - sizeof(uint64_t); i < ETH_ADDRESS_LEN; i++) {
+        id = (id << 8) + *(ethAddress + i);
     }
 
     char to_f0[30] = {0};

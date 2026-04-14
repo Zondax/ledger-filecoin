@@ -177,7 +177,9 @@ parser_error_t _printParam(const fil_base_tx_t *tx, uint8_t paramIdx, char *outV
 
     CborParser parser;
     CborValue itContainer;
-    CHECK_CBOR_MAP_ERR(cbor_parser_init(tx->params, MAX_PARAMS_BUFFER_SIZE, 0, &parser, &itContainer))
+    // Use the actual payload length rather than the full buffer capacity.
+    const size_t parseLen = tx->params_len > 0 ? tx->params_len : MAX_PARAMS_BUFFER_SIZE;
+    CHECK_CBOR_MAP_ERR(cbor_parser_init(tx->params, parseLen, 0, &parser, &itContainer))
     CHECK_APP_CANARY()
 
     CborValue itParams = itContainer;
@@ -268,6 +270,8 @@ __Z_INLINE parser_error_t readMethod(fil_base_tx_t *tx, CborValue *value) {
         CborValue itParams;
         CHECK_CBOR_MAP_ERR(cbor_parser_init(tx->params, paramsLen, 0, &parser, &itParams))
 
+        tx->params_len = paramsLen;
+
         switch (itParams.type) {
             case CborArrayType: {
                 size_t arrayLength = 0;
@@ -291,7 +295,9 @@ __Z_INLINE parser_error_t readMethod(fil_base_tx_t *tx, CborValue *value) {
                 // If Invoke + ERC20 Transfer discard encoded cbor bytes at the beginning
                 if (methodValue == INVOKE_EVM_METHOD && tx->params[0] == 0x58 && tx->params[1] == ERC20_DATA_LENGTH &&
                     MEMCMP(tx->params + 2, ERC20_TRANSFER_PREFIX, sizeof(ERC20_TRANSFER_PREFIX)) == 0) {
+                    PARSER_ASSERT_OR_ERROR(paramsLen == 2 + ERC20_DATA_LENGTH, parser_unexpected_number_items)
                     MEMMOVE(tx->params, tx->params + 2, ERC20_DATA_LENGTH);
+                    tx->params_len = ERC20_DATA_LENGTH;
                 }
                 break;
             }
