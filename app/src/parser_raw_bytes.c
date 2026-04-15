@@ -27,6 +27,7 @@
 #include "parser_common.h"
 #include "parser_impl.h"
 #include "parser_txdef.h"
+#include "tx.h"
 #include "zxformat.h"
 
 static const char messagePrefix[] = "Filecoin Sign Bytes:\n";
@@ -51,7 +52,9 @@ parser_error_t raw_bytes_init(uint8_t *buf, size_t buf_len) {
     uint64_t total = 0;
     size_t bytes_read = decompressLEB128(buf, buf_len, &total);
 
-    if (total == 0 || bytes_read == buf_len) return parser_unexpected_buffer_end;
+    if (total == 0 || bytes_read == buf_len || total > FLASH_BUFFER_SIZE) {
+        return parser_unexpected_buffer_end;
+    }
 
     // skip the bytes used by varint
     size_t rx = buf_len - bytes_read;
