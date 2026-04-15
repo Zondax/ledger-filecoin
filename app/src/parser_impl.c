@@ -411,13 +411,11 @@ uint8_t _getNumItems(__Z_UNUSED const parser_context_t *c, const fil_base_tx_t *
 
     // Items for InvokeEVM + ERC20 transfer
     if (isInvokeEVM_ERC20Transfer(v)) {
-        if (getNumItemsInvokeEVM((uint8_t *)&itemCount, v) != parser_ok) {
+        uint8_t invokeItems = 0;
+        if (getNumItemsInvokeEVM(&invokeItems, v) != parser_ok) {
             return 0;
         }
-        if (itemCount > UINT8_MAX) {
-            return 0;
-        }
-        return (uint8_t)itemCount;
+        return invokeItems;
     }
 
     if (app_mode_expert()) {

@@ -273,10 +273,20 @@ parser_error_t parse_cid(cid_t *cid, CborValue *value) {
         uint64_t codec;
 
         uint8_t base_offset = decompressLEB128(tmp, cid_len, &base);
-        bytes_read += base_offset;
+        if (base_offset == 0 || base_offset > cid_len) {
+            return parser_invalid_cid;
+        }
+        bytes_read = base_offset;
 
-        bytes_read += decompressLEB128(tmp + bytes_read, cid_len - bytes_read, &version);
-        decompressLEB128(tmp + bytes_read, cid_len - bytes_read, &codec);
+        uint8_t version_read = decompressLEB128(tmp + bytes_read, cid_len - bytes_read, &version);
+        if (version_read == 0 || bytes_read + version_read > cid_len) {
+            return parser_invalid_cid;
+        }
+        bytes_read += version_read;
+
+        if (decompressLEB128(tmp + bytes_read, cid_len - bytes_read, &codec) == 0) {
+            return parser_invalid_cid;
+        }
 
         if ((uint8_t)codec != CID_CODEC || (uint8_t)version != CID_VERSION || (uint8_t)base != CID_BASE)
             return parser_invalid_cid;

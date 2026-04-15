@@ -21,6 +21,9 @@
 
 #include "zxerror.h"
 
+#define RAM_BUFFER_SIZE 8192
+#define FLASH_BUFFER_SIZE 16384
+
 // transaction initializer for the buffer and transaction type.
 void tx_context_fil();
 void tx_context_raw_bytes();

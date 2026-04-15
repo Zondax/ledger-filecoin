@@ -24,9 +24,6 @@
 #include "parser_common.h"
 #include "zxmacros.h"
 
-#define RAM_BUFFER_SIZE 8192
-#define FLASH_BUFFER_SIZE 16384
-
 // Ram
 uint8_t ram_buffer[RAM_BUFFER_SIZE];
 
