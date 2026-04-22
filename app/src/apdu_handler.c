@@ -44,6 +44,8 @@ static uint32_t msg_counter = 0;
 // Global variable to store error message offset for custom error display
 uint16_t G_error_message_offset = 0;
 
+bool review_pending = false;
+
 void extractHDPath(uint32_t rx, uint32_t offset, uint32_t path_len) {
     if (path_len == 0 || path_len > MAX_BIP32_PATH) {
         THROW(APDU_CODE_DATA_INVALID);
@@ -70,6 +72,11 @@ void extract_fil_path(uint32_t rx, uint32_t offset) {
     const bool testnet = hdPath[0] == HDPATH_0_TESTNET && hdPath[1] == HDPATH_1_TESTNET;
 
     if (!mainnet && !testnet) {
+        THROW(APDU_CODE_DATA_INVALID);
+    }
+
+    // Require the account component to be hardened.
+    if ((hdPath[2] & 0x80000000) == 0) {
         THROW(APDU_CODE_DATA_INVALID);
     }
 }
@@ -162,6 +169,7 @@ __Z_INLINE bool process_rawbytes_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_
             }
 
             if (payloadType == P1_LAST) {
+                tx_initialized = false;
                 return true;
             }
 
@@ -188,6 +196,7 @@ __Z_INLINE void handleGetAddr(volatile uint32_t *flags, volatile uint32_t *tx, u
         view_review_init(addr_getItem, addr_getNumItems, app_reply_address);
         view_review_show(REVIEW_ADDRESS);
         *flags |= IO_ASYNCH_REPLY;
+        review_pending = true;
         return;
     }
     *tx = action_addrResponseLen;
@@ -227,6 +236,7 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
     view_review_init(tx_getItem, tx_getNumItems, app_sign);
     view_review_show(REVIEW_TXN);
     *flags |= IO_ASYNCH_REPLY;
+    review_pending = true;
 }
 
 __Z_INLINE void handleSignRawBytes(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
@@ -274,6 +284,7 @@ __Z_INLINE void handleSignRawBytes(volatile uint32_t *flags, volatile uint32_t *
     view_review_init(tx_getItem, tx_getNumItems, app_sign);
     view_review_show(REVIEW_TXN);
     *flags |= IO_ASYNCH_REPLY;
+    review_pending = true;
 }
 
 __Z_INLINE void handleSignFvmEip191(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
@@ -302,6 +313,7 @@ __Z_INLINE void handleSignFvmEip191(volatile uint32_t *flags, volatile uint32_t 
     view_review_init(fvm_eip191_msg_getItem, fvm_eip191_msg_getNumItems, app_sign_fvm_eip191);
     view_review_show(REVIEW_MSG);
     *flags |= IO_ASYNCH_REPLY;
+    review_pending = true;
 }
 
 void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
@@ -322,11 +334,22 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                 THROW(APDU_CODE_WRONG_LENGTH);
             }
 
+            // Reject any APDU while a review is already on screen.
+            if (review_pending) {
+                THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+            }
+
             const uint8_t instruction = G_io_apdu_buffer[OFFSET_INS];
 
-            // Handle this case as ins number is the same as normal fil sign
-            // instruction
-            if (instruction == INS_GET_ADDR_ETH && cla == CLA_ETH) handleGetAddrEth(flags, tx, rx);
+            // INS_GET_ADDR_ETH and INS_SIGN_SECP256K1 share 0x02; return
+            // after the ETH handler so control does not enter the switch.
+            if (instruction == INS_GET_ADDR_ETH && cla == CLA_ETH) {
+                handleGetAddrEth(flags, tx, rx);
+                if (*flags & IO_ASYNCH_REPLY) {
+                    review_pending = true;
+                }
+                return;
+            }
 
             // Reset BLS UI for next transaction
             app_mode_skip_blindsign_ui();
@@ -377,6 +400,9 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     }
                     tx_context_eth();
                     handleSignEth(flags, tx, rx);
+                    if (*flags & IO_ASYNCH_REPLY) {
+                        review_pending = true;
+                    }
                     break;
                 }
                 case INS_SIGN_PERSONAL_MESSAGE: {
@@ -390,13 +416,19 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     } else {
                         THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
                     }
+                    if (*flags & IO_ASYNCH_REPLY) {
+                        review_pending = true;
+                    }
                     break;
                 }
                 default:
                     THROW(APDU_CODE_INS_NOT_SUPPORTED);
             }
         }
-        CATCH(EXCEPTION_IO_RESET) { THROW(EXCEPTION_IO_RESET); }
+        CATCH(EXCEPTION_IO_RESET) {
+            review_pending = false;
+            THROW(EXCEPTION_IO_RESET);
+        }
         CATCH_OTHER(e) {
             switch (e & 0xF000) {
                 case 0x6000:
