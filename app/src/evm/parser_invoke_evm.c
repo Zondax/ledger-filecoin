@@ -241,6 +241,10 @@ bool isInvokeEVM_ERC20Transfer(const fil_base_tx_t *txObj) {
         return false;
     }
 
+    if (txObj->params_len != ERC20_DATA_LENGTH) {
+        return false;
+    }
+
     rlp_t tmpValue = {0};
     rlp_t tokenContract = {.ptr = txObj->to.buffer + 2, .rlpLen = ETH_ADDRESS_LEN, .kind = RLP_KIND_STRING};
     rlp_t data = {.ptr = txObj->params, .rlpLen = ERC20_DATA_LENGTH, .kind = RLP_KIND_STRING};

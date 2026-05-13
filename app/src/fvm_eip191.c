@@ -31,6 +31,8 @@ cx_blake2b_t ctx_blake2b_fvm;
 #define CX_RIPEMD160_SIZE 20
 #endif
 
+#define FVM_EIP191_MAX_MESSAGE_LEN 4096
+
 static const char FVM_SIGN_MAGIC[] =
     "\x19"
     "Filecoin Signed Message:\n";
@@ -94,6 +96,10 @@ zxerr_t fvm_eip191_msg_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyL
 }
 
 parser_error_t fvm_eip191_msg_parse() {
+    if (tx_get_buffer() == NULL || tx_get_buffer_length() < sizeof(uint32_t)) {
+        return parser_unexpected_buffer_end;
+    }
+
     const uint32_t declared_len = U4BE(tx_get_buffer(), 0);
 
     const uint16_t messageLength = tx_get_buffer_length() - sizeof(uint32_t);
@@ -101,6 +107,10 @@ parser_error_t fvm_eip191_msg_parse() {
     // Verify that the declared length matches the actual remaining bytes
     if (declared_len != messageLength) {
         return parser_unexpected_buffer_end;
+    }
+
+    if (messageLength > FVM_EIP191_MAX_MESSAGE_LEN) {
+        return parser_value_out_of_range;
     }
 
     const uint8_t *message = tx_get_buffer() + sizeof(uint32_t);
