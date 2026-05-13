@@ -55,6 +55,12 @@ describe.each(models)("RawBytes", function (m) {
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
       // wait for the text to disappear
       await sim.waitUntilTextDisappears("Chunk 0");
+      // On touch devices the screen briefly returns to the main menu between
+      // "Chunk 0" and the blind-signing warning; wait for the warning text so
+      // the first captured snapshot is the warning, not the transient menu.
+      if (m.name === "stax" || m.name === "flex" || m.name === "apex_p") {
+        await sim.waitForText("Blind signing ahead");
+      }
       await sim.compareSnapshotsAndApprove(
         ".",
         `${m.prefix.toLowerCase()}-sign_raw_bytes`,
