@@ -23,11 +23,6 @@
     "try": "ts-node try.ts",
     "upgrade": "bunx npm-check-updates -i"
   },
-  "resolutions": {
-    "axios": "^1.10.0",
-    "glob": "^11.0.3",
-    "jackspeak": "2.1.1"
-  },
   "dependencies": {
     "@ledgerhq/hw-transport-node-hid": "6.33.0",
     "@zondax/ledger-filecoin": "^3.0.7",
