@@ -1,0 +1,14 @@
+overrides:
+  axios: ^1.10.0
+  glob: ^11.0.3
+  jackspeak: 2.1.1
+
+allowBuilds:
+  cpu-features: false
+  keccak: true
+  node-hid: true
+  protobufjs: true
+  secp256k1: true
+  ssh2: false
+  unrs-resolver: false
+  usb: true
