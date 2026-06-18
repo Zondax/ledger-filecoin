@@ -294,8 +294,8 @@ __Z_INLINE parser_error_t readMethod(fil_base_tx_t *tx, CborValue *value) {
 
                 // If Invoke + ERC20 Transfer discard encoded cbor bytes at the beginning
                 // Validate paramsLen before accessing buffer contents to prevent OOB reads
-                if (methodValue == INVOKE_EVM_METHOD && paramsLen == 2 + ERC20_DATA_LENGTH &&
-                    tx->params[0] == 0x58 && tx->params[1] == ERC20_DATA_LENGTH &&
+                if (methodValue == INVOKE_EVM_METHOD && paramsLen == 2 + ERC20_DATA_LENGTH && tx->params[0] == 0x58 &&
+                    tx->params[1] == ERC20_DATA_LENGTH &&
                     MEMCMP(tx->params + 2, ERC20_TRANSFER_PREFIX, sizeof(ERC20_TRANSFER_PREFIX)) == 0) {
                     MEMMOVE(tx->params, tx->params + 2, ERC20_DATA_LENGTH);
                     tx->params_len = ERC20_DATA_LENGTH;
