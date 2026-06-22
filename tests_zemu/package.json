@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@ledgerhq/hw-transport-node-hid": "6.33.0",
-    "@zondax/ledger-filecoin": "^3.0.7",
+    "@zondax/ledger-filecoin": "^3.0.9",
     "@zondax/zemu": "0.67.4",
     "varint": "^6.0.0"
   },

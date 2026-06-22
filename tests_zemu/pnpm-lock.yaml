@@ -17,8 +17,8 @@ importers:
         specifier: 6.33.0
         version: 6.33.0
       '@zondax/ledger-filecoin':
-        specifier: ^3.0.7
-        version: 3.0.7
+        specifier: ^3.0.9
+        version: 3.0.9
       '@zondax/zemu':
         specifier: 0.67.4
         version: 0.67.4
@@ -967,8 +967,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@zondax/ledger-filecoin@3.0.7':
-    resolution: {integrity: sha512-bfMwcruNywKn/Twwru4aMv1PS1/bS+5+t+K8T8Hu/18J66kXDYZrCSki6Wt+Fp3Ry64zBx8qHsx1eI4lLwtOIA==}
+  '@zondax/ledger-filecoin@3.0.9':
+    resolution: {integrity: sha512-nHMXhijCBOCi6y12EMTEkzf9thaNdcjZ7didNOCq4JfBtTARls2xjjghZkY1grfZjVQervcePsoS3+kz9o1Oeg==}
 
   '@zondax/ledger-js@1.3.1':
     resolution: {integrity: sha512-sDBwsunK2nSzkqJ5xi6QTiVVpAxSy+X1BVcMfKioBsInjktki2SezT7K8Hw6kSlYd3yfOJlw8cs+hqVtxpAGtg==}
@@ -4133,7 +4133,7 @@ snapshots:
   '@unrs/resolver-binding-win32-x64-msvc@1.11.1':
     optional: true
 
-  '@zondax/ledger-filecoin@3.0.7':
+  '@zondax/ledger-filecoin@3.0.9':
     dependencies:
       '@ledgerhq/hw-transport': 6.32.0
       '@zondax/ledger-js': 1.3.1
