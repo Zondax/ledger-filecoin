@@ -96,6 +96,27 @@ const erc20_tokens_t supportedTokens[] = {
 
 const uint8_t supportedTokensSize = sizeof(supportedTokens) / sizeof(supportedTokens[0]);
 
+// RLP encodes zero as the empty string (0x80), so a zero `value` decodes with
+// rlpLen == 0. The byte scan also catches a host sending a non-canonical 0x00.
+static bool nativeValueIsZero(const eth_tx_t *ethTxObj) {
+    const rlp_t *value = &ethTxObj->tx.value;
+    if (value->ptr == NULL) {
+        return true;
+    }
+    for (uint64_t i = 0; i < value->rlpLen; i++) {
+        if (value->ptr[i] != 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// ERC20 transfer() is non-payable and none of the clear-sign screens below show
+// tx.value, so a transfer carrying native FIL must not be clear-signed: the user
+// would read only the token amount while also approving a FIL transfer. Such a
+// transaction falls back to the blind-sign hash instead.
+static bool isClearSignableERC20(eth_tx_t *ethTxObj) { return validateERC20(ethTxObj) && nativeValueIsZero(ethTxObj); }
+
 parser_error_t printERC20TransferAppSpecific(const parser_context_t *ctx, eth_tx_t *ethTxObj, uint8_t displayIdx,
                                              char *outKey, uint16_t outKeyLen, char *outVal, uint16_t outValLen,
                                              uint8_t pageIdx, uint8_t *pageCount) {
@@ -103,7 +124,11 @@ parser_error_t printERC20TransferAppSpecific(const parser_context_t *ctx, eth_tx
         return parser_unexpected_error;
     }
 
-    UNUSED(ctx);
+    if (!isClearSignableERC20(ethTxObj)) {
+        return printGenericAppSpecific(ctx, ethTxObj, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx,
+                                       pageCount);
+    }
+
     const eth_base_t *tx = &ethTxObj->tx;
     // A type 0x02 transaction never populates gasPrice - it carries a max fee and
     // a priority fee instead, one screen each.
@@ -174,7 +199,7 @@ parser_error_t getNumItemsEthAppSpecific(eth_tx_t *ethTxObj, uint8_t *numItems) 
     }
     // Verify that tx is ERC20
 
-    if (validateERC20(ethTxObj)) {
+    if (isClearSignableERC20(ethTxObj)) {
         char tokenSymbol[10] = {0};
         uint8_t decimals = 0;
         CHECK_ERROR(getERC20Token(ethTxObj, tokenSymbol, &decimals));

@@ -49,6 +49,16 @@ const SIGN_TEST_DATA_CLEARSIGN = [
 
 const SIGN_TEST_DATA_BLINDISIGN = [
   {
+    // Same ERC20 transfer as erc20_transfer_1559 but carrying 1 FIL of native
+    // value. No clear-sign screen shows tx.value, so this must not be
+    // clear-signed - it has to fall back to the blind-sign hash.
+    name: "erc20_transfer_with_native_value",
+    op: Buffer.from(
+      "02f87882013a80843b9aca00850d8c7b50e68303d09094eb466342c4d449bc9f53a865d5cb90586f405215880de0b6b3a7640000b844a9059cbb0000000000000000000000004e83362442b8d1bec281594cea3050c8eb01311c00000000000000000000000000000000000000000000000000000000075bca00c0",
+      "hex",
+    ),
+  },
+  {
     name: "transfer",
     op: Buffer.from(
       "02f782013a8402a8af41843b9aca00850d8c7b50e68303d090944a2962ac08962819a8a17661970e3c0db765565e8817addd0864728ae780c0",
