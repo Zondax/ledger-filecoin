@@ -293,8 +293,11 @@ __Z_INLINE parser_error_t readMethod(fil_base_tx_t *tx, CborValue *value) {
             case CborMapType: {
                 size_t mapLength = 0;
                 CHECK_CBOR_MAP_ERR(cbor_value_get_map_length(&itParams, &mapLength))
-                PARSER_ASSERT_OR_ERROR(mapLength < UINT8_MAX, parser_value_out_of_range)
-                tx->numparams = mapLength;
+                // A map iterates as alternating key/value items while _printParam
+                // walks single items, so N pairs need 2N screens - counting pairs
+                // would leave the second half of the map unreviewed.
+                PARSER_ASSERT_OR_ERROR(mapLength <= UINT8_MAX / 2, parser_value_out_of_range)
+                tx->numparams = (uint8_t)(mapLength * 2);
                 break;
             }
             case CborByteStringType: {
