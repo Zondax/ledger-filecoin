@@ -123,3 +123,7 @@ zxerr_t tx_rawbytes_update(uint8_t *buf, size_t buf_len) {
 
     return zxerr_ok;
 }
+
+void tx_rawbytes_reset() { parser_rawbytes_reset(); }
+
+bool tx_rawbytes_initialized() { return parser_rawbytes_initialized(); }

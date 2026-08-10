@@ -37,6 +37,10 @@ static const char messagePrefix[] = "Filecoin Sign Bytes:\n";
 // the begining of the message.
 // and, finally, check that the data comes prefixed
 parser_error_t raw_bytes_init(uint8_t *buf, size_t buf_len) {
+    // Drop any previous session up front: if this init fails half way, the state
+    // left behind must not be resumable by a later raw_bytes_update.
+    parser_tx_obj.raw_bytes_tx.initialized = false;
+
     if (buf_len == 0) return parser_unexpected_buffer_end;
 
 #if defined(LEDGER_SPECIFIC)
@@ -74,10 +78,21 @@ parser_error_t raw_bytes_init(uint8_t *buf, size_t buf_len) {
     parser_tx_obj.raw_bytes_tx.current = 0;
     MEMZERO(parser_tx_obj.raw_bytes_tx.digest, BLAKE2B_256_SIZE);
 
+    // The prefix checked above is the only thing separating a raw-bytes digest
+    // from a transaction digest - both end up as CID(blake2b(..)) fed to the same
+    // signer. Mark the session live only now that the prefix has been accepted.
+    parser_tx_obj.raw_bytes_tx.initialized = true;
+
     return raw_bytes_update(msg, rx);
 }
 
+void raw_bytes_reset(void) { MEMZERO(&parser_tx_obj.raw_bytes_tx, sizeof(parser_tx_obj.raw_bytes_tx)); }
+
+bool raw_bytes_is_initialized(void) { return parser_tx_obj.raw_bytes_tx.initialized; }
+
 parser_error_t raw_bytes_update(uint8_t *buf, size_t buf_len) {
+    if (!parser_tx_obj.raw_bytes_tx.initialized) return parser_init_context_empty;
+
     if (buf_len == 0) return parser_unexpected_buffer_end;
 
     if (blake_hash_update(buf, buf_len) != zxerr_ok) return parser_value_out_of_range;
@@ -88,6 +103,8 @@ parser_error_t raw_bytes_update(uint8_t *buf, size_t buf_len) {
 }
 
 parser_error_t _readRawBytes(__Z_UNUSED const parser_context_t *ctx, raw_bytes_state_t *tx) {
+    if (!tx->initialized) return parser_no_data;
+
     size_t total = tx->total;
     size_t current = tx->current;
 
