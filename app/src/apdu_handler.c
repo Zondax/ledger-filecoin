@@ -376,20 +376,31 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     break;
                 }
 
+                // The FIL instructions below derive and use a Filecoin key, so
+                // they are only reachable under the Filecoin CLA.
                 case INS_GET_ADDR_SECP256K1: {
                     CHECK_PIN_VALIDATED()
+                    if (cla != CLA) {
+                        THROW(APDU_CODE_CLA_NOT_SUPPORTED);
+                    }
                     handleGetAddr(flags, tx, rx);
                     break;
                 }
 
                 case INS_SIGN_SECP256K1: {
                     CHECK_PIN_VALIDATED()
+                    if (cla != CLA) {
+                        THROW(APDU_CODE_CLA_NOT_SUPPORTED);
+                    }
                     handleSign(flags, tx, rx);
                     break;
                 }
 
                 case INS_SIGN_RAW_BYTES: {
                     CHECK_PIN_VALIDATED()
+                    if (cla != CLA) {
+                        THROW(APDU_CODE_CLA_NOT_SUPPORTED);
+                    }
                     handleSignRawBytes(flags, tx, rx);
                     break;
                 }
