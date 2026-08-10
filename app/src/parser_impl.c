@@ -272,6 +272,16 @@ __Z_INLINE parser_error_t readMethod(fil_base_tx_t *tx, CborValue *value) {
 
         tx->params_len = paramsLen;
 
+        // The root params item must consume the whole blob. Anything trailing it
+        // is covered by the signature but belongs to no display item, so it would
+        // be signed without ever reaching a review screen. The default branch
+        // below is exempt: it deliberately renders the blob as opaque bytes.
+        if (itParams.type == CborArrayType || itParams.type == CborMapType || itParams.type == CborByteStringType) {
+            CborValue itEnd = itParams;
+            CHECK_CBOR_MAP_ERR(cbor_value_advance(&itEnd))
+            PARSER_ASSERT_OR_ERROR(itEnd.ptr == tx->params + paramsLen, parser_cbor_unexpected_EOF)
+        }
+
         switch (itParams.type) {
             case CborArrayType: {
                 size_t arrayLength = 0;
