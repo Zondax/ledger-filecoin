@@ -123,6 +123,14 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_item
     switch (ctx->tx_type) {
         case fil_tx: {
             *num_items = _getNumItems(ctx, &parser_tx_obj.base_tx);
+            // _getNumItems reports failure - an item count that does not fit a
+            // uint8_t, or an unparseable InvokeEVM payload - by returning 0. A
+            // valid FIL message always has at least the six base fields, so a
+            // zero count must not reach parser_validate: its loop would run zero
+            // times and the user would approve a review with no fields on screen.
+            if (*num_items == 0) {
+                return parser_unexpected_number_items;
+            }
             break;
         }
         case raw_bytes: {
