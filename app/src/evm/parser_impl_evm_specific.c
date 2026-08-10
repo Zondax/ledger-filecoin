@@ -104,13 +104,20 @@ parser_error_t printERC20TransferAppSpecific(const parser_context_t *ctx, eth_tx
     }
 
     UNUSED(ctx);
-    const eth_base_t *legacy = &ethTxObj->tx;
+    const eth_base_t *tx = &ethTxObj->tx;
+    // A type 0x02 transaction never populates gasPrice - it carries a max fee and
+    // a priority fee instead, one screen each.
+    const bool is1559 = (ethTxObj->tx_type == eip1559);
+
     char tokenSymbol[10] = {0};
     uint8_t decimals = 0;
     CHECK_ERROR(getERC20Token(ethTxObj, tokenSymbol, &decimals));
     bool hideContract = (MEMCMP(tokenSymbol, "?? ", 3) != 0);
 
     displayIdx += (displayIdx && hideContract) ? 1 : 0;
+    // Slot 5 is the priority fee, which exists only for 1559.
+    displayIdx += (!is1559 && displayIdx >= 5) ? 1 : 0;
+
     switch (displayIdx) {
         case 0:
             snprintf(outKey, outKeyLen, "To");
@@ -131,17 +138,27 @@ parser_error_t printERC20TransferAppSpecific(const parser_context_t *ctx, eth_tx
 
         case 3:
             snprintf(outKey, outKeyLen, "Nonce");
-            CHECK_ERROR(printRLPNumber(&legacy->nonce, outVal, outValLen, pageIdx, pageCount));
+            CHECK_ERROR(printRLPNumber(&tx->nonce, outVal, outValLen, pageIdx, pageCount));
             break;
 
         case 4:
+            if (is1559) {
+                snprintf(outKey, outKeyLen, "Max fee per gas");
+                CHECK_ERROR(printRLPNumber(&tx->max_fee_per_gas, outVal, outValLen, pageIdx, pageCount));
+                break;
+            }
             snprintf(outKey, outKeyLen, "Gas price");
-            CHECK_ERROR(printRLPNumber(&legacy->gasPrice, outVal, outValLen, pageIdx, pageCount));
+            CHECK_ERROR(printRLPNumber(&tx->gasPrice, outVal, outValLen, pageIdx, pageCount));
             break;
 
         case 5:
+            snprintf(outKey, outKeyLen, "Max priority fee");
+            CHECK_ERROR(printRLPNumber(&tx->max_priority_fee_per_gas, outVal, outValLen, pageIdx, pageCount));
+            break;
+
+        case 6:
             snprintf(outKey, outKeyLen, "Gas limit");
-            CHECK_ERROR(printRLPNumber(&legacy->gasLimit, outVal, outValLen, pageIdx, pageCount));
+            CHECK_ERROR(printRLPNumber(&tx->gasLimit, outVal, outValLen, pageIdx, pageCount));
             break;
 
         default:
@@ -152,7 +169,7 @@ parser_error_t printERC20TransferAppSpecific(const parser_context_t *ctx, eth_tx
 }
 
 parser_error_t getNumItemsEthAppSpecific(eth_tx_t *ethTxObj, uint8_t *numItems) {
-    if (numItems == NULL) {
+    if (ethTxObj == NULL || numItems == NULL) {
         return parser_unexpected_error;
     }
     // Verify that tx is ERC20
@@ -163,6 +180,10 @@ parser_error_t getNumItemsEthAppSpecific(eth_tx_t *ethTxObj, uint8_t *numItems) 
         CHECK_ERROR(getERC20Token(ethTxObj, tokenSymbol, &decimals));
         // If token is not recognized, print value address
         *numItems = (MEMCMP(tokenSymbol, "?? ", 3) != 0) ? 5 : 6;
+        // 1559 replaces the single gas price screen with max fee + priority fee.
+        if (ethTxObj->tx_type == eip1559) {
+            (*numItems)++;
+        }
         return parser_ok;
     }
 
