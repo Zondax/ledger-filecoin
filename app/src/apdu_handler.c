@@ -38,13 +38,22 @@
 #include "view_internal.h"
 #include "zxmacros.h"
 
-static bool tx_initialized = false;
 static uint32_t msg_counter = 0;
 
 // Global variable to store error message offset for custom error display
 uint16_t G_error_message_offset = 0;
 
-bool review_pending = false;
+// Storage for the request state declared in actions.h.
+tx_state_e g_tx_state = TX_STATE_IDLE;
+
+// Hands the device back and drops every trace of an in-flight stream, including
+// the chunk state zxlib keeps for the EVM payloads and the raw-bytes hasher.
+static void tx_state_go_idle(void) {
+    g_tx_state = TX_STATE_IDLE;
+    msg_counter = 0;
+    reset_evm_chunk_state();
+    tx_rawbytes_reset();
+}
 
 void extractHDPath(uint32_t rx, uint32_t offset, uint32_t path_len) {
     if (path_len == 0 || path_len > MAX_BIP32_PATH) {
@@ -64,7 +73,6 @@ void extractHDPath(uint32_t rx, uint32_t offset, uint32_t path_len) {
 }
 
 void extract_fil_path(uint32_t rx, uint32_t offset) {
-    tx_initialized = false;
     extractHDPath(rx, offset, HDPATH_LEN_DEFAULT);
 
     const bool mainnet = hdPath[0] == HDPATH_0_DEFAULT && hdPath[1] == HDPATH_1_DEFAULT;
@@ -95,27 +103,28 @@ __Z_INLINE bool process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
     uint32_t added;
     switch (payloadType) {
         case P1_INIT:
+            if (g_tx_state != TX_STATE_IDLE) {
+                THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+            }
             tx_initialize();
             tx_reset();
             extract_fil_path(rx, OFFSET_DATA);
-            tx_initialized = true;
+            g_tx_state = TX_STATE_RECEIVING;
             return false;
         case P1_ADD:
-            if (!tx_initialized) {
+            if (g_tx_state != TX_STATE_RECEIVING) {
                 THROW(APDU_CODE_TX_NOT_INITIALIZED);
             }
             added = tx_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
             if (added != rx - OFFSET_DATA) {
-                tx_initialized = false;
                 THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
             }
             return false;
         case P1_LAST:
-            if (!tx_initialized) {
+            if (g_tx_state != TX_STATE_RECEIVING) {
                 THROW(APDU_CODE_TX_NOT_INITIALIZED);
             }
             added = tx_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
-            tx_initialized = false;
             if (added != rx - OFFSET_DATA) {
                 THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
             }
@@ -139,10 +148,13 @@ __Z_INLINE bool process_rawbytes_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_
 
     switch (payloadType) {
         case P1_INIT:
+            if (g_tx_state != TX_STATE_IDLE) {
+                THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+            }
             tx_initialize();
             tx_reset();
             extract_fil_path(rx, OFFSET_DATA);
-            tx_initialized = true;
+            g_tx_state = TX_STATE_RECEIVING;
             msg_counter = 0;
             return false;
         case P1_ADD:
@@ -150,39 +162,40 @@ __Z_INLINE bool process_rawbytes_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_
             size_t msg_len = rx - OFFSET_DATA;
             uint8_t *buf = G_io_apdu_buffer + OFFSET_DATA;
 
-            if (!tx_initialized) {
+            if (g_tx_state != TX_STATE_RECEIVING) {
                 THROW(APDU_CODE_TX_NOT_INITIALIZED);
             }
 
-            // initialize if this is the first message, as P1_INIT is the first chunk containing only the PATH
-            // if this is not the first message, then, just update our state with this data
-            if (msg_counter == 1) {
+            // P1_INIT carries only the path, so the first data chunk is the one
+            // that sets up the hasher and checks the "Filecoin Sign Bytes:"
+            // prefix; later chunks only extend the hash. Keying off the parser's
+            // own state instead of a chunk counter means a session whose init
+            // failed cannot be resumed mid-stream with the prefix unchecked.
+            if (!tx_rawbytes_initialized()) {
                 if (tx_rawbytes_init_state(buf, msg_len) != zxerr_ok) {
-                    tx_initialized = false;
                     THROW(APDU_CODE_DATA_INVALID);
                 }
             } else {
                 if (tx_rawbytes_update(buf, msg_len) != zxerr_ok) {
-                    tx_initialized = false;
                     THROW(APDU_CODE_EXECUTION_ERROR);
                 }
             }
 
-            if (payloadType == P1_LAST) {
-                tx_initialized = false;
-                return true;
-            }
-
-            return false;
+            return payloadType == P1_LAST;
         }
     }
 
-    tx_initialized = false;
     THROW(APDU_CODE_INVALIDP1P2);
     return false;
 }
 
 __Z_INLINE void handleGetAddr(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
+    // Deriving an address overwrites hdPath, which a half-received transaction
+    // still owns.
+    if (g_tx_state != TX_STATE_IDLE) {
+        THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+    }
+
     extract_fil_path(rx, OFFSET_DATA);
 
     uint8_t requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
@@ -195,8 +208,10 @@ __Z_INLINE void handleGetAddr(volatile uint32_t *flags, volatile uint32_t *tx, u
     if (requireConfirmation) {
         view_review_init(addr_getItem, addr_getNumItems, app_reply_address);
         view_review_show(REVIEW_ADDRESS);
+        // Claim the state only once the review is actually on screen, so a
+        // failure while bringing it up leaves the app idle instead of locked.
+        g_tx_state = TX_STATE_REVIEWING;
         *flags |= IO_ASYNCH_REPLY;
-        review_pending = true;
         return;
     }
     *tx = action_addrResponseLen;
@@ -235,8 +250,10 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
     CHECK_APP_CANARY()
     view_review_init(tx_getItem, tx_getNumItems, app_sign);
     view_review_show(REVIEW_TXN);
+    // Claim the state only once the review is actually on screen, so a failure
+    // while bringing it up leaves the app idle instead of locked.
+    g_tx_state = TX_STATE_REVIEWING;
     *flags |= IO_ASYNCH_REPLY;
-    review_pending = true;
 }
 
 __Z_INLINE void handleSignRawBytes(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
@@ -283,8 +300,10 @@ __Z_INLINE void handleSignRawBytes(volatile uint32_t *flags, volatile uint32_t *
     CHECK_APP_CANARY()
     view_review_init(tx_getItem, tx_getNumItems, app_sign);
     view_review_show(REVIEW_TXN);
+    // Claim the state only once the review is actually on screen, so a failure
+    // while bringing it up leaves the app idle instead of locked.
+    g_tx_state = TX_STATE_REVIEWING;
     *flags |= IO_ASYNCH_REPLY;
-    review_pending = true;
 }
 
 __Z_INLINE void handleSignFvmEip191(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
@@ -312,8 +331,29 @@ __Z_INLINE void handleSignFvmEip191(volatile uint32_t *flags, volatile uint32_t 
 
     view_review_init(fvm_eip191_msg_getItem, fvm_eip191_msg_getNumItems, app_sign_fvm_eip191);
     view_review_show(REVIEW_MSG);
+    // Claim the state only once the review is actually on screen, so a failure
+    // while bringing it up leaves the app idle instead of locked.
+    g_tx_state = TX_STATE_REVIEWING;
     *flags |= IO_ASYNCH_REPLY;
-    review_pending = true;
+}
+
+// zxlib owns the EVM chunk counters, so mirror them onto the shared state
+// before handing over: a first chunk opens a stream, anything else continues
+// one that must already be running.
+//
+// Note the two status words throughout this file: a continuation chunk with no
+// flow running keeps the pre-existing TX_NOT_INITIALIZED, while an attempt to
+// start something while another request owns the device is COMMAND_NOT_ALLOWED.
+// Only the latter preserves the in-flight state in handleApdu's CATCH_OTHER.
+__Z_INLINE void claim_evm_chunk(void) {
+    if (G_io_apdu_buffer[OFFSET_PAYLOAD_TYPE] == P1_ETH_FIRST) {
+        if (g_tx_state != TX_STATE_IDLE) {
+            THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+        }
+        g_tx_state = TX_STATE_RECEIVING;
+    } else if (g_tx_state != TX_STATE_RECEIVING) {
+        THROW(APDU_CODE_TX_NOT_INITIALIZED);
+    }
 }
 
 void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
@@ -335,7 +375,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
             }
 
             // Reject any APDU while a review is already on screen.
-            if (review_pending) {
+            if (g_tx_state == TX_STATE_REVIEWING) {
                 THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
             }
 
@@ -344,9 +384,12 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
             // INS_GET_ADDR_ETH and INS_SIGN_SECP256K1 share 0x02; return
             // after the ETH handler so control does not enter the switch.
             if (instruction == INS_GET_ADDR_ETH && cla == CLA_ETH) {
+                if (g_tx_state != TX_STATE_IDLE) {
+                    THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+                }
                 handleGetAddrEth(flags, tx, rx);
                 if (*flags & IO_ASYNCH_REPLY) {
-                    review_pending = true;
+                    g_tx_state = TX_STATE_REVIEWING;
                 }
                 return;
             }
@@ -376,20 +419,31 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     break;
                 }
 
+                // The FIL instructions below derive and use a Filecoin key, so
+                // they are only reachable under the Filecoin CLA.
                 case INS_GET_ADDR_SECP256K1: {
                     CHECK_PIN_VALIDATED()
+                    if (cla != CLA) {
+                        THROW(APDU_CODE_CLA_NOT_SUPPORTED);
+                    }
                     handleGetAddr(flags, tx, rx);
                     break;
                 }
 
                 case INS_SIGN_SECP256K1: {
                     CHECK_PIN_VALIDATED()
+                    if (cla != CLA) {
+                        THROW(APDU_CODE_CLA_NOT_SUPPORTED);
+                    }
                     handleSign(flags, tx, rx);
                     break;
                 }
 
                 case INS_SIGN_RAW_BYTES: {
                     CHECK_PIN_VALIDATED()
+                    if (cla != CLA) {
+                        THROW(APDU_CODE_CLA_NOT_SUPPORTED);
+                    }
                     handleSignRawBytes(flags, tx, rx);
                     break;
                 }
@@ -398,16 +452,18 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     if (cla != CLA_ETH) {
                         THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
                     }
+                    claim_evm_chunk();
                     tx_context_eth();
                     handleSignEth(flags, tx, rx);
                     if (*flags & IO_ASYNCH_REPLY) {
-                        review_pending = true;
+                        g_tx_state = TX_STATE_REVIEWING;
                     }
                     break;
                 }
                 case INS_SIGN_PERSONAL_MESSAGE: {
                     CHECK_PIN_VALIDATED()
                     if (cla == CLA_ETH) {
+                        claim_evm_chunk();
                         tx_context_eth();
                         handleSignEip191(flags, tx, rx);
                     } else if (cla == CLA) {
@@ -417,7 +473,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                         THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
                     }
                     if (*flags & IO_ASYNCH_REPLY) {
-                        review_pending = true;
+                        g_tx_state = TX_STATE_REVIEWING;
                     }
                     break;
                 }
@@ -426,10 +482,21 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
             }
         }
         CATCH(EXCEPTION_IO_RESET) {
-            review_pending = false;
+            // The link is gone, so nothing is waiting on a reply.
+            tx_state_go_idle();
             THROW(EXCEPTION_IO_RESET);
         }
         CATCH_OTHER(e) {
+            // Handlers that put a UI on screen and then threw - the expert-mode
+            // and blind-sign error modals, here and in zxlib - still owe the host
+            // a reply through that UI's callback (app_reply_error / app_reject).
+            // Hold the state until it answers, otherwise the host can push a
+            // second review while the modal is up and have the user approve it
+            // with the button press meant to dismiss the error.
+            if (*flags & IO_ASYNCH_REPLY) {
+                g_tx_state = TX_STATE_REVIEWING;
+            }
+
             switch (e & 0xF000) {
                 case 0x6000:
                 case APDU_CODE_OK:
@@ -439,6 +506,18 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     sw = 0x6800 | (e & 0x7FF);
                     break;
             }
+
+            // Reset on real errors. Preserve the state on success (an
+            // intermediate chunk reports APDU_CODE_OK and its stream must stay
+            // alive), on COMMAND_NOT_ALLOWED, where we are rejecting a
+            // concurrent command and the in-flight request must be allowed to
+            // finish, and while a review is on screen - that request still owns
+            // hdPath and the tx buffer, both read again when the user approves,
+            // so only the reply paths in actions.h may hand the state back.
+            if (sw != APDU_CODE_OK && sw != APDU_CODE_COMMAND_NOT_ALLOWED && g_tx_state != TX_STATE_REVIEWING) {
+                tx_state_go_idle();
+            }
+
             G_io_apdu_buffer[*tx] = sw >> 8;
             G_io_apdu_buffer[*tx + 1] = sw & 0xFF;
             *tx += 2;

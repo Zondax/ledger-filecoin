@@ -44,6 +44,8 @@ parser_error_t parser_getItem(const parser_context_t *ctx, uint8_t displayIdx, c
 parser_error_t parser_rawbytes_init(uint8_t *buf, size_t buf_len);
 parser_error_t parser_rawbytes_update(uint8_t *buf, size_t buf_len);
 parser_error_t parser_rawbytes_finalize();
+void parser_rawbytes_reset();
+bool parser_rawbytes_initialized();
 uint8_t *parser_rawbytes_hash();
 size_t parser_rawbytes_hash_len();
 
