@@ -175,6 +175,24 @@ parser_error_t printValue(const struct CborValue *value, char *outVal, uint16_t 
             break;
         }
 
+        // A container nested inside the parameters gets no screen of its own,
+        // so print the bytes it spans. Naming the type alone left everything
+        // inside it covered by the signature but absent from the review, and
+        // real actor parameters (multisig proposals, market deals) nest as a
+        // matter of course, so rejecting them instead would make ordinary
+        // transactions unsignable.
+        case CborArrayType:
+        case CborMapType: {
+            CborValue itNested = *value;
+            const uint8_t *start = value->ptr;
+            CHECK_CBOR_MAP_ERR(cbor_value_advance(&itNested))
+            CHECK_APP_CANARY()
+            const uint8_t *end = itNested.ptr;
+            PARSER_ASSERT_OR_ERROR(end > start, parser_unexpected_value)
+            pageStringHex(outVal, outValLen, (const char *)start, (uint16_t)(end - start), pageIdx, pageCount);
+            return parser_ok;
+        }
+
         default:
             snprintf(outVal, outValLen, "Type: %d", value->type);
     }
