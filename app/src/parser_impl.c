@@ -143,15 +143,36 @@ parser_error_t printValue(const struct CborValue *value, char *outVal, uint16_t 
         // Add support to render fields tagged as Tag(42) as described here:
         // https://github.com/ipld/cid-cbor/
         case CborTagType: {
-            CborTag tag;
-            CHECK_CBOR_MAP_ERR(cbor_value_get_tag(value, &tag))
-            if (tag == TAG_CID) {
-                CHECK_CBOR_MAP_ERR(cbor_value_copy_tag(value, buff, &buffLen, NULL /* next */))
+            // parse_cid strips the DagCbor multibase prefix, checks the version
+            // and codec, and printCid renders the base32 form a wallet shows.
+            // cbor_value_copy_tag is not used: it sizes the copy from the tag
+            // number rather than the tagged item, which both truncates the CID
+            // and refuses ordinary single-CID parameters outright.
+            CborValue itTag = *value;
+            cid_t cid;
+            MEMZERO(&cid, sizeof(cid));
+            if (parse_cid(&cid, &itTag) == parser_ok) {
                 CHECK_APP_CANARY()
-                CHECK_ERROR(renderByteString(buff, buffLen, outVal, outValLen, pageIdx, pageCount))
-                break;
+                CHECK_ERROR(printCid(&cid, outVal, outValLen, pageIdx, pageCount))
+                return parser_ok;
             }
-            return parser_unexpected_type;
+
+            // parse_cid only recognises the dag-cbor codec, and parameters
+            // legitimately carry CIDs under others -- multisig constructor
+            // parameters use the raw codec. Print the bytes for those rather
+            // than refusing the transaction. The tag is skipped first so the
+            // length comes from the tagged item, which is the part
+            // cbor_value_copy_tag gets wrong.
+            CborValue itBytes = *value;
+            CHECK_CBOR_MAP_ERR(cbor_value_skip_tag(&itBytes))
+            CHECK_CBOR_TYPE(cbor_value_get_type(&itBytes), CborByteStringType)
+            buffLen = sizeof(buff);
+            CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(&itBytes, buff, &buffLen, NULL /* next */))
+            CHECK_APP_CANARY()
+            if (buffLen > 0) {
+                CHECK_ERROR(renderByteString(buff, buffLen, outVal, outValLen, pageIdx, pageCount))
+            }
+            break;
         }
 
         default:
