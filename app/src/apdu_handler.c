@@ -153,6 +153,12 @@ __Z_INLINE bool process_rawbytes_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_
             }
             tx_initialize();
             tx_reset();
+            // parser_tx_obj is a union shared with the message flows, so a
+            // session starting here can otherwise read its "initialized" flag
+            // out of bytes an earlier transaction wrote. Only the reset paths
+            // taken on IO_RESET and on an error clear it, and neither runs on
+            // an ordinary return to idle.
+            tx_rawbytes_reset();
             extract_fil_path(rx, OFFSET_DATA);
             g_tx_state = TX_STATE_RECEIVING;
             msg_counter = 0;
