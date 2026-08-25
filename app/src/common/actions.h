@@ -32,14 +32,16 @@ extern uint16_t action_addrResponseLen;
 extern uint16_t G_error_message_offset;
 
 // One request owns the device at a time. IDLE means nothing is in flight;
-// RECEIVING means chunks are still being assembled into the shared tx buffer;
-// REVIEWING means a review or an error modal is on screen and the request still
-// owns hdPath and the tx buffer, both of which are read again when the user
-// answers. Only the reply paths below hand the state back.
+// RECEIVING means chunks are still being assembled into the shared tx buffer.
+// Only the reply paths below hand the state back.
+//
+// The on-screen half of this used to live here too, as TX_STATE_REVIEWING. It
+// is now zxlib's view_review_is_pending(), which covers reviews and error
+// modals alike -- including the ones zxlib itself puts up, which this app could
+// never see.
 typedef enum {
     TX_STATE_IDLE = 0,
     TX_STATE_RECEIVING,
-    TX_STATE_REVIEWING,
 } tx_state_e;
 
 extern tx_state_e g_tx_state;
