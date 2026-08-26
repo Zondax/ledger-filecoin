@@ -153,6 +153,12 @@ __Z_INLINE bool process_rawbytes_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_
             }
             tx_initialize();
             tx_reset();
+            // parser_tx_obj is a union shared with the message flows, so a
+            // session starting here can otherwise read its "initialized" flag
+            // out of bytes an earlier transaction wrote. Only the reset paths
+            // taken on IO_RESET and on an error clear it, and neither runs on
+            // an ordinary return to idle.
+            tx_rawbytes_reset();
             extract_fil_path(rx, OFFSET_DATA);
             g_tx_state = TX_STATE_RECEIVING;
             msg_counter = 0;
@@ -208,9 +214,6 @@ __Z_INLINE void handleGetAddr(volatile uint32_t *flags, volatile uint32_t *tx, u
     if (requireConfirmation) {
         view_review_init(addr_getItem, addr_getNumItems, app_reply_address);
         view_review_show(REVIEW_ADDRESS);
-        // Claim the state only once the review is actually on screen, so a
-        // failure while bringing it up leaves the app idle instead of locked.
-        g_tx_state = TX_STATE_REVIEWING;
         *flags |= IO_ASYNCH_REPLY;
         return;
     }
@@ -250,9 +253,6 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
     CHECK_APP_CANARY()
     view_review_init(tx_getItem, tx_getNumItems, app_sign);
     view_review_show(REVIEW_TXN);
-    // Claim the state only once the review is actually on screen, so a failure
-    // while bringing it up leaves the app idle instead of locked.
-    g_tx_state = TX_STATE_REVIEWING;
     *flags |= IO_ASYNCH_REPLY;
 }
 
@@ -300,9 +300,6 @@ __Z_INLINE void handleSignRawBytes(volatile uint32_t *flags, volatile uint32_t *
     CHECK_APP_CANARY()
     view_review_init(tx_getItem, tx_getNumItems, app_sign);
     view_review_show(REVIEW_TXN);
-    // Claim the state only once the review is actually on screen, so a failure
-    // while bringing it up leaves the app idle instead of locked.
-    g_tx_state = TX_STATE_REVIEWING;
     *flags |= IO_ASYNCH_REPLY;
 }
 
@@ -331,9 +328,6 @@ __Z_INLINE void handleSignFvmEip191(volatile uint32_t *flags, volatile uint32_t 
 
     view_review_init(fvm_eip191_msg_getItem, fvm_eip191_msg_getNumItems, app_sign_fvm_eip191);
     view_review_show(REVIEW_MSG);
-    // Claim the state only once the review is actually on screen, so a failure
-    // while bringing it up leaves the app idle instead of locked.
-    g_tx_state = TX_STATE_REVIEWING;
     *flags |= IO_ASYNCH_REPLY;
 }
 
@@ -374,8 +368,8 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                 THROW(APDU_CODE_WRONG_LENGTH);
             }
 
-            // Reject any APDU while a review is already on screen.
-            if (g_tx_state == TX_STATE_REVIEWING) {
+            // Reject any APDU while a review or an error modal is on screen.
+            if (view_review_is_pending()) {
                 THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
             }
 
@@ -388,9 +382,6 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
                 }
                 handleGetAddrEth(flags, tx, rx);
-                if (*flags & IO_ASYNCH_REPLY) {
-                    g_tx_state = TX_STATE_REVIEWING;
-                }
                 return;
             }
 
@@ -455,9 +446,6 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     claim_evm_chunk();
                     tx_context_eth();
                     handleSignEth(flags, tx, rx);
-                    if (*flags & IO_ASYNCH_REPLY) {
-                        g_tx_state = TX_STATE_REVIEWING;
-                    }
                     break;
                 }
                 case INS_SIGN_PERSONAL_MESSAGE: {
@@ -472,9 +460,6 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     } else {
                         THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
                     }
-                    if (*flags & IO_ASYNCH_REPLY) {
-                        g_tx_state = TX_STATE_REVIEWING;
-                    }
                     break;
                 }
                 default:
@@ -487,16 +472,6 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
             THROW(EXCEPTION_IO_RESET);
         }
         CATCH_OTHER(e) {
-            // Handlers that put a UI on screen and then threw - the expert-mode
-            // and blind-sign error modals, here and in zxlib - still owe the host
-            // a reply through that UI's callback (app_reply_error / app_reject).
-            // Hold the state until it answers, otherwise the host can push a
-            // second review while the modal is up and have the user approve it
-            // with the button press meant to dismiss the error.
-            if (*flags & IO_ASYNCH_REPLY) {
-                g_tx_state = TX_STATE_REVIEWING;
-            }
-
             switch (e & 0xF000) {
                 case 0x6000:
                 case APDU_CODE_OK:
@@ -511,10 +486,11 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
             // intermediate chunk reports APDU_CODE_OK and its stream must stay
             // alive), on COMMAND_NOT_ALLOWED, where we are rejecting a
             // concurrent command and the in-flight request must be allowed to
-            // finish, and while a review is on screen - that request still owns
-            // hdPath and the tx buffer, both read again when the user approves,
-            // so only the reply paths in actions.h may hand the state back.
-            if (sw != APDU_CODE_OK && sw != APDU_CODE_COMMAND_NOT_ALLOWED && g_tx_state != TX_STATE_REVIEWING) {
+            // finish, and while the view layer still has a screen up - that
+            // request still owns hdPath and the tx buffer, both read again when
+            // the user answers, so only the reply paths in actions.h may hand
+            // the state back.
+            if (sw != APDU_CODE_OK && sw != APDU_CODE_COMMAND_NOT_ALLOWED && !view_review_is_pending()) {
                 tx_state_go_idle();
             }
 

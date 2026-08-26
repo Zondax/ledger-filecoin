@@ -1105,7 +1105,7 @@ static CborError iterate_string_chunks(const CborValue *value, char *buffer, siz
     size_t total = 0;
     const void *ptr;
 
-    cbor_assert(cbor_value_is_byte_string(value) || cbor_value_is_text_string(value));
+    cbor_assert(cbor_value_is_byte_string(value) || cbor_value_is_text_string(value) || cbor_value_is_tag(value));
     if (!next)
         next = &tmp;
     *next = *value;

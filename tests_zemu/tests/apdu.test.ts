@@ -15,7 +15,8 @@
  ******************************************************************************* */
 
 import Zemu from "@zondax/zemu";
-import { models, defaultOptions } from "./common";
+import { FilecoinApp } from "@zondax/ledger-filecoin";
+import { models, defaultOptions, PATH } from "./common";
 
 jest.setTimeout(180000);
 
@@ -89,6 +90,13 @@ async function sw(
     throw e;
   }
 }
+
+// A well-formed transfer -- the same blob standard.test.ts signs. Unlike CHUNK
+// above this has to parse, because the point is to reach a review.
+const TX_BLOB = Buffer.from(
+  "8a0058310396a1a3e4ea7a14d49985e661b22401d44fed402d1d0925b243c923589c0fbc7e32cd04e29ed78d15d37d3aaa3fe6da3358310386b454258c589475f7d16f5aac018a79f6c1169d20fc33921dd8b5ce1cac6c348f90a3603624f6aeb91b64518c2e80950144000186a01961a8430009c44200000040",
+  "hex",
+);
 
 const hex = (v: number) => `0x${v.toString(16)}`;
 
@@ -239,6 +247,67 @@ describe("APDU state machine", function () {
           await sw(t, CLA, INS_SIGN_SECP256K1, P1_ADD, P2_NONE, CHUNK),
           SW_TX_NOT_INITIALIZED,
           "add after an aborted flow",
+        );
+      } finally {
+        await sim.close();
+      }
+    },
+  );
+
+  // The assertions above all live in the receiving phase and never put anything
+  // on screen. This covers what nothing else did: that a review hands the device
+  // back once the user answers it, so a second transaction still gets through.
+  //
+  // The lock is zxlib's view_review_is_pending() rather than state this app
+  // keeps, and it is checked at the top of handleApdu before any instruction is
+  // dispatched -- so any status word other than 0x6986 below proves it was
+  // released. The failure this guards against is a lock that arms but never
+  // releases, leaving the app answering 0x6986 to everything until it is
+  // restarted. Every other sign test here approves once and then closes the
+  // simulator, so none of them would notice.
+  //
+  // Reuses the sign_basic goldens: same transaction, same review screens, so no
+  // new snapshots.
+  test.concurrent.each(models)(
+    "a review hands the device back for $name",
+    async function (m) {
+      const sim = new Zemu(m.path);
+      try {
+        await sim.start({ ...defaultOptions, model: m.name });
+        const app = new FilecoinApp(sim.getTransport());
+        const t = sim.getTransport();
+        const check = (actual: number, expected: number, what: string) =>
+          expect(`${what} -> ${hex(actual)}`).toEqual(
+            `${what} -> ${hex(expected)}`,
+          );
+
+        // Not awaited: sign only settles once the user answers the review.
+        const signatureRequest = app.sign(PATH, TX_BLOB);
+        await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
+        await sim.compareSnapshotsAndApprove(
+          ".",
+          `${m.prefix.toLowerCase()}-sign_basic`,
+        );
+        await expect(signatureRequest).resolves.toBeDefined();
+
+        // A plain request is served again.
+        check(
+          await sw(t, CLA, INS_GET_ADDR_SECP256K1, 0x00, P2_NONE, HDPATH),
+          SW_OK,
+          "get address once the review has been approved",
+        );
+
+        // And a fresh signing flow is accepted, which is the case that matters:
+        // two transactions in a row must both get through.
+        check(
+          await sw(t, CLA, INS_SIGN_SECP256K1, P1_INIT, P2_NONE, HDPATH),
+          SW_OK,
+          "sign init once the review has been approved",
+        );
+        check(
+          await sw(t, CLA, INS_SIGN_SECP256K1, P1_ADD, P2_NONE, CHUNK),
+          SW_OK,
+          "sign add once the review has been approved",
         );
       } finally {
         await sim.close();
