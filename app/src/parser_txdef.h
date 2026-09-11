@@ -94,6 +94,10 @@ typedef struct {
     uint8_t digest[BLAKE2B_256_SIZE];
     size_t total;
     size_t current;
+    // Set only once raw_bytes_init has accepted the length varint and the
+    // "Filecoin Sign Bytes:" prefix. Updates and the final read are refused
+    // while it is false, so a failed or foreign session cannot be resumed.
+    bool initialized;
 } raw_bytes_state_t;
 
 typedef struct {

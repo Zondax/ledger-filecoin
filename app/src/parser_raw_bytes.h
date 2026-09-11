@@ -28,6 +28,12 @@ extern parser_tx_t parser_tx_obj;
 parser_error_t raw_bytes_init(uint8_t *buf, size_t buf_len);
 parser_error_t raw_bytes_update(uint8_t *buf, size_t buf_len);
 
+/// Discards any raw-bytes session state, including the hashing context.
+void raw_bytes_reset(void);
+
+/// True while a raw-bytes session has passed the prefix check and can be updated.
+bool raw_bytes_is_initialized(void);
+
 parser_error_t _readRawBytes(const parser_context_t *ctx, raw_bytes_state_t *tx);
 
 parser_error_t _validateRawBytes(const parser_context_t *ctx);
