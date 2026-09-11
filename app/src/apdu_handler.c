@@ -319,11 +319,17 @@ __Z_INLINE void handleSignFvmEip191(volatile uint32_t *flags, volatile uint32_t 
 void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     volatile uint16_t sw = 0;
 
-    // Reset error message offset at the beginning of each command
-    G_error_message_offset = 0;
-
     BEGIN_TRY {
         TRY {
+            // A pending UI callback still owns the transaction state. Reject
+            // the next command before dispatching or mutating app-owned state.
+            if (review_pending) {
+                THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+            }
+
+            // The current command may install a new asynchronous error reply.
+            G_error_message_offset = 0;
+
             const uint8_t cla = G_io_apdu_buffer[OFFSET_CLA];
 
             if ((cla != CLA) && (cla != CLA_ETH)) {
@@ -332,11 +338,6 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
 
             if (rx < APDU_MIN_LENGTH) {
                 THROW(APDU_CODE_WRONG_LENGTH);
-            }
-
-            // Reject any APDU while a review is already on screen.
-            if (review_pending) {
-                THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
             }
 
             const uint8_t instruction = G_io_apdu_buffer[OFFSET_INS];
@@ -430,6 +431,12 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
             THROW(EXCEPTION_IO_RESET);
         }
         CATCH_OTHER(e) {
+            // Error views throw after scheduling their asynchronous reply.
+            // Keep the review lock until the UI callback sends that reply.
+            if (*flags & IO_ASYNCH_REPLY) {
+                review_pending = true;
+            }
+
             switch (e & 0xF000) {
                 case 0x6000:
                 case APDU_CODE_OK:

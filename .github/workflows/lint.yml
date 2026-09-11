@@ -10,6 +10,10 @@ on:
       - master
       - dev
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   ledger-lint:
     uses: Zondax/_workflows/.github/workflows/_ledger_lint.yml@v3

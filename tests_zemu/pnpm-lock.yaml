@@ -98,6 +98,9 @@ importers:
       js-sha256:
         specifier: 0.11.1
         version: 0.11.1
+      js-sha3:
+        specifier: 0.8.0
+        version: 0.8.0
       prettier:
         specifier: ^3.8.3
         version: 3.8.3
