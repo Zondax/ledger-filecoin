@@ -54,6 +54,7 @@
     "jest-runner": "^30.3.0",
     "jest-serial-runner": "^1.2.2",
     "js-sha256": "0.11.1",
+    "js-sha3": "0.8.0",
     "prettier": "^3.8.3",
     "secp256k1": "^5.0.1",
     "sort-package-json": "^3.6.1",
