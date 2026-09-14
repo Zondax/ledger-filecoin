@@ -353,9 +353,6 @@ __Z_INLINE void claim_evm_chunk(void) {
 void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     volatile uint16_t sw = 0;
 
-    // Reset error message offset at the beginning of each command
-    G_error_message_offset = 0;
-
     BEGIN_TRY {
         TRY {
             const uint8_t cla = G_io_apdu_buffer[OFFSET_CLA];
@@ -372,6 +369,11 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
             if (view_review_is_pending()) {
                 THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
             }
+
+            // Only now is the command going to be dispatched. Resetting any
+            // earlier let a rejected APDU clear the offset that the error
+            // reply still on screen has yet to send.
+            G_error_message_offset = 0;
 
             const uint8_t instruction = G_io_apdu_buffer[OFFSET_INS];
 
