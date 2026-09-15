@@ -355,6 +355,18 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
 
     BEGIN_TRY {
         TRY {
+            // Reject any APDU while a review or an error modal is on screen.
+            // This runs first: the screen that is up still owes the host a
+            // reply, and G_error_message_offset below is part of the state that
+            // reply reads when the user finally answers it.
+            if (view_review_is_pending()) {
+                THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+            }
+
+            // Reset only once the command is going to be dispatched. It may
+            // install an asynchronous error reply of its own.
+            G_error_message_offset = 0;
+
             const uint8_t cla = G_io_apdu_buffer[OFFSET_CLA];
 
             if ((cla != CLA) && (cla != CLA_ETH)) {
@@ -364,16 +376,6 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
             if (rx < APDU_MIN_LENGTH) {
                 THROW(APDU_CODE_WRONG_LENGTH);
             }
-
-            // Reject any APDU while a review or an error modal is on screen.
-            if (view_review_is_pending()) {
-                THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
-            }
-
-            // Only now is the command going to be dispatched. Resetting any
-            // earlier let a rejected APDU clear the offset that the error
-            // reply still on screen has yet to send.
-            G_error_message_offset = 0;
 
             const uint8_t instruction = G_io_apdu_buffer[OFFSET_INS];
 
