@@ -45,7 +45,9 @@ parser_error_t getNumItemsInvokeEVM(uint8_t *numItems, const fil_base_tx_t *txOb
     CHECK_ERROR(getERC20Token(&tmpEthObj, tokenSymbol, &decimals));
     const bool unknownToken = (MEMCMP(tokenSymbol, "?? ", 3) == 0);
 
-    *numItems = 5;
+    // Method, From, To, Value, Gas Limit and Gas Fee Cap are always shown: the
+    // fee cap bounds what the user pays, so it is not an expert-only detail.
+    *numItems = 6;
 
     const uint16_t fromIdentifier = txObj->from.buffer[0] << 8 | txObj->from.buffer[1];
     if (fromIdentifier == F4_ETH_ADDRESS_IDENTIFIER) {
@@ -65,7 +67,8 @@ parser_error_t getNumItemsInvokeEVM(uint8_t *numItems, const fil_base_tx_t *txOb
         (*numItems) += 2;
     }
     if (expertMode) {
-        (*numItems) += 3;
+        // Gas Premium and Nonce
+        (*numItems) += 2;
     }
     return parser_ok;
 }

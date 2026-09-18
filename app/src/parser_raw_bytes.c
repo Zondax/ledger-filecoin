@@ -50,7 +50,9 @@ parser_error_t raw_bytes_init(uint8_t *buf, size_t buf_len) {
     }
 #endif
     // init hash context
-    blake_hash_init();
+    if (blake_hash_init() != zxerr_ok) {
+        return parser_unexpected_error;
+    }
 
     // get message len in bytes
     uint64_t total = 0;
