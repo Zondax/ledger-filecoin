@@ -332,10 +332,10 @@ std::vector<std::string> InvokeContractGenerateExpectedUIOutput(const nlohmann::
     addTo(answer, "{} | Gas Limit: {}", idx, FormatAmount(gaslimit));
     idx++;
 
-    if (expertMode) {
-        addTo(answer, "{} | Gas Fee Cap: {}", idx, FormatAmount(gasfeecap));
-        idx++;
+    addTo(answer, "{} | Gas Fee Cap: {}", idx, FormatAmount(gasfeecap));
+    idx++;
 
+    if (expertMode) {
         addTo(answer, "{} | Gas Premium: {}", idx, FormatAmount(gaspremium));
         idx++;
 

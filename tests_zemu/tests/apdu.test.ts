@@ -42,6 +42,7 @@ const P2_NONE = 0x00;
 
 const SW_OK = 0x9000;
 const SW_WRONG_LENGTH = 0x6700;
+const SW_DATA_INVALID = 0x6984;
 const SW_COMMAND_NOT_ALLOWED = 0x6986;
 const SW_TX_NOT_INITIALIZED = 0x6987;
 const SW_INVALID_P1P2 = 0x6b00;
@@ -53,6 +54,7 @@ const SW_CLA_NOT_SUPPORTED = 0x6e00;
 const ACCEPTED_STATUS = [
   SW_OK,
   SW_WRONG_LENGTH,
+  SW_DATA_INVALID,
   SW_COMMAND_NOT_ALLOWED,
   SW_TX_NOT_INITIALIZED,
   SW_INVALID_P1P2,
@@ -97,6 +99,14 @@ const TX_BLOB = Buffer.from(
   "8a0058310396a1a3e4ea7a14d49985e661b22401d44fed402d1d0925b243c923589c0fbc7e32cd04e29ed78d15d37d3aaa3fe6da3358310386b454258c589475f7d16f5aac018a79f6c1169d20fc33921dd8b5ce1cac6c348f90a3603624f6aeb91b64518c2e80950144000186a01961a8430009c44200000040",
   "hex",
 );
+
+// First raw-bytes data chunk: LEB128 length, then a message that does not start
+// with "Filecoin Sign Bytes:". The prefix is the only thing separating a
+// raw-bytes digest from a transaction digest, so this chunk must be refused.
+const RAW_BAD_PREFIX = Buffer.concat([
+  Buffer.from([30]),
+  Buffer.from("Not the Filecoin raw prefix!..", "ascii"),
+]);
 
 const hex = (v: number) => `0x${v.toString(16)}`;
 
@@ -248,6 +258,29 @@ describe("APDU state machine", function () {
           SW_TX_NOT_INITIALIZED,
           "add after an aborted flow",
         );
+
+        // --- a raw-bytes session whose prefix check failed cannot be resumed
+        // (F14: the old chunk counter let the next chunk skip the check) ---
+        check(
+          await sw(t, CLA, INS_SIGN_RAW_BYTES, P1_INIT, P2_NONE, HDPATH),
+          SW_OK,
+          "raw-bytes init",
+        );
+        check(
+          await sw(t, CLA, INS_SIGN_RAW_BYTES, P1_ADD, P2_NONE, RAW_BAD_PREFIX),
+          SW_DATA_INVALID,
+          "raw-bytes first chunk without the prefix",
+        );
+        check(
+          await sw(t, CLA, INS_SIGN_RAW_BYTES, P1_ADD, P2_NONE, CHUNK),
+          SW_TX_NOT_INITIALIZED,
+          "raw-bytes chunk after a refused prefix",
+        );
+        check(
+          await sw(t, CLA, INS_SIGN_RAW_BYTES, P1_LAST, P2_NONE, CHUNK),
+          SW_TX_NOT_INITIALIZED,
+          "raw-bytes last chunk after a refused prefix",
+        );
       } finally {
         await sim.close();
       }
@@ -295,6 +328,21 @@ describe("APDU state machine", function () {
           await sw(t, CLA, INS_GET_ADDR_SECP256K1, 0x00, P2_NONE, HDPATH),
           SW_OK,
           "get address once the review has been approved",
+        );
+
+        // The signed transaction is still in the parser union that the
+        // raw-bytes session shares. A new session must not read its
+        // "initialized" flag out of those bytes and skip the prefix check
+        // (FIL-C24).
+        check(
+          await sw(t, CLA, INS_SIGN_RAW_BYTES, P1_INIT, P2_NONE, HDPATH),
+          SW_OK,
+          "raw-bytes init after a signed transaction",
+        );
+        check(
+          await sw(t, CLA, INS_SIGN_RAW_BYTES, P1_ADD, P2_NONE, RAW_BAD_PREFIX),
+          SW_DATA_INVALID,
+          "raw-bytes prefix still checked after a signed transaction",
         );
 
         // And a fresh signing flow is accepted, which is the case that matters:
