@@ -18,6 +18,11 @@ on:
       - master
       - dev
 
+permissions:
+  actions: write
+  contents: read
+  pull-requests: write
+
 jobs:
   guidelines_enforcer:
     name: Call Ledger guidelines_enforcer

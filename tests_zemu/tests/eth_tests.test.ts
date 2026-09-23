@@ -36,9 +36,28 @@ const SIGN_TEST_DATA_CLEARSIGN = [
       "hex",
     ),
   },
+  {
+    // Type 0x02 never populates gasPrice, so the review must read the 1559 fee
+    // fields instead. axlUSDC (6 decimals), zero native value.
+    name: "erc20_transfer_1559",
+    op: Buffer.from(
+      "02f87082013a80843b9aca00850d8c7b50e68303d09094eb466342c4d449bc9f53a865d5cb90586f40521580b844a9059cbb0000000000000000000000004e83362442b8d1bec281594cea3050c8eb01311c00000000000000000000000000000000000000000000000000000000075bca00c0",
+      "hex",
+    ),
+  },
 ];
 
 const SIGN_TEST_DATA_BLINDISIGN = [
+  {
+    // Same ERC20 transfer as erc20_transfer_1559 but carrying 1 FIL of native
+    // value. No clear-sign screen shows tx.value, so this must not be
+    // clear-signed - it has to fall back to the blind-sign hash.
+    name: "erc20_transfer_with_native_value",
+    op: Buffer.from(
+      "02f87882013a80843b9aca00850d8c7b50e68303d09094eb466342c4d449bc9f53a865d5cb90586f405215880de0b6b3a7640000b844a9059cbb0000000000000000000000004e83362442b8d1bec281594cea3050c8eb01311c00000000000000000000000000000000000000000000000000000000075bca00c0",
+      "hex",
+    ),
+  },
   {
     name: "transfer",
     op: Buffer.from(
