@@ -13,6 +13,11 @@ on:
       - '.github/workflows/*.yml'
       - 'tests/*'
 
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
 jobs:
   analyse:
     name: Call Ledger CodeQL analysis

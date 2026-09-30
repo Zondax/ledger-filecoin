@@ -191,7 +191,7 @@ zxerr_t crypto_sign(uint8_t *buffer, uint16_t signatureMaxlen, const uint8_t *me
     uint8_t tmp[BLAKE2B_256_SIZE] = {0};
     uint8_t message_digest[BLAKE2B_256_SIZE] = {0};
 
-    blake_hash(message, messageLen, tmp, BLAKE2B_256_SIZE);
+    CHECK_ZXERR(blake_hash(message, messageLen, tmp, BLAKE2B_256_SIZE))
     CHECK_ZXERR(blake_hash_cid(tmp, BLAKE2B_256_SIZE, message_digest, BLAKE2B_256_SIZE))
 
     return _sign(buffer, signatureMaxlen, message_digest, BLAKE2B_256_SIZE, sigSize, NULL);
@@ -246,7 +246,7 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrL
     // addr bytes
     answer->addrBytesLen = sizeof_field(answer_t, addrBytes);
     answer->addrBytes[0] = ADDRESS_PROTOCOL_SECP256K1;
-    blake_hash(answer->publicKey, SECP256K1_PK_LEN, answer->addrBytes + 1, answer->addrBytesLen - 1);
+    CHECK_ZXERR(blake_hash(answer->publicKey, SECP256K1_PK_LEN, answer->addrBytes + 1, answer->addrBytesLen - 1))
 
     // addr str
     answer->addrStrLen = sizeof_field(answer_t, addrStr);

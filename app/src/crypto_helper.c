@@ -128,7 +128,9 @@ uint16_t formatProtocol(const uint8_t *addressBytes, uint16_t addressSize, uint8
     }
     MEMCPY(payload_crc, addressBytes + 1 + actorIdSize, payloadSize);
 
-    blake_hash(addressBytes, addressSize, payload_crc + payloadSize, CHECKSUM_LENGTH);
+    if (blake_hash(addressBytes, addressSize, payload_crc + payloadSize, CHECKSUM_LENGTH) != zxerr_ok) {
+        return 0;
+    }
 
     const uint16_t offset = strnlen((char *)formattedAddress, formattedAddressSize);
     // Now prepare the address output

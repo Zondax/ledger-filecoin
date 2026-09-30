@@ -116,6 +116,34 @@ TEST(SecurityRegression, RendersNestedContainerBytes) {
     EXPECT_STREQ(value, "820001");
 }
 
+TEST(SecurityRegression, RejectsCidTagWrappingNonByteString) {
+    app_mode_reset();
+    // A one-element array holding Tag(42) wrapping an integer instead of the
+    // CID byte string.
+    const auto message = filecoinMessageWithParams({0x81, 0xd8, 0x2a, 0x01});
+    const auto context = parseFilecoin(message);
+
+    char key[40] = {};
+    char value[40] = {};
+    uint8_t pageCount = 0;
+    EXPECT_EQ(parser_getItem(&context, 6, key, sizeof(key), value, sizeof(value), 0, &pageCount),
+              parser_unexpected_type);
+}
+
+TEST(SecurityRegression, RejectsTagCongruentToCidTag) {
+    app_mode_reset();
+    // Tag(10538) is not Tag(42), but its low byte is: the CID path used to
+    // accept it and copy a non-byte-string item. Found by fuzzing.
+    const auto message = filecoinMessageWithParams({0x81, 0xd9, 0x29, 0x2a, 0x01});
+    const auto context = parseFilecoin(message);
+
+    char key[40] = {};
+    char value[40] = {};
+    uint8_t pageCount = 0;
+    EXPECT_EQ(parser_getItem(&context, 6, key, sizeof(key), value, sizeof(value), 0, &pageCount),
+              parser_unexpected_type);
+}
+
 TEST(SecurityRegression, RejectsZeroItemReview) {
     app_mode_reset();
     std::vector<uint8_t> params = {0x98, 0xfa};
