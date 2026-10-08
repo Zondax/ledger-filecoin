@@ -255,14 +255,17 @@ parser_error_t parse_cid(cid_t *cid, CborValue *value) {
     // advance to the next element in the tag.
     CHECK_CBOR_MAP_ERR(cbor_value_skip_tag(value));
 
-    // Tag is defined as an uint64_t, so we need to cast it here.
-    // in order to get the right value(a byte_string).
     uint8_t tmp[100] = {0};
     size_t cid_len = sizeof(tmp);
 
     size_t bytes_read = 0;
 
-    if ((uint8_t)tag == TAG_CID) {
+    // The whole tag is compared: truncating it to its low byte accepted any
+    // tag congruent to TAG_CID mod 256, such as 10538.
+    if (tag == TAG_CID) {
+        // The tagged item carries the CID bytes. A tag can wrap any type, so
+        // the copy below needs the type checked first.
+        CHECK_CBOR_TYPE(cbor_value_get_type(value), CborByteStringType)
         CHECK_CBOR_MAP_ERR(cbor_value_copy_byte_string(value, tmp, &cid_len, NULL /* next */))
 
         // CID docs says base can be omitted, but DagCbor protocol prefixes
